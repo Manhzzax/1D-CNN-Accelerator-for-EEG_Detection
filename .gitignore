@@ -216,3 +216,12 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local-only AI Agent communication folder
+AI_train_model/agent_notes/
+
+# Generated EEG datasets and training outputs
+AI_train_model/data/*.csv
+AI_train_model/data/*.npz
+AI_train_model/outputs/
+AI_train_model/server_results/run_*/
