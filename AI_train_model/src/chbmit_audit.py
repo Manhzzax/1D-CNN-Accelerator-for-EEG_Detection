@@ -113,6 +113,37 @@ def find_local_edf_paths(raw_dataset_dir):
     }
 
 
+def parse_edf_seizure_annotations(edf_path, sampling_rate_hz):
+    """Read the PhysioNet WFDB '[' and ']' seizure markers beside an EDF file."""
+    annotation_path = Path(f"{edf_path}.seizures")
+    if not annotation_path.is_file():
+        return None
+
+    import wfdb
+
+    annotation = wfdb.rdann(str(edf_path), "seizures")
+    starts = []
+    intervals = []
+    for sample, symbol in zip(annotation.sample, annotation.symbol):
+        if symbol == "[":
+            starts.append(int(sample))
+        elif symbol == "]":
+            if not starts:
+                raise ValueError(f"Unpaired seizure end marker in {annotation_path}")
+            start_sample = starts.pop(0)
+            end_sample = int(sample)
+            if end_sample <= start_sample:
+                raise ValueError(f"Non-positive seizure interval in {annotation_path}")
+            intervals.append((
+                round(start_sample / sampling_rate_hz, 6),
+                round(end_sample / sampling_rate_hz, 6),
+            ))
+
+    if starts:
+        raise ValueError(f"Unpaired seizure start marker in {annotation_path}")
+    return intervals
+
+
 def inspect_edf_header(edf_path):
     """Read only EDF metadata and always release the file handle."""
     import mne
@@ -179,8 +210,11 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
     channel_counts = Counter()
     header_errors = []
     total_declared_seizures = 0
-    total_annotated_seizures = 0
-    annotation_mismatches = []
+    total_summary_seizures = 0
+    total_primary_seizures = 0
+    annotation_file_errors = []
+    summary_annotation_discrepancies = []
+    seizure_manifest_discrepancies = []
     summary_missing_records = []
 
     print(f"Auditing {len(records)} EDF files listed by RECORDS...")
@@ -188,28 +222,50 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         edf_path = root / record_id
         header = inspect_edf_header(edf_path)
         annotation = annotations.get(record_id, {"intervals": [], "declared_count": None})
-        intervals = annotation["intervals"]
+        summary_intervals = annotation["intervals"]
         declared_seizure_count = annotation["declared_count"]
         is_seizure_record = record_id in seizure_record_set
-        total_annotated_seizures += len(intervals)
+        external_intervals = None
+        external_error = ""
+        if not header["error"]:
+            try:
+                external_intervals = parse_edf_seizure_annotations(
+                    edf_path,
+                    header["sampling_rate_hz"],
+                )
+            except Exception as exc:
+                external_error = f"{type(exc).__name__}: {exc}"
+                annotation_file_errors.append({"recording_id": record_id, "error": external_error})
+
+        intervals = external_intervals if external_intervals is not None else summary_intervals
+        label_source = "edf_seizures" if external_intervals is not None else "summary"
+        total_summary_seizures += len(summary_intervals)
+        total_primary_seizures += len(intervals)
         if declared_seizure_count is not None:
             total_declared_seizures += declared_seizure_count
         if declared_seizure_count is None:
             summary_missing_records.append(record_id)
 
-        mismatch_reasons = []
-        if declared_seizure_count is not None and declared_seizure_count != len(intervals):
-            mismatch_reasons.append("declared_count_differs_from_parsed_intervals")
-        if is_seizure_record and not intervals:
-            mismatch_reasons.append("RECORDS-WITH-SEIZURES_has_no_parsed_interval")
-        if not is_seizure_record and intervals:
-            mismatch_reasons.append("parsed_interval_not_listed_in_RECORDS-WITH-SEIZURES")
-        if mismatch_reasons:
-            annotation_mismatches.append({
+        if declared_seizure_count is not None and declared_seizure_count != len(summary_intervals):
+            summary_annotation_discrepancies.append({
                 "recording_id": record_id,
                 "declared_seizure_count": declared_seizure_count,
-                "parsed_seizure_count": len(intervals),
-                "reasons": mismatch_reasons,
+                "summary_interval_count": len(summary_intervals),
+                "reason": "declared_count_differs_from_summary_intervals",
+            })
+        if external_intervals is not None and external_intervals != summary_intervals:
+            summary_annotation_discrepancies.append({
+                "recording_id": record_id,
+                "summary_intervals": summary_intervals,
+                "edf_seizures_intervals": external_intervals,
+                "reason": "summary_intervals_differ_from_edf_seizures",
+            })
+        if is_seizure_record != bool(intervals):
+            seizure_manifest_discrepancies.append({
+                "recording_id": record_id,
+                "is_listed_in_records_with_seizures": is_seizure_record,
+                "primary_interval_count": len(intervals),
+                "label_source": label_source,
             })
         normalized_channels = header.pop("normalized_channels")
 
@@ -232,10 +288,12 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             "channel_count": header["channel_count"],
             "channel_names_json": json.dumps(header["channel_names"]),
             "seizure_intervals_json": json.dumps(intervals),
+            "label_source": label_source,
+            "edf_seizures_intervals_json": json.dumps(external_intervals),
+            "edf_seizures_error": external_error,
             "declared_seizure_count": declared_seizure_count,
             "seizure_count": len(intervals),
             "is_listed_in_records_with_seizures": is_seizure_record,
-            "annotation_mismatch": bool(mismatch_reasons),
             "header_error": header["error"],
         })
 
@@ -248,8 +306,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         [
             "recording_id", "case_id", "edf_path", "sampling_rate_hz", "sample_count",
             "duration_sec", "channel_count", "channel_names_json", "seizure_intervals_json",
-            "declared_seizure_count", "seizure_count", "is_listed_in_records_with_seizures",
-            "annotation_mismatch", "header_error",
+            "label_source", "edf_seizures_intervals_json", "edf_seizures_error",
+            "declared_seizure_count", "seizure_count", "is_listed_in_records_with_seizures", "header_error",
         ],
     )
 
@@ -280,9 +338,15 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         "sampling_rate_distribution_hz": dict(sorted(sampling_rates.items())),
         "channel_count_distribution": dict(sorted(channel_counts.items())),
         "summary_declared_seizure_count": total_declared_seizures,
-        "summary_parsed_seizure_count": total_annotated_seizures,
-        "annotation_mismatch_count": len(annotation_mismatches),
-        "annotation_mismatches": annotation_mismatches,
+        "summary_parsed_seizure_count": total_summary_seizures,
+        "primary_label_source": "edf_seizures_when_available_else_summary",
+        "primary_parsed_seizure_count": total_primary_seizures,
+        "edf_seizures_error_count": len(annotation_file_errors),
+        "edf_seizures_errors": annotation_file_errors,
+        "summary_annotation_discrepancy_count": len(summary_annotation_discrepancies),
+        "summary_annotation_discrepancies": summary_annotation_discrepancies,
+        "records_with_seizures_discrepancy_count": len(seizure_manifest_discrepancies),
+        "records_with_seizures_discrepancies": seizure_manifest_discrepancies,
         "summary_missing_record_count": len(summary_missing_records),
         "summary_missing_records": summary_missing_records,
         "canonical_bipolar_18_coverage": {
@@ -306,14 +370,17 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         and not local_only
         and not seizure_records_outside_records
         and not header_errors
-        and not annotation_mismatches
+        and not annotation_file_errors
+        and total_primary_seizures == total_declared_seizures
     )
     print(f"Manifest records: {len(records)} | local EDF: {len(local_set)}")
     print(
         "Header errors: "
         f"{len(header_errors)} | declared seizures: {total_declared_seizures} | "
-        f"parsed seizures: {total_annotated_seizures} | seizure records: {len(seizure_records)} | "
-        f"annotation mismatches: {len(annotation_mismatches)} | "
+        f"summary seizures: {total_summary_seizures} | primary seizures: {total_primary_seizures} | "
+        f"seizure records: {len(seizure_records)} | annotation-file errors: {len(annotation_file_errors)} | "
+        f"summary/annotation discrepancies: {len(summary_annotation_discrepancies)} | "
+        f"seizure-manifest discrepancies: {len(seizure_manifest_discrepancies)} | "
         f"summary-missing records: {len(summary_missing_records)}"
     )
     print(f"Audit artifacts: {output_path}")
