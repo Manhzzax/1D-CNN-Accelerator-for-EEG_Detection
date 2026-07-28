@@ -6,21 +6,23 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 
-from scripts import run_audit, run_preprocess, run_eda, run_train, run_quantize
+from scripts import run_audit, run_plan, run_preprocess, run_eda, run_train, run_quantize
 
 def main():
     parser = argparse.ArgumentParser(description="EEG Seizure Detection 1D-CNN Accelerator Pipeline")
     parser.add_argument(
         "--mode", 
-        choices=["audit", "preprocess", "eda", "train", "quantize", "all"],
+        choices=["audit", "plan", "preprocess", "eda", "train", "quantize", "all"],
         default="all",
-        help="Pipeline phase to run: 'audit' (EDF metadata), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'quantize' (Quantize & export), or 'all' (Run all)."
+        help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'quantize' (Quantize & export), or 'all' (Run all)."
     )
     
     args = parser.parse_args()
     
     if args.mode == "audit":
         run_audit.main()
+    elif args.mode == "plan":
+        run_plan.main()
     elif args.mode == "preprocess":
         run_preprocess.main()
     elif args.mode == "eda":
@@ -30,17 +32,10 @@ def main():
     elif args.mode == "quantize":
         run_quantize.main()
     elif args.mode == "all":
-        print("=" * 60)
-        print("STARTING FULL EEG SEIZURE ACCELERATOR PIPELINE")
-        print("=" * 60)
-        run_preprocess.main()
-        run_eda.main()
-        run_train.main()
-        run_quantize.main()
-        print("=" * 60)
-        print("FULL PIPELINE EXECUTED SUCCESSFULLY!")
-        print("All outputs are saved to AI_train_model/outputs/")
-        print("=" * 60)
+        raise SystemExit(
+            "The legacy full pipeline is disabled. Run audit and plan first; "
+            "the leakage-safe preprocessing stage is being introduced separately."
+        )
 
 if __name__ == "__main__":
     main()

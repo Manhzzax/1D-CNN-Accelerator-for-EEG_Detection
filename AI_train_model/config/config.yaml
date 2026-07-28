@@ -10,12 +10,15 @@ data:
 
   # Directory under AI_train_model/data/ for immutable EDF/header audit artifacts
   audit_output_dir: "chbmit_audit"
+
+  # Directory under AI_train_model/data/ for the split manifest locked before preprocessing
+  protocol_output_dir: "chbmit_protocol"
   
   # Split ratios for train, validation, and test datasets
   split_ratios:
-    train: 0.80
+    train: 0.70
     val: 0.10
-    test: 0.10
+    test: 0.20
   seed: 42
 
 model:
