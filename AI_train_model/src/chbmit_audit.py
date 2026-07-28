@@ -96,6 +96,14 @@ def load_records(raw_dataset_dir):
         return [line.strip() for line in records_file if line.strip()]
 
 
+def load_records_with_seizures(raw_dataset_dir):
+    records_path = Path(raw_dataset_dir) / "RECORDS-WITH-SEIZURES"
+    if not records_path.is_file():
+        raise FileNotFoundError(f"Seizure RECORDS manifest is missing: {records_path}")
+    with records_path.open("r", encoding="utf-8", errors="replace") as records_file:
+        return [line.strip() for line in records_file if line.strip()]
+
+
 def find_local_edf_paths(raw_dataset_dir):
     root = Path(raw_dataset_dir)
     return {
@@ -157,9 +165,12 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
 
     records = load_records(root)
     record_set = set(records)
+    seizure_records = load_records_with_seizures(root)
+    seizure_record_set = set(seizure_records)
     local_set = find_local_edf_paths(root)
     missing_local = sorted(record_set - local_set)
     local_only = sorted(local_set - record_set)
+    seizure_records_outside_records = sorted(seizure_record_set - record_set)
     annotations = load_all_annotations(root)
 
     manifest_rows = []
@@ -170,6 +181,7 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
     total_declared_seizures = 0
     total_annotated_seizures = 0
     annotation_mismatches = []
+    summary_missing_records = []
 
     print(f"Auditing {len(records)} EDF files listed by RECORDS...")
     for index, record_id in enumerate(records, start=1):
@@ -178,14 +190,26 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         annotation = annotations.get(record_id, {"intervals": [], "declared_count": None})
         intervals = annotation["intervals"]
         declared_seizure_count = annotation["declared_count"]
+        is_seizure_record = record_id in seizure_record_set
         total_annotated_seizures += len(intervals)
         if declared_seizure_count is not None:
             total_declared_seizures += declared_seizure_count
-        if declared_seizure_count != len(intervals):
+        if declared_seizure_count is None:
+            summary_missing_records.append(record_id)
+
+        mismatch_reasons = []
+        if declared_seizure_count is not None and declared_seizure_count != len(intervals):
+            mismatch_reasons.append("declared_count_differs_from_parsed_intervals")
+        if is_seizure_record and not intervals:
+            mismatch_reasons.append("RECORDS-WITH-SEIZURES_has_no_parsed_interval")
+        if not is_seizure_record and intervals:
+            mismatch_reasons.append("parsed_interval_not_listed_in_RECORDS-WITH-SEIZURES")
+        if mismatch_reasons:
             annotation_mismatches.append({
                 "recording_id": record_id,
                 "declared_seizure_count": declared_seizure_count,
                 "parsed_seizure_count": len(intervals),
+                "reasons": mismatch_reasons,
             })
         normalized_channels = header.pop("normalized_channels")
 
@@ -210,7 +234,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             "seizure_intervals_json": json.dumps(intervals),
             "declared_seizure_count": declared_seizure_count,
             "seizure_count": len(intervals),
-            "annotation_mismatch": declared_seizure_count != len(intervals),
+            "is_listed_in_records_with_seizures": is_seizure_record,
+            "annotation_mismatch": bool(mismatch_reasons),
             "header_error": header["error"],
         })
 
@@ -223,7 +248,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         [
             "recording_id", "case_id", "edf_path", "sampling_rate_hz", "sample_count",
             "duration_sec", "channel_count", "channel_names_json", "seizure_intervals_json",
-            "declared_seizure_count", "seizure_count", "annotation_mismatch", "header_error",
+            "declared_seizure_count", "seizure_count", "is_listed_in_records_with_seizures",
+            "annotation_mismatch", "header_error",
         ],
     )
 
@@ -247,6 +273,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         "local_edf_count": len(local_set),
         "missing_local_count": len(missing_local),
         "local_only_count": len(local_only),
+        "records_with_seizures_count": len(seizure_records),
+        "records_with_seizures_outside_records": seizure_records_outside_records,
         "header_success_count": len(records) - len(header_errors),
         "header_error_count": len(header_errors),
         "sampling_rate_distribution_hz": dict(sorted(sampling_rates.items())),
@@ -255,6 +283,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         "summary_parsed_seizure_count": total_annotated_seizures,
         "annotation_mismatch_count": len(annotation_mismatches),
         "annotation_mismatches": annotation_mismatches,
+        "summary_missing_record_count": len(summary_missing_records),
+        "summary_missing_records": summary_missing_records,
         "canonical_bipolar_18_coverage": {
             channel_name: channel_presence[channel_name] for channel_name in CANONICAL_BIPOLAR_18
         },
@@ -271,12 +301,20 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         json.dump(summary, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
 
-    verified = not missing_local and not local_only and not header_errors and not annotation_mismatches
+    verified = (
+        not missing_local
+        and not local_only
+        and not seizure_records_outside_records
+        and not header_errors
+        and not annotation_mismatches
+    )
     print(f"Manifest records: {len(records)} | local EDF: {len(local_set)}")
     print(
         "Header errors: "
         f"{len(header_errors)} | declared seizures: {total_declared_seizures} | "
-        f"parsed seizures: {total_annotated_seizures} | annotation mismatches: {len(annotation_mismatches)}"
+        f"parsed seizures: {total_annotated_seizures} | seizure records: {len(seizure_records)} | "
+        f"annotation mismatches: {len(annotation_mismatches)} | "
+        f"summary-missing records: {len(summary_missing_records)}"
     )
     print(f"Audit artifacts: {output_path}")
     print(f"Audit result: {'PASS' if verified else 'REVIEW REQUIRED'}")
