@@ -6,9 +6,6 @@ import re
 from collections import Counter
 from pathlib import Path
 
-import mne
-
-
 CANONICAL_BIPOLAR_18 = (
     "FP1-F7", "F7-T7", "T7-P7", "P7-O1",
     "FP1-F3", "F3-C3", "C3-P3", "P3-O1",
@@ -27,18 +24,20 @@ def normalize_channel_name(name):
 
 
 def parse_summary_annotations(summary_path):
-    """Return {edf_file_name: [(start_seconds, end_seconds), ...]} from a case summary."""
+    """Return seizure intervals and declared counts from a case summary."""
     annotations = {}
     current_file = None
     starts = []
     ends = []
+    declared_count = None
 
     def save_current():
         if current_file is None:
             return
-        annotations[current_file] = [
-            (start, end) for start, end in zip(starts, ends) if end > start
-        ]
+        annotations[current_file] = {
+            "intervals": [(start, end) for start, end in zip(starts, ends) if end > start],
+            "declared_count": declared_count,
+        }
 
     with summary_path.open("r", encoding="utf-8", errors="replace") as summary_file:
         for raw_line in summary_file:
@@ -49,10 +48,16 @@ def parse_summary_annotations(summary_path):
                 current_file = file_match.group(1)
                 starts = []
                 ends = []
+                declared_count = None
+                continue
+
+            count_match = re.match(r"Number of Seizures in File:\s*(\d+)\s*$", line, re.IGNORECASE)
+            if count_match and current_file:
+                declared_count = int(count_match.group(1))
                 continue
 
             start_match = re.match(
-                r"Seizure\s+\d+\s+Start Time:\s*(\d+)\s*seconds",
+                r"Seizure(?:\s+\d+)?\s+Start Time:\s*(\d+)\s*seconds",
                 line,
                 re.IGNORECASE,
             )
@@ -61,7 +66,7 @@ def parse_summary_annotations(summary_path):
                 continue
 
             end_match = re.match(
-                r"Seizure\s+\d+\s+End Time:\s*(\d+)\s*seconds",
+                r"Seizure(?:\s+\d+)?\s+End Time:\s*(\d+)\s*seconds",
                 line,
                 re.IGNORECASE,
             )
@@ -78,8 +83,8 @@ def load_all_annotations(raw_dataset_dir):
     root = Path(raw_dataset_dir)
     for summary_path in sorted(root.glob("chb*/chb*-summary.txt")):
         case_id = summary_path.parent.name
-        for file_name, intervals in parse_summary_annotations(summary_path).items():
-            annotations[f"{case_id}/{file_name}"] = intervals
+        for file_name, details in parse_summary_annotations(summary_path).items():
+            annotations[f"{case_id}/{file_name}"] = details
     return annotations
 
 
@@ -102,6 +107,8 @@ def find_local_edf_paths(raw_dataset_dir):
 
 def inspect_edf_header(edf_path):
     """Read only EDF metadata and always release the file handle."""
+    import mne
+
     raw = None
     try:
         raw = mne.io.read_raw_edf(str(edf_path), preload=False, verbose="ERROR")
@@ -160,14 +167,26 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
     sampling_rates = Counter()
     channel_counts = Counter()
     header_errors = []
+    total_declared_seizures = 0
     total_annotated_seizures = 0
+    annotation_mismatches = []
 
     print(f"Auditing {len(records)} EDF files listed by RECORDS...")
     for index, record_id in enumerate(records, start=1):
         edf_path = root / record_id
         header = inspect_edf_header(edf_path)
-        intervals = annotations.get(record_id, [])
+        annotation = annotations.get(record_id, {"intervals": [], "declared_count": None})
+        intervals = annotation["intervals"]
+        declared_seizure_count = annotation["declared_count"]
         total_annotated_seizures += len(intervals)
+        if declared_seizure_count is not None:
+            total_declared_seizures += declared_seizure_count
+        if declared_seizure_count != len(intervals):
+            annotation_mismatches.append({
+                "recording_id": record_id,
+                "declared_seizure_count": declared_seizure_count,
+                "parsed_seizure_count": len(intervals),
+            })
         normalized_channels = header.pop("normalized_channels")
 
         if header["error"]:
@@ -189,7 +208,9 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             "channel_count": header["channel_count"],
             "channel_names_json": json.dumps(header["channel_names"]),
             "seizure_intervals_json": json.dumps(intervals),
+            "declared_seizure_count": declared_seizure_count,
             "seizure_count": len(intervals),
+            "annotation_mismatch": declared_seizure_count != len(intervals),
             "header_error": header["error"],
         })
 
@@ -202,7 +223,7 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         [
             "recording_id", "case_id", "edf_path", "sampling_rate_hz", "sample_count",
             "duration_sec", "channel_count", "channel_names_json", "seizure_intervals_json",
-            "seizure_count", "header_error",
+            "declared_seizure_count", "seizure_count", "annotation_mismatch", "header_error",
         ],
     )
 
@@ -230,7 +251,10 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         "header_error_count": len(header_errors),
         "sampling_rate_distribution_hz": dict(sorted(sampling_rates.items())),
         "channel_count_distribution": dict(sorted(channel_counts.items())),
-        "summary_annotation_seizure_count": total_annotated_seizures,
+        "summary_declared_seizure_count": total_declared_seizures,
+        "summary_parsed_seizure_count": total_annotated_seizures,
+        "annotation_mismatch_count": len(annotation_mismatches),
+        "annotation_mismatches": annotation_mismatches,
         "canonical_bipolar_18_coverage": {
             channel_name: channel_presence[channel_name] for channel_name in CANONICAL_BIPOLAR_18
         },
@@ -247,9 +271,13 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         json.dump(summary, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
 
-    verified = not missing_local and not local_only and not header_errors
+    verified = not missing_local and not local_only and not header_errors and not annotation_mismatches
     print(f"Manifest records: {len(records)} | local EDF: {len(local_set)}")
-    print(f"Header errors: {len(header_errors)} | annotated seizures: {total_annotated_seizures}")
+    print(
+        "Header errors: "
+        f"{len(header_errors)} | declared seizures: {total_declared_seizures} | "
+        f"parsed seizures: {total_annotated_seizures} | annotation mismatches: {len(annotation_mismatches)}"
+    )
     print(f"Audit artifacts: {output_path}")
     print(f"Audit result: {'PASS' if verified else 'REVIEW REQUIRED'}")
     return verified
