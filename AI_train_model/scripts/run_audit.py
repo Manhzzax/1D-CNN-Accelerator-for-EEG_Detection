@@ -11,7 +11,7 @@ from src.data_loader import load_config
 
 def main():
     config = load_config()
-    raw_dataset_dir = config["data"]["raw_dir"]
+    raw_dataset_dir = os.environ.get("CHBMIT_RAW_DIR", config["data"]["raw_dir"])
     audit_dir_name = config["data"].get("audit_output_dir", "chbmit_audit")
     output_dir = os.path.join(project_dir, "data", audit_dir_name)
 
