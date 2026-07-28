@@ -6,33 +6,30 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
+from src.chbmit_preparation import prepare_chbmit_windows
 from src.data_loader import load_config
-from src.preprocess_chbmit import run_chbmit_preprocessing
 
 def main():
     config = load_config()
-    raw_dataset_dir = config['data']['raw_dir']
-    
-    # Save output to data/ folder inside AI_train_model
-    output_path = os.path.join(project_dir, "data", config['data']['preprocessed_filename'])
-    
-    sample_rate = config['model']['input_length']  # 256 Hz
+    protocol_dir = os.path.join(project_dir, "data", config["data"]["protocol_output_dir"])
+    output_dir = os.path.join(project_dir, "data", config["data"]["prepared_output_dir"])
     
     print("=" * 60)
-    print("RUNNING CHB-MIT EDF PREPROCESSING PIPELINE")
+    print("RUNNING LOCKED-SPLIT CHB-MIT PREPROCESSING")
     print("=" * 60)
     
-    success = run_chbmit_preprocessing(
-        raw_dataset_dir=raw_dataset_dir,
-        output_path=output_path,
-        sample_rate=sample_rate,
-        window_sec=1
+    summary = prepare_chbmit_windows(
+        protocol_dir=protocol_dir,
+        output_dir=output_dir,
+        preprocessing=config["preprocessing"],
+        seed=config["data"]["seed"],
     )
-    
-    if success:
-        print("\nPreprocessing step completed successfully!")
-    else:
-        print("\nPreprocessing step failed or was skipped. Please verify data paths.")
+    print("\nPreprocessing completed successfully.")
+    for split_name, details in summary["outputs"].items():
+        print(
+            f"  {split_name}: {details['positive_windows']} ictal + "
+            f"{details['normal_windows']} interictal windows"
+        )
     print("=" * 60)
 
 if __name__ == "__main__":

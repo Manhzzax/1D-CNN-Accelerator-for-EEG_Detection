@@ -5,7 +5,7 @@ data:
   # Change this to the path on your training server
   raw_dir: "D:/Research/chb-mit-scalp-eeg-database-1.0.0/"
   
-  # Output file name for the preprocessed numpy segments
+  # Deprecated legacy output name. The locked-split builder writes one NPZ per split.
   preprocessed_filename: "chbmit_preprocessed.npz"
 
   # Directory under AI_train_model/data/ for immutable EDF/header audit artifacts
@@ -13,6 +13,9 @@ data:
 
   # Directory under AI_train_model/data/ for the split manifest locked before preprocessing
   protocol_output_dir: "chbmit_protocol"
+
+  # Directory under AI_train_model/data/ for prepared train/validation/test windows
+  prepared_output_dir: "chbmit_prepared_v1"
   
   # Split ratios for train, validation, and test datasets
   split_ratios:
@@ -23,8 +26,21 @@ data:
 
 model:
   num_classes: 2
-  input_channels: 23     # CHB-MIT standard channels
+  input_channels: 17     # Locked canonical bipolar montage
   input_length: 256      # 1 second of EEG recording at 256 Hz
+
+preprocessing:
+  sample_rate_hz: 256
+  window_sec: 1
+  stride_sec: 1
+  interictal_guard_sec: 30
+  bandpass_low_hz: 0.5
+  bandpass_high_hz: 45.0
+  notch_hz: 60.0
+  normal_to_seizure_ratio:
+    train: 1.0
+    val: 1.0
+    test: 10.0
 
 training:
   epochs: 30
