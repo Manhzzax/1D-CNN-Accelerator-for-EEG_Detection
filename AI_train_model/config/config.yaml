@@ -7,6 +7,9 @@ data:
   
   # Output file name for the preprocessed numpy segments
   preprocessed_filename: "chbmit_preprocessed.npz"
+
+  # Directory under AI_train_model/data/ for immutable EDF/header audit artifacts
+  audit_output_dir: "chbmit_audit"
   
   # Split ratios for train, validation, and test datasets
   split_ratios:
