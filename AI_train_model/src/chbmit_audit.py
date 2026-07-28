@@ -6,21 +6,14 @@ import re
 from collections import Counter
 from pathlib import Path
 
-CANONICAL_BIPOLAR_18 = (
-    "FP1-F7", "F7-T7", "T7-P7", "P7-O1",
-    "FP1-F3", "F3-C3", "C3-P3", "P3-O1",
-    "FP2-F4", "F4-C4", "C4-P4", "P4-O2",
-    "FP2-F8", "F8-T8", "T8-P8", "P8-O2",
-    "FZ-CZ", "CZ-PZ",
+from .chbmit_montage import (
+    CANONICAL_BIPOLAR_17,
+    normalize_channel_name,
+    resolve_canonical_bipolar_17,
 )
 
 
-def normalize_channel_name(name):
-    """Normalize common CHB-MIT EDF channel-name variants for auditing only."""
-    normalized = name.upper().strip()
-    normalized = re.sub(r"^EEG\s*", "", normalized)
-    normalized = re.sub(r"\s*(?:-REF|-LE)$", "", normalized)
-    return normalized.replace(" ", "")
+CANONICAL_BIPOLAR_18_DIRECT = CANONICAL_BIPOLAR_17[:14] + ("T8-P8",) + CANONICAL_BIPOLAR_17[14:]
 
 
 def parse_summary_annotations(summary_path):
@@ -208,6 +201,10 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
     channel_presence = Counter()
     sampling_rates = Counter()
     channel_counts = Counter()
+    canonical_17_direct_counts = Counter()
+    canonical_17_reconstructed_counts = Counter()
+    canonical_17_complete_records = []
+    canonical_17_incomplete_records = []
     header_errors = []
     total_declared_seizures = 0
     total_summary_seizures = 0
@@ -276,6 +273,28 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             channel_counts[str(header["channel_count"])] += 1
             for channel_name in set(normalized_channels):
                 channel_presence[channel_name] += 1
+            channel_resolution = resolve_canonical_bipolar_17(header["channel_names"])
+            missing_channels = [
+                channel_name
+                for channel_name, (mode, _) in channel_resolution.items()
+                if mode == "missing"
+            ]
+            if missing_channels:
+                canonical_17_incomplete_records.append({
+                    "recording_id": record_id,
+                    "missing_channels": missing_channels,
+                })
+            else:
+                canonical_17_complete_records.append(record_id)
+            for channel_name, (mode, _) in channel_resolution.items():
+                if mode == "direct":
+                    canonical_17_direct_counts[channel_name] += 1
+                elif mode == "difference":
+                    canonical_17_reconstructed_counts[channel_name] += 1
+        if header["error"]:
+            channel_resolution = {
+                channel_name: ("missing", ()) for channel_name in CANONICAL_BIPOLAR_17
+            }
 
         case_id = record_id.split("/", maxsplit=1)[0]
         manifest_rows.append({
@@ -287,6 +306,10 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             "duration_sec": header["duration_sec"],
             "channel_count": header["channel_count"],
             "channel_names_json": json.dumps(header["channel_names"]),
+            "canonical_bipolar_17_resolution_json": json.dumps({
+                channel_name: {"mode": mode, "indices": list(indices)}
+                for channel_name, (mode, indices) in channel_resolution.items()
+            }),
             "seizure_intervals_json": json.dumps(intervals),
             "label_source": label_source,
             "edf_seizures_intervals_json": json.dumps(external_intervals),
@@ -305,7 +328,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         manifest_rows,
         [
             "recording_id", "case_id", "edf_path", "sampling_rate_hz", "sample_count",
-            "duration_sec", "channel_count", "channel_names_json", "seizure_intervals_json",
+            "duration_sec", "channel_count", "channel_names_json", "canonical_bipolar_17_resolution_json",
+            "seizure_intervals_json",
             "label_source", "edf_seizures_intervals_json", "edf_seizures_error",
             "declared_seizure_count", "seizure_count", "is_listed_in_records_with_seizures", "header_error",
         ],
@@ -317,12 +341,12 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
             "normalized_channel": channel_name,
             "recording_count": count,
             "coverage_percent": round(100.0 * count / len(records), 3),
-            "is_canonical_bipolar_18": channel_name in CANONICAL_BIPOLAR_18,
+            "is_canonical_bipolar_18_direct": channel_name in CANONICAL_BIPOLAR_18_DIRECT,
         })
     write_csv(
         output_path / "channel_presence.csv",
         channel_rows,
-        ["normalized_channel", "recording_count", "coverage_percent", "is_canonical_bipolar_18"],
+        ["normalized_channel", "recording_count", "coverage_percent", "is_canonical_bipolar_18_direct"],
     )
 
     summary = {
@@ -349,9 +373,17 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         "records_with_seizures_discrepancies": seizure_manifest_discrepancies,
         "summary_missing_record_count": len(summary_missing_records),
         "summary_missing_records": summary_missing_records,
-        "canonical_bipolar_18_coverage": {
-            channel_name: channel_presence[channel_name] for channel_name in CANONICAL_BIPOLAR_18
+        "canonical_bipolar_18_direct_coverage": {
+            channel_name: channel_presence[channel_name] for channel_name in CANONICAL_BIPOLAR_18_DIRECT
         },
+        "canonical_bipolar_17_direct_coverage": {
+            channel_name: canonical_17_direct_counts[channel_name] for channel_name in CANONICAL_BIPOLAR_17
+        },
+        "canonical_bipolar_17_reconstructed_coverage": {
+            channel_name: canonical_17_reconstructed_counts[channel_name] for channel_name in CANONICAL_BIPOLAR_17
+        },
+        "canonical_bipolar_17_complete_record_count": len(canonical_17_complete_records),
+        "canonical_bipolar_17_incomplete_records": canonical_17_incomplete_records,
         "channels_present_in_every_readable_recording": sorted(
             channel_name
             for channel_name, count in channel_presence.items()
@@ -372,6 +404,7 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         and not header_errors
         and not annotation_file_errors
         and total_primary_seizures == total_declared_seizures
+        and not canonical_17_incomplete_records
     )
     print(f"Manifest records: {len(records)} | local EDF: {len(local_set)}")
     print(
@@ -381,7 +414,8 @@ def run_chbmit_audit(raw_dataset_dir, output_dir):
         f"seizure records: {len(seizure_records)} | annotation-file errors: {len(annotation_file_errors)} | "
         f"summary/annotation discrepancies: {len(summary_annotation_discrepancies)} | "
         f"seizure-manifest discrepancies: {len(seizure_manifest_discrepancies)} | "
-        f"summary-missing records: {len(summary_missing_records)}"
+        f"summary-missing records: {len(summary_missing_records)} | "
+        f"canonical-17 complete: {len(canonical_17_complete_records)}/{len(records)}"
     )
     print(f"Audit artifacts: {output_path}")
     print(f"Audit result: {'PASS' if verified else 'REVIEW REQUIRED'}")
