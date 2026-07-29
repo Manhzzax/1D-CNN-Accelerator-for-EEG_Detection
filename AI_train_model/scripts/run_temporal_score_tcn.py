@@ -21,7 +21,7 @@ from src.event_evaluation import (
     score_continuous_recordings,
     write_threshold_sweep,
 )
-from src.model import EEG1DCNN
+from src.model import build_model_from_run
 from src.temporal_score_tcn import (
     TemporalScoreTCN,
     adjust_scores_with_tcn,
@@ -62,7 +62,7 @@ def main():
     use_amp = config["training"].get("use_amp", False) and device.type == "cuda"
 
     base_model_path = os.path.join(source_output_dir, "best_model.pth")
-    base_model = EEG1DCNN().to(device)
+    base_model = build_model_from_run(source_output_dir).to(device)
     base_model.load_state_dict(torch.load(base_model_path, map_location=device, weights_only=True))
     scaler_mean = np.load(os.path.join(source_output_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_output_dir, "scaler_scale.npy"))

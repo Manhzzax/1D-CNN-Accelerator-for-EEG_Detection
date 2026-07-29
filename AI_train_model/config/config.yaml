@@ -28,9 +28,18 @@ data:
   seed: 42
 
 model:
+  # Override per training run with CHBMIT_MODEL_ARCHITECTURE; baseline remains default.
+  architecture: "baseline_1dcnn"
   num_classes: 2
   input_channels: 17     # Locked canonical bipolar montage
   input_length: 256      # 1 second of EEG recording at 256 Hz
+  separable_1dcnn:
+    # Per-channel temporal filters -> pointwise spatial mixing -> temporal refinement.
+    temporal_filters_per_channel: 2
+    spatial_filters: 32
+    temporal_kernel: 31
+    refinement_kernel: 15
+    dropout: 0.25
 
 preprocessing:
   sample_rate_hz: 256

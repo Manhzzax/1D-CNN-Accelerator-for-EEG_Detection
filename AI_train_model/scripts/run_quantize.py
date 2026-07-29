@@ -9,7 +9,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, get_train_val_test_datasets
-from src.model import EEG1DCNN
+from src.model import EEG1DCNN, build_model_from_run
 from src.quantization import verify_and_export_quantized_model
 from src.utils import outputs_dir
 
@@ -29,7 +29,12 @@ def main():
         print(f"ERROR: Trained model not found at {model_path}. Please run run_train.py first.")
         sys.exit(1)
         
-    model = EEG1DCNN().to(device)
+    model = build_model_from_run(outputs_dir).to(device)
+    if not isinstance(model, EEG1DCNN):
+        raise NotImplementedError(
+            "The current Q15 exporter supports baseline_1dcnn only; add a dedicated exporter "
+            "after selecting a separable architecture."
+        )
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     print(f"Loaded trained model weights from {model_path}")
     

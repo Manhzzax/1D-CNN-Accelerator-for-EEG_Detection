@@ -23,7 +23,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, get_train_val_test_datasets
-from src.model import EEG1DCNN
+from src.model import build_model, build_model_from_run, save_model_spec
 from src.utils import set_seed, plot_training_history, plot_confusion_matrix, outputs_dir
 
 def main():
@@ -88,7 +88,12 @@ def main():
     print(f"Device: {device}")
     
     # 4. Initialize model
-    model = EEG1DCNN().to(device)
+    model = build_model().to(device)
+    save_model_spec(outputs_dir, model)
+    print(
+        f"Model: {model.architecture_name} | parameters: "
+        f"{sum(parameter.numel() for parameter in model.parameters()):,}"
+    )
     
     # 5. Set loss, optimizer, and AMP Scaler
     criterion = nn.CrossEntropyLoss()
@@ -234,7 +239,7 @@ def main():
     
     # 8. Evaluate on Test Set
     print("\nEvaluating best model on Test Set...")
-    best_model = EEG1DCNN().to(device)
+    best_model = build_model_from_run(outputs_dir).to(device)
     best_model.load_state_dict(
         torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device, weights_only=True)
     )

@@ -12,7 +12,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config
-from src.model import EEG1DCNN
+from src.model import build_model_from_run
 from src.temporal_hard_negative_mining import mine_temporal_hard_negative_windows
 from src.utils import get_outputs_dir
 
@@ -44,7 +44,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_amp = config["training"].get("use_amp", False) and device.type == "cuda"
-    model = EEG1DCNN().to(device)
+    model = build_model_from_run(source_outputs_dir).to(device)
     model.load_state_dict(torch.load(source_model_path, map_location=device, weights_only=True))
     scaler_mean = np.load(os.path.join(source_outputs_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))

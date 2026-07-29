@@ -1,3 +1,4 @@
+import json
 import os
 import yaml
 import torch
@@ -21,6 +22,7 @@ class EEG1DCNN(nn.Module):
         Total parameters: ~70K (well under the 100K limit)
         """
         super(EEG1DCNN, self).__init__()
+        self.architecture_name = "baseline_1dcnn"
         
         # Load from config if not specified
         config = load_config()
@@ -84,6 +86,113 @@ class EEG1DCNN(nn.Module):
         # FC 3
         x = self.fc3(x)
         return x
+
+
+class SeparableEEG1DCNN(nn.Module):
+    """EEGNet-inspired raw-signal CNN with explicit temporal then spatial mixing."""
+
+    def __init__(
+        self,
+        in_channels,
+        num_classes,
+        temporal_filters_per_channel=2,
+        spatial_filters=32,
+        temporal_kernel=31,
+        refinement_kernel=15,
+        dropout=0.25,
+    ):
+        super().__init__()
+        if temporal_kernel % 2 == 0 or refinement_kernel % 2 == 0:
+            raise ValueError("Separable temporal kernels must be odd for length-preserving padding")
+        self.architecture_name = "separable_1dcnn"
+        temporal_channels = in_channels * temporal_filters_per_channel
+        self.temporal_depthwise = nn.Conv1d(
+            in_channels,
+            temporal_channels,
+            kernel_size=temporal_kernel,
+            padding=temporal_kernel // 2,
+            groups=in_channels,
+            bias=False,
+        )
+        self.temporal_bn = nn.BatchNorm1d(temporal_channels)
+        self.spatial_pointwise = nn.Conv1d(temporal_channels, spatial_filters, kernel_size=1, bias=False)
+        self.spatial_bn = nn.BatchNorm1d(spatial_filters)
+        self.refine_depthwise = nn.Conv1d(
+            spatial_filters,
+            spatial_filters,
+            kernel_size=refinement_kernel,
+            padding=refinement_kernel // 2,
+            groups=spatial_filters,
+            bias=False,
+        )
+        self.refine_pointwise = nn.Conv1d(spatial_filters, spatial_filters, kernel_size=1, bias=False)
+        self.refine_bn = nn.BatchNorm1d(spatial_filters)
+        self.activation = nn.ReLU()
+        self.pool = nn.AvgPool1d(kernel_size=4, stride=4)
+        self.dropout = nn.Dropout(dropout)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(spatial_filters, num_classes)
+
+    def forward(self, x):
+        x = self.activation(self.temporal_bn(self.temporal_depthwise(x)))
+        x = self.pool(self.activation(self.spatial_bn(self.spatial_pointwise(x))))
+        x = self.activation(self.refine_bn(self.refine_pointwise(self.refine_depthwise(x))))
+        x = self.pool(x)
+        x = self.dropout(self.global_pool(x).squeeze(-1))
+        return self.classifier(x)
+
+
+def build_model(architecture=None, model_config=None):
+    """Create a configured model; environment override keeps ablations isolated."""
+    if model_config is None:
+        model_config = load_config()["model"]
+    architecture = architecture or os.environ.get(
+        "CHBMIT_MODEL_ARCHITECTURE", model_config.get("architecture", "baseline_1dcnn")
+    )
+    if architecture == "baseline_1dcnn":
+        return EEG1DCNN(
+            in_channels=model_config["input_channels"],
+            input_length=model_config["input_length"],
+            num_classes=model_config["num_classes"],
+        )
+    if architecture == "separable_1dcnn":
+        options = model_config["separable_1dcnn"]
+        return SeparableEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            temporal_filters_per_channel=int(options["temporal_filters_per_channel"]),
+            spatial_filters=int(options["spatial_filters"]),
+            temporal_kernel=int(options["temporal_kernel"]),
+            refinement_kernel=int(options["refinement_kernel"]),
+            dropout=float(options["dropout"]),
+        )
+    raise ValueError(f"Unknown CHB-MIT model architecture: {architecture}")
+
+
+def save_model_spec(output_dir, model):
+    """Persist the architecture contract alongside a checkpoint."""
+    model_config = load_config()["model"].copy()
+    model_config["architecture"] = model.architecture_name
+    spec = {
+        "architecture": model.architecture_name,
+        "parameter_count": int(sum(parameter.numel() for parameter in model.parameters())),
+        "model_config": model_config,
+    }
+    with open(os.path.join(output_dir, "model_spec.json"), "w", encoding="utf-8") as output_file:
+        json.dump(spec, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
+
+
+def build_model_from_run(output_dir):
+    """Load the architecture recorded with a run; legacy checkpoints are baseline CNNs."""
+    spec_path = os.path.join(output_dir, "model_spec.json")
+    architecture = "baseline_1dcnn"
+    if os.path.isfile(spec_path):
+        with open(spec_path, "r", encoding="utf-8") as input_file:
+            spec = json.load(input_file)
+        architecture = spec["architecture"]
+        return build_model(architecture, spec.get("model_config"))
+    return build_model(architecture)
 
 if __name__ == "__main__":
     # Test the model parameters and shape for CHB-MIT settings

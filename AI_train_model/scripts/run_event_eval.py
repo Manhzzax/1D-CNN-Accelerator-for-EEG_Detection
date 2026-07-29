@@ -19,7 +19,7 @@ from src.event_evaluation import (
     event_metrics,
     write_threshold_sweep,
 )
-from src.model import EEG1DCNN
+from src.model import build_model_from_run
 from src.utils import get_outputs_dir, outputs_dir
 
 
@@ -58,7 +58,7 @@ def main():
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_amp = config["training"].get("use_amp", False) and device.type == "cuda"
-    model = EEG1DCNN().to(device)
+    model = build_model_from_run(source_outputs_dir).to(device)
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     scaler_mean = np.load(os.path.join(source_outputs_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))
