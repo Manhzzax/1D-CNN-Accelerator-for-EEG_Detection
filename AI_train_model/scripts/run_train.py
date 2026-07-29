@@ -3,7 +3,7 @@ import sys
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, WeightedRandomSampler
 import numpy as np
 from sklearn.metrics import (
     average_precision_score,
@@ -47,10 +47,23 @@ def main():
     batch_size = config['training']['batch_size']
     num_workers = config['training'].get('num_workers', 4)
     pin_memory = config['training'].get('pin_memory', True)
+    class_balanced_batches = config['training'].get('class_balanced_batches', False)
+    train_sampler = None
+    if class_balanced_batches:
+        class_counts = torch.bincount(train_dataset.y, minlength=2).to(torch.float64)
+        if torch.any(class_counts == 0):
+            raise ValueError("Class-balanced batches require both training classes")
+        sample_weights = (1.0 / class_counts[train_dataset.y]).to(torch.double)
+        train_sampler = WeightedRandomSampler(
+            sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
+        print(f"Class-balanced training batches enabled; source counts: {class_counts.tolist()}")
     
     # Enable multiple workers and pinned memory for server optimization
     train_loader = DataLoader(
-        train_dataset, batch_size=batch_size, shuffle=True, 
+        train_dataset, batch_size=batch_size, shuffle=train_sampler is None, sampler=train_sampler,
         num_workers=num_workers, pin_memory=pin_memory
     )
     val_loader = DataLoader(

@@ -17,8 +17,8 @@ data:
   # Directory under AI_train_model/data/ for prepared train/validation/test windows
   prepared_output_dir: "chbmit_prepared_v1"
 
-  # Created by train-only hard-negative mining; select it with CHBMIT_PREPARED_OUTPUT_DIR.
-  hard_negative_output_dir: "chbmit_prepared_hardneg_v1"
+  # Created by train-only mixed hard-negative mining; select it with CHBMIT_PREPARED_OUTPUT_DIR.
+  hard_negative_output_dir: "chbmit_prepared_mixed_hardneg_v1"
   
   # Split ratios for train, validation, and test datasets
   split_ratios:
@@ -77,7 +77,8 @@ evaluation:
 hard_negative_mining:
   # Empty means the baseline in AI_train_model/outputs/.
   source_run_id: ""
-  normal_to_seizure_ratio: 5.0
+  # Keep the original sampled 1:1 normal set, then add this many unique hard negatives.
+  hard_negative_to_seizure_ratio: 2.0
   candidate_batch_size: 512
 
 training:
@@ -93,6 +94,7 @@ training:
   pin_memory: true       # Speed up CPU-to-GPU transfer (set True for GPU runs)
   use_amp: true          # RTX 8000 CUDA training uses Automatic Mixed Precision (FP16)
   num_threads: 4         # Limit PyTorch CPU threads to avoid server core thrashing
+  class_balanced_batches: true
 
 quantization:
   q_scale_bits: 15        # Default fallback fractional bits

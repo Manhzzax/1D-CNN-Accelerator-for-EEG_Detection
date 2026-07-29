@@ -50,12 +50,13 @@ def main():
         use_amp=use_amp,
         scaler_mean=scaler_mean,
         scaler_std=scaler_std,
-        normal_to_seizure_ratio=float(mining["normal_to_seizure_ratio"]),
+        hard_negative_to_seizure_ratio=float(mining["hard_negative_to_seizure_ratio"]),
         seed=config["data"]["seed"],
         source_model_path=source_model_path,
     )
     print(
-        f"Hard-negative dataset: {summary['positive_windows']} ictal + "
+        f"Mixed hard-negative dataset: {summary['positive_windows']} ictal + "
+        f"{summary['source_normal_windows']} source normals + "
         f"{summary['hard_negative_windows']} hard negatives | "
         f"candidates scored: {summary['normal_candidates_scored']}"
     )

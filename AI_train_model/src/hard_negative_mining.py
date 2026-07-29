@@ -80,7 +80,7 @@ def _score_windows(model, device, data, starts, window_samples, batch_size, use_
     return np.concatenate(scores)
 
 
-def _load_positive_windows(prepared_dir):
+def _load_source_train_windows(prepared_dir):
     train_path = Path(prepared_dir) / "chbmit_train.npz"
     with np.load(train_path, allow_pickle=False) as source:
         x = np.asarray(source["X"], dtype=np.float32)
@@ -88,10 +88,9 @@ def _load_positive_windows(prepared_dir):
         recording_ids = np.asarray(source["recording_id"])
         starts = np.asarray(source["start_sample"], dtype=np.int64)
         channels = np.asarray(source["channels"])
-    positive = y == 1
-    if not positive.any():
-        raise ValueError(f"No ictal windows found in {train_path}")
-    return x[positive], recording_ids[positive], starts[positive], channels
+    if not (y == 1).any() or not (y == 0).any():
+        raise ValueError(f"Expected both ictal and normal windows in {train_path}")
+    return x, y, recording_ids, starts, channels
 
 
 def _copy_fixed_splits(source_dir, target_dir):
@@ -113,21 +112,27 @@ def mine_hard_negative_windows(
     use_amp,
     scaler_mean,
     scaler_std,
-    normal_to_seizure_ratio,
+    hard_negative_to_seizure_ratio,
     seed,
     source_model_path,
 ):
     """Create a new train split with top-scoring non-seizure windows from train only."""
-    if normal_to_seizure_ratio <= 0:
-        raise ValueError("normal_to_seizure_ratio must be positive")
+    if hard_negative_to_seizure_ratio <= 0:
+        raise ValueError("hard_negative_to_seizure_ratio must be positive")
     source_dir = Path(source_prepared_dir)
     target_dir = Path(output_dir)
     if target_dir.exists() and any(target_dir.iterdir()):
         raise FileExistsError(f"Hard-negative output already exists and is non-empty: {target_dir}")
     target_dir.mkdir(parents=True, exist_ok=True)
 
-    positive_x, positive_records, positive_starts, channels = _load_positive_windows(source_dir)
-    target_count = int(round(len(positive_x) * normal_to_seizure_ratio))
+    source_x, source_y, source_records, source_starts, channels = _load_source_train_windows(source_dir)
+    positive_count = int(source_y.sum())
+    source_normal = source_y == 0
+    source_normal_keys = {
+        (str(recording_id), int(start))
+        for recording_id, start in zip(source_records[source_normal], source_starts[source_normal])
+    }
+    target_count = int(round(positive_count * hard_negative_to_seizure_ratio))
     rows = _load_train_rows(protocol_dir)
     sample_rate = preprocessing["sample_rate_hz"]
     window_samples = int(preprocessing["window_sec"] * sample_rate)
@@ -144,6 +149,8 @@ def mine_hard_negative_windows(
         )
         candidate_count += len(starts)
         for start, probability in zip(starts, probabilities):
+            if (row["recording_id"], int(start)) in source_normal_keys:
+                continue
             candidate = (float(probability), insertion_index, row_index, int(start))
             insertion_index += 1
             if len(heap) < target_count:
@@ -173,13 +180,10 @@ def mine_hard_negative_windows(
             normal_scores.append(score)
         print(f"  Extracted hard negatives: {len(normal_signals)}/{target_count}")
 
-    x = np.concatenate((positive_x, np.stack(normal_signals, axis=0)), axis=0)
-    y = np.concatenate((
-        np.ones(len(positive_x), dtype=np.int64),
-        np.zeros(len(normal_signals), dtype=np.int64),
-    ))
-    recording_ids = np.concatenate((positive_records, np.asarray(normal_records)))
-    starts = np.concatenate((positive_starts, np.asarray(normal_starts, dtype=np.int64)))
+    x = np.concatenate((source_x, np.stack(normal_signals, axis=0)), axis=0)
+    y = np.concatenate((source_y, np.zeros(len(normal_signals), dtype=np.int64)))
+    recording_ids = np.concatenate((source_records, np.asarray(normal_records)))
+    starts = np.concatenate((source_starts, np.asarray(normal_starts, dtype=np.int64)))
     order = np.random.default_rng(seed).permutation(len(y))
     np.savez_compressed(
         target_dir / "chbmit_train.npz",
@@ -196,10 +200,14 @@ def mine_hard_negative_windows(
         "source_prepared_dir": str(source_dir),
         "source_model_path": str(source_model_path),
         "source_model_sha256": hashlib.sha256(Path(source_model_path).read_bytes()).hexdigest(),
-        "normal_to_seizure_ratio": normal_to_seizure_ratio,
-        "positive_windows": int(len(positive_x)),
+        "hard_negative_to_seizure_ratio": hard_negative_to_seizure_ratio,
+        "positive_windows": positive_count,
+        "source_normal_windows": int(source_normal.sum()),
         "hard_negative_windows": int(len(normal_signals)),
+        "total_normal_windows": int((y == 0).sum()),
+        "total_normal_to_seizure_ratio": float((y == 0).sum() / positive_count),
         "normal_candidates_scored": int(candidate_count),
+        "source_normal_windows_excluded_from_mining": int(len(source_normal_keys)),
         "hard_negative_score_min": float(min(normal_scores)),
         "hard_negative_score_max": float(max(normal_scores)),
         "channels": channels.astype(str).tolist(),

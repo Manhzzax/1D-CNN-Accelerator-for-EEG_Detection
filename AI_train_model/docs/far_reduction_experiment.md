@@ -14,7 +14,7 @@ The command sweeps every configured threshold and temporal policy. The selected 
 
 ## Train-Only Hard Negatives
 
-Mine the highest seizure-score interictal windows only from train recordings. The source checkpoint defaults to the baseline in `outputs/` and the result is written to `data/chbmit_prepared_hardneg_v1`.
+Mine the highest seizure-score interictal windows only from train recordings. The builder retains the original sampled normal windows and adds unique hard negatives; the default dataset therefore has a 1:3 ictal:normal ratio. The source checkpoint defaults to the baseline in `outputs/` and the result is written to `data/chbmit_prepared_mixed_hardneg_v1`.
 
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && python main.py --mode mine_hard_negatives
@@ -27,13 +27,13 @@ The mining summary stores the source checkpoint SHA-256, candidate count, select
 Train with the new prepared dataset and write all outputs to a separate run directory:
 
 ```bash
-cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_hardneg_v1 CHBMIT_RUN_ID=run_02_hardneg_5to1 python main.py --mode train
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_mixed_hardneg_v1 CHBMIT_RUN_ID=run_03_mixed_hardneg python main.py --mode train
 ```
 
 Evaluate that exact checkpoint and scaler continuously, while preserving the same run directory for the new artifacts:
 
 ```bash
-cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_RUN_ID=run_02_hardneg_5to1 CHBMIT_RUN_ID=run_02_hardneg_5to1 python main.py --mode event_eval
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_RUN_ID=run_03_mixed_hardneg CHBMIT_RUN_ID=run_03_mixed_hardneg python main.py --mode event_eval
 ```
 
 Do not commit EDF files, NPZ datasets, checkpoints, or continuous-score arrays. Commit only concise summaries, CSV sweeps, reports, and plots under `server_results/`.
