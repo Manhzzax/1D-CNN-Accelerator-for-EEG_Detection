@@ -15,7 +15,14 @@ A validation pass requires event sensitivity >= 90%, FAR/h <= 0.50, median delay
 
 ## First Controlled Sweep
 
-The first sweep is intentionally limited to six trials around `run_03_mixed_hardneg`, the previous low-FAR reference. The immutable prepared data is `chbmit_prepared_mixed_hardneg_v1`; all trials use the baseline 1D-CNN, train-only z-score normalization, the fixed seed, AMP, and the existing early stopping rule.
+The sweep supports two isolated model families. The same six optimizer/sampling trials are run within a family; architecture and prepared data remain fixed inside that sweep.
+
+| Family | Starting reference | Architecture | Prepared data | Purpose |
+|---|---|---|---|---|
+| `baseline_mixed` | `run_03_mixed_hardneg` | Baseline 1D-CNN | `chbmit_prepared_mixed_hardneg_v1` | Low-FAR calibration |
+| `separable_raw` | `run_06_separable_raw` | Separable 1D-CNN | `chbmit_prepared_v1` | Best current validation accuracy and event sensitivity |
+
+All trials use train-only z-score normalization, the fixed seed, AMP, and the existing early stopping rule.
 
 | Trial | Learning rate | Weight decay | Class-balanced batches |
 |---|---:|---:|---|
@@ -33,9 +40,9 @@ This separates optimizer regularization from sampling calibration. The non-balan
 Run one command from `AI_train_model`:
 
 ```bash
-CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_mixed_hardneg_v1 CHBMIT_SWEEP_ID=run_09_hparam python main.py --mode hyperparameter_sweep
+CHBMIT_SWEEP_FAMILY=separable_raw CHBMIT_SWEEP_ID=run_10_separable_hparam python main.py --mode hyperparameter_sweep
 ```
 
-The script creates one isolated output directory per trial and writes `outputs/run_09_hparam/validation_leaderboard.csv`. It sets `CHBMIT_SKIP_TEST_EVALUATION=1` and `CHBMIT_EVENT_EVAL_SPLITS=val`; therefore it does not produce or inspect test probabilities or test event metrics.
+The script creates one isolated output directory per trial and writes `outputs/<sweep_id>/validation_leaderboard.csv`. It sets `CHBMIT_SKIP_TEST_EVALUATION=1` and `CHBMIT_EVENT_EVAL_SPLITS=val`; therefore it does not produce or inspect test probabilities or test event metrics.
 
 After choosing the validation winner, record its configuration and run a single new final training/evaluation run with a new ID. Only that final run may score the test split. Do not choose another model from its test result.

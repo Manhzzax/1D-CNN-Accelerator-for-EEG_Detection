@@ -13,7 +13,7 @@ project_dir = os.path.dirname(script_dir)
 outputs_root = os.path.join(project_dir, "outputs")
 
 
-TRIALS = [
+BASELINE_MIXED_TRIALS = [
     {"name": "a_lr1e3_wd1e4_balanced", "learning_rate": 1e-3, "weight_decay": 1e-4, "balanced": True},
     {"name": "b_lr3e4_wd1e4_balanced", "learning_rate": 3e-4, "weight_decay": 1e-4, "balanced": True},
     {"name": "c_lr3e4_wd5e4_balanced", "learning_rate": 3e-4, "weight_decay": 5e-4, "balanced": True},
@@ -21,6 +21,28 @@ TRIALS = [
     {"name": "e_lr3e4_wd1e4_nobalance", "learning_rate": 3e-4, "weight_decay": 1e-4, "balanced": False},
     {"name": "f_lr1e3_wd1e4_nobalance", "learning_rate": 1e-3, "weight_decay": 1e-4, "balanced": False},
 ]
+
+SEPARABLE_RAW_TRIALS = [
+    {"name": "a_lr1e3_wd1e4_balanced", "learning_rate": 1e-3, "weight_decay": 1e-4, "balanced": True},
+    {"name": "b_lr3e4_wd1e4_balanced", "learning_rate": 3e-4, "weight_decay": 1e-4, "balanced": True},
+    {"name": "c_lr3e4_wd5e4_balanced", "learning_rate": 3e-4, "weight_decay": 5e-4, "balanced": True},
+    {"name": "d_lr1e3_wd5e4_balanced", "learning_rate": 1e-3, "weight_decay": 5e-4, "balanced": True},
+    {"name": "e_lr3e4_wd1e4_nobalance", "learning_rate": 3e-4, "weight_decay": 1e-4, "balanced": False},
+    {"name": "f_lr1e3_wd1e4_nobalance", "learning_rate": 1e-3, "weight_decay": 1e-4, "balanced": False},
+]
+
+SWEEP_FAMILIES = {
+    "baseline_mixed": {
+        "architecture": "baseline_1dcnn",
+        "default_prepared_output_dir": "chbmit_prepared_mixed_hardneg_v1",
+        "trials": BASELINE_MIXED_TRIALS,
+    },
+    "separable_raw": {
+        "architecture": "separable_1dcnn",
+        "default_prepared_output_dir": "chbmit_prepared_v1",
+        "trials": SEPARABLE_RAW_TRIALS,
+    },
+}
 
 
 def _sweep_id():
@@ -76,10 +98,14 @@ def _rank_key(row):
 
 def main():
     sweep_id = _sweep_id()
-    prepared_output_dir = os.environ.get("CHBMIT_PREPARED_OUTPUT_DIR", "chbmit_prepared_mixed_hardneg_v1")
+    family_name = os.environ.get("CHBMIT_SWEEP_FAMILY", "baseline_mixed")
+    if family_name not in SWEEP_FAMILIES:
+        raise ValueError(f"CHBMIT_SWEEP_FAMILY must be one of {sorted(SWEEP_FAMILIES)}")
+    family = SWEEP_FAMILIES[family_name]
+    prepared_output_dir = os.environ.get("CHBMIT_PREPARED_OUTPUT_DIR", family["default_prepared_output_dir"])
     resume = os.environ.get("CHBMIT_SWEEP_RESUME", "0") == "1"
     results = []
-    for trial in TRIALS:
+    for trial in family["trials"]:
         run_id = f"{sweep_id}_{trial['name']}"
         result_path = os.path.join(outputs_root, run_id, "event_metrics.json")
         if resume and os.path.isfile(result_path):
@@ -89,6 +115,7 @@ def main():
             environment.update({
                 "CHBMIT_RUN_ID": run_id,
                 "CHBMIT_MODEL_RUN_ID": run_id,
+                "CHBMIT_MODEL_ARCHITECTURE": family["architecture"],
                 "CHBMIT_PREPARED_OUTPUT_DIR": prepared_output_dir,
                 "CHBMIT_TRAIN_LEARNING_RATE": str(trial["learning_rate"]),
                 "CHBMIT_TRAIN_WEIGHT_DECAY": str(trial["weight_decay"]),
@@ -103,6 +130,8 @@ def main():
             _run([sys.executable, "main.py", "--mode", "event_eval"], environment)
         result = _load_result(run_id)
         result.update(trial)
+        result["architecture"] = family["architecture"]
+        result["prepared_output_dir"] = prepared_output_dir
         result["benchmark_pass_validation"] = bool(
             result["event_sensitivity"] >= 0.90
             and result["false_alarms_per_hour"] <= 0.50
@@ -134,6 +163,7 @@ def main():
         f"validation_accuracy={winner['validation_window_accuracy']:.4f}"
     )
     print(f"Leaderboard: {os.path.join(sweep_dir, 'validation_leaderboard.csv')}")
+    print(f"Sweep family: {family_name} | architecture: {family['architecture']}")
     print("No test recording was scored by this sweep.")
 
 
