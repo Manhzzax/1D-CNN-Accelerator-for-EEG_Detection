@@ -120,7 +120,7 @@ def get_train_val_test_datasets():
 
     print("Loaded locked prepared splits:")
     for split_name, split in split_summary.items():
-        if split_name == "channels":
+        if split_name in {"channels", "prepared_output_dir"}:
             continue
         print(
             f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "
