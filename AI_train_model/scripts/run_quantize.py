@@ -30,7 +30,7 @@ def main():
         sys.exit(1)
         
     model = EEG1DCNN().to(device)
-    model.load_state_dict(torch.load(model_path, map_location=device))
+    model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     print(f"Loaded trained model weights from {model_path}")
     
     # 2. Get test set loader

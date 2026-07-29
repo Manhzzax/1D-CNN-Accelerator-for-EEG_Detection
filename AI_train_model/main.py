@@ -6,15 +6,15 @@ import os
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(script_dir)
 
-from scripts import run_audit, run_plan, run_preprocess, run_eda, run_train, run_quantize
+from scripts import run_audit, run_event_eval, run_plan, run_preprocess, run_eda, run_train, run_quantize
 
 def main():
     parser = argparse.ArgumentParser(description="EEG Seizure Detection 1D-CNN Accelerator Pipeline")
     parser.add_argument(
         "--mode", 
-        choices=["audit", "plan", "preprocess", "eda", "train", "quantize", "all"],
+        choices=["audit", "plan", "preprocess", "eda", "train", "event_eval", "quantize", "all"],
         default="all",
-        help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'quantize' (Quantize & export), or 'all' (Run all)."
+        help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'event_eval' (continuous metrics), 'quantize' (Quantize & export), or 'all' (Run all)."
     )
     
     args = parser.parse_args()
@@ -29,6 +29,8 @@ def main():
         run_eda.main()
     elif args.mode == "train":
         run_train.main()
+    elif args.mode == "event_eval":
+        run_event_eval.main()
     elif args.mode == "quantize":
         run_quantize.main()
     elif args.mode == "all":

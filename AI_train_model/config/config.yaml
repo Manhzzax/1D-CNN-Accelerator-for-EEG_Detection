@@ -42,6 +42,14 @@ preprocessing:
     val: 1.0
     test: 10.0
 
+evaluation:
+  continuous_batch_size: 512
+  threshold_min: 0.05
+  threshold_max: 0.99
+  threshold_step: 0.01
+  refractory_sec: 30
+  target_false_alarms_per_hour: 0.5
+
 training:
   epochs: 30
   batch_size: 128

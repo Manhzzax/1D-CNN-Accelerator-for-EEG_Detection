@@ -84,7 +84,7 @@ def main():
     
     # Check if GPU training and AMP is active
     use_amp = config['training'].get('use_amp', False) and device.type == "cuda"
-    scaler = torch.cuda.amp.GradScaler() if use_amp else None
+    scaler = torch.amp.GradScaler("cuda") if use_amp else None
     
     if use_amp:
         print("Automatic Mixed Precision (AMP) training enabled (FP16).")
@@ -112,7 +112,7 @@ def main():
             
             if use_amp:
                 # Forward with mixed precision
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast(device_type="cuda"):
                     outputs = model(inputs)
                     loss = criterion(outputs, targets)
                 # Backward and step with scaler
@@ -145,7 +145,7 @@ def main():
                 inputs, targets = inputs.to(device), targets.to(device)
                 
                 if use_amp:
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast(device_type="cuda"):
                         outputs = model(inputs)
                         loss = criterion(outputs, targets)
                 else:
@@ -184,7 +184,9 @@ def main():
     # 8. Evaluate on Test Set
     print("\nEvaluating best model on Test Set...")
     best_model = EEG1DCNN().to(device)
-    best_model.load_state_dict(torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device))
+    best_model.load_state_dict(
+        torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device, weights_only=True)
+    )
     best_model.eval()
     
     all_probs = []
@@ -194,7 +196,7 @@ def main():
         for inputs, targets in test_loader:
             inputs = inputs.to(device)
             if use_amp:
-                with torch.cuda.amp.autocast():
+                with torch.amp.autocast(device_type="cuda"):
                     outputs = best_model(inputs)
             else:
                 outputs = best_model(inputs)
