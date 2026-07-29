@@ -100,7 +100,7 @@ def _validate_temporal_policy(positive_windows, decision_window_windows):
         raise ValueError("positive_windows cannot exceed decision_window_windows")
 
 
-def _generate_alarms(
+def generate_alarms(
     starts,
     probabilities,
     threshold,
@@ -154,7 +154,7 @@ def event_metrics(
         offset_end = scores["record_offsets"][record_index + 1]
         record_starts = start_samples[offset_start:offset_end]
         record_probabilities = probabilities[offset_start:offset_end]
-        alarms = _generate_alarms(
+        alarms = generate_alarms(
             record_starts,
             record_probabilities,
             threshold,

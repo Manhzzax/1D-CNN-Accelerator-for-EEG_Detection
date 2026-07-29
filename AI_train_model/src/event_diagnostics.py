@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from .event_evaluation import event_metrics, load_scores
+from .event_evaluation import event_metrics, generate_alarms, load_scores
 
 
 def _record_subset(scores, record_index):
@@ -38,6 +38,86 @@ def _aggregate(rows):
     }
 
 
+def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, preprocessing, evaluation):
+    sample_rate = preprocessing["sample_rate_hz"]
+    window_samples = int(preprocessing["window_sec"] * sample_rate)
+    refractory_samples = int(evaluation["refractory_sec"] * sample_rate)
+    alarm_rows = []
+    event_rows = []
+
+    for record_index, record in enumerate(scores["records"]):
+        offset_start = int(scores["record_offsets"][record_index])
+        offset_end = int(scores["record_offsets"][record_index + 1])
+        starts = scores["start_samples"][offset_start:offset_end]
+        probabilities = scores["probabilities"][offset_start:offset_end]
+        alarms = generate_alarms(
+            starts,
+            probabilities,
+            selected["threshold"],
+            refractory_samples,
+            selected["positive_windows"],
+            selected["decision_window_windows"],
+        )
+        intervals = record["seizure_intervals"]
+        case_id = record["recording_id"].split("/", 1)[0]
+
+        for alarm in alarms:
+            overlapping_events = [
+                event_index
+                for event_index, (start, end) in enumerate(intervals)
+                if alarm < end and alarm + window_samples > start
+            ]
+            alarm_rows.append({
+                "case_id": case_id,
+                "recording_id": record["recording_id"],
+                "alarm_start_sample": alarm,
+                "alarm_start_sec": alarm / sample_rate,
+                "is_false_alarm": not bool(overlapping_events),
+                "overlapping_event_index": overlapping_events[0] if overlapping_events else None,
+            })
+
+        for event_index, (seizure_start, seizure_end) in enumerate(intervals):
+            matching_alarms = [
+                alarm for alarm in alarms
+                if alarm < seizure_end and alarm + window_samples > seizure_start
+            ]
+            first_alarm = min(matching_alarms) if matching_alarms else None
+            event_rows.append({
+                "case_id": case_id,
+                "recording_id": record["recording_id"],
+                "event_index": event_index,
+                "seizure_start_sec": seizure_start / sample_rate,
+                "seizure_end_sec": seizure_end / sample_rate,
+                "seizure_duration_sec": (seizure_end - seizure_start) / sample_rate,
+                "detected": first_alarm is not None,
+                "first_alarm_sec": first_alarm / sample_rate if first_alarm is not None else None,
+                "detection_delay_sec": (
+                    max(0.0, (first_alarm - seizure_start) / sample_rate)
+                    if first_alarm is not None else None
+                ),
+            })
+
+    alarm_path = output_dir / f"event_diagnostics_{split_name}_alarms.csv"
+    alarm_fields = [
+        "case_id", "recording_id", "alarm_start_sample", "alarm_start_sec",
+        "is_false_alarm", "overlapping_event_index",
+    ]
+    with alarm_path.open("w", newline="", encoding="utf-8") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=alarm_fields)
+        writer.writeheader()
+        writer.writerows(alarm_rows)
+    event_path = output_dir / f"event_diagnostics_{split_name}_events.csv"
+    event_fields = [
+        "case_id", "recording_id", "event_index", "seizure_start_sec", "seizure_end_sec",
+        "seizure_duration_sec", "detected", "first_alarm_sec", "detection_delay_sec",
+    ]
+    with event_path.open("w", newline="", encoding="utf-8") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=event_fields)
+        writer.writeheader()
+        writer.writerows(event_rows)
+    return alarm_path, event_path, alarm_rows, event_rows
+
+
 def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
     """Write per-recording and per-case metrics from an already completed event run."""
     output_dir = Path(run_output_dir)
@@ -65,6 +145,10 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
         result["recording_id"] = record["recording_id"]
         result["case_id"] = record["recording_id"].split("/", 1)[0]
         per_recording.append(result)
+
+    alarm_path, event_path, alarm_rows, event_rows = _write_alarm_and_event_tables(
+        output_dir, split_name, scores, selected, preprocessing, evaluation
+    )
 
     per_recording.sort(key=lambda row: (-row["false_alarms_per_hour"], row["recording_id"]))
     recording_path = output_dir / f"event_diagnostics_{split_name}_per_recording.csv"
@@ -100,9 +184,13 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
         "selected_policy": selected,
         "aggregate": _aggregate(per_recording),
         "recordings_with_false_alarms": sum(row["false_alarms"] > 0 for row in per_recording),
+        "false_alarm_count": sum(row["is_false_alarm"] for row in alarm_rows),
+        "missed_event_count": sum(not row["detected"] for row in event_rows),
         "top_false_alarm_recordings": per_recording[:10],
         "per_recording_csv": str(recording_path),
         "per_case_csv": str(case_path),
+        "alarms_csv": str(alarm_path),
+        "events_csv": str(event_path),
     }
     summary_path = output_dir / f"event_diagnostics_{split_name}_summary.json"
     with summary_path.open("w", encoding="utf-8") as output_file:

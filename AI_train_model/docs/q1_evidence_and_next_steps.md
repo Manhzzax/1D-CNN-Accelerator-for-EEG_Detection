@@ -13,6 +13,10 @@ All results below use the verified CHB-MIT v1.0.0 EDF corpus, the fixed 17-chann
 
 The policy and threshold for each row were selected on validation only. The continuous test set was then evaluated once for that predeclared selection.
 
+## Validation Error Signature Of `run_03_mixed_hardneg`
+
+Validation records 18 of 29 seizure events and has FAR `0.1537/h`. The 26 false alarms are concentrated: `chb07/chb07_14.edf`, `chb20/chb20_26.edf`, and `chb09/chb09_09.edf` account for 16 alarms. In contrast, the 11 missed seizure events are distributed across `chb06`, `chb13`, `chb14`, `chb16`, `chb18`, `chb20`, `chb21`, and `chb23` recordings. This distinguishes a concentrated false-alarm failure from a distributed seizure-sensitivity failure and motivates timestamp-level review before architecture changes.
+
 ## Paper-Safe Conclusion
 
 Under the locked within-case CHB-MIT protocol, the compact 1D-CNN has a severe false-alarm problem at high event sensitivity. Temporal confirmation alone reduces false alarms but cannot meet the `0.5/h` target for the baseline model. Training with mixed hard negatives plus stronger temporal confirmation reaches the false-alarm target, but misses 26 of 62 test seizure events. Therefore, the current evidence demonstrates a sensitivity-FAR trade-off rather than a clinically ready detector.
