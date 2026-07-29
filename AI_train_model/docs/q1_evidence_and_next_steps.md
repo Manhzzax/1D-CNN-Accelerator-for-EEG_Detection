@@ -33,6 +33,10 @@ Only 474 separated train-only score contexts met the strict persistent-negative 
 
 The reconciliation is based entirely on the saved validation/test score arrays and does not re-run inference or use test results for model selection. Future event-evaluation summaries must be selected from persisted score arrays before publication.
 
+## Per-Recording Z-Score Screening
+
+`run_07_separable_perrecord_z` retained the raw separable architecture but replaced train-fitted channel-wise z-score with unlabeled per-recording z-score. It early-stopped at epoch 14, with its best validation loss at epoch 8 (`0.4590`), substantially worse than the raw separable run's best validation loss (`0.3061`). It was therefore rejected on validation before continuous event evaluation. Its automatically emitted sampled-test window report is exploratory only and is not used for selection. This result does not reject causal recording-scale adaptation as a deployment idea; it rejects this offline prepared-window statistic as the current training transform.
+
 ## Paper-Safe Conclusion
 
 Under the locked within-case CHB-MIT protocol, the compact 1D-CNN has a severe false-alarm problem at high event sensitivity. Temporal confirmation alone reduces false alarms but cannot meet the `0.5/h` target for the baseline model. Training with mixed hard negatives plus stronger temporal confirmation reaches the false-alarm target, but misses 26 of 62 test seizure events. Therefore, the current evidence demonstrates a sensitivity-FAR trade-off rather than a clinically ready detector.
