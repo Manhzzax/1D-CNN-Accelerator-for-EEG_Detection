@@ -45,6 +45,16 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
     alarm_rows = []
     event_rows = []
 
+    def max_hits_in_window(hits, window_size):
+        running_total = 0
+        maximum = 0
+        for index, hit in enumerate(hits):
+            running_total += int(hit)
+            if index >= window_size:
+                running_total -= int(hits[index - window_size])
+            maximum = max(maximum, running_total)
+        return maximum
+
     for record_index, record in enumerate(scores["records"]):
         offset_start = int(scores["record_offsets"][record_index])
         offset_end = int(scores["record_offsets"][record_index + 1])
@@ -81,6 +91,7 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
         for event_index, (seizure_start, seizure_end) in enumerate(intervals):
             overlapping_windows = (starts < seizure_end) & (starts + window_samples > seizure_start)
             event_probabilities = probabilities[overlapping_windows]
+            event_threshold_hits = event_probabilities >= selected["threshold"]
             matching_alarms = [
                 alarm for alarm in alarms
                 if alarm < seizure_end and alarm + window_samples > seizure_start
@@ -95,7 +106,11 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
                 "seizure_duration_sec": (seizure_end - seizure_start) / sample_rate,
                 "overlapping_window_count": int(len(event_probabilities)),
                 "max_ictal_probability": float(event_probabilities.max()),
-                "ictal_windows_at_threshold": int((event_probabilities >= selected["threshold"]).sum()),
+                "ictal_windows_at_threshold": int(event_threshold_hits.sum()),
+                "max_ictal_hits_in_decision_window": int(max_hits_in_window(
+                    event_threshold_hits,
+                    selected["decision_window_windows"],
+                )),
                 "detected": first_alarm is not None,
                 "first_alarm_sec": first_alarm / sample_rate if first_alarm is not None else None,
                 "detection_delay_sec": (
@@ -117,7 +132,8 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
     event_fields = [
         "case_id", "recording_id", "event_index", "seizure_start_sec", "seizure_end_sec",
         "seizure_duration_sec", "overlapping_window_count", "max_ictal_probability",
-        "ictal_windows_at_threshold", "detected", "first_alarm_sec", "detection_delay_sec",
+        "ictal_windows_at_threshold", "max_ictal_hits_in_decision_window", "detected",
+        "first_alarm_sec", "detection_delay_sec",
     ]
     with event_path.open("w", newline="", encoding="utf-8") as output_file:
         writer = csv.DictWriter(output_file, fieldnames=event_fields)
