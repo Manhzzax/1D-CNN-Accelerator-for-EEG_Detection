@@ -1,0 +1,28 @@
+=== Model Evaluation Report ===
+Test Accuracy: 84.33%
+
+Classification Report:
+              precision    recall  f1-score   support
+
+ Non-Seizure     0.9823    0.8428    0.9072     45820
+     Seizure     0.3506    0.8485    0.4962      4582
+
+    accuracy                         0.8433     50402
+   macro avg     0.6665    0.8457    0.7017     50402
+weighted avg     0.9249    0.8433    0.8699     50402
+
+Confusion Matrix:
+[[38618  7202]
+ [  694  3888]]
+
+Window-Level Metrics:
+{
+  "accuracy": 0.8433395500178564,
+  "auroc": 0.917087983628649,
+  "average_precision": 0.5949634206468991,
+  "balanced_accuracy": 0.8456787429070275,
+  "f1": 0.49617151607963245,
+  "precision": 0.35058611361587017,
+  "sensitivity": 0.8485377564382366,
+  "threshold": 0.5
+}

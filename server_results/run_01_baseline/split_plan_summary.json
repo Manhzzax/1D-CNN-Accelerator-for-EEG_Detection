@@ -1,0 +1,459 @@
+{
+  "aggregate": {
+    "test": {
+      "recordings": 192,
+      "seizures": 62
+    },
+    "train": {
+      "recordings": 399,
+      "seizures": 107
+    },
+    "val": {
+      "recordings": 95,
+      "seizures": 29
+    }
+  },
+  "case_count": 24,
+  "cases": [
+    {
+      "case_id": "chb01",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 17,
+        "seizures": 1
+      },
+      "total_recordings": 42,
+      "total_seizures": 7,
+      "train": {
+        "recordings": 20,
+        "seizures": 5
+      },
+      "val": {
+        "recordings": 5,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb02",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 17,
+        "seizures": 1
+      },
+      "total_recordings": 36,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 16,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb03",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 4,
+        "seizures": 2
+      },
+      "total_recordings": 38,
+      "total_seizures": 7,
+      "train": {
+        "recordings": 28,
+        "seizures": 4
+      },
+      "val": {
+        "recordings": 6,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb04",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 20,
+        "seizures": 2
+      },
+      "total_recordings": 42,
+      "total_seizures": 4,
+      "train": {
+        "recordings": 7,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 15,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb05",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 18,
+        "seizures": 1
+      },
+      "total_recordings": 39,
+      "total_seizures": 5,
+      "train": {
+        "recordings": 16,
+        "seizures": 3
+      },
+      "val": {
+        "recordings": 5,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb06",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 4,
+        "seizures": 2
+      },
+      "total_recordings": 18,
+      "total_seizures": 10,
+      "train": {
+        "recordings": 11,
+        "seizures": 7
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb07",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 4,
+        "seizures": 1
+      },
+      "total_recordings": 19,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 12,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb08",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 8,
+        "seizures": 1
+      },
+      "total_recordings": 20,
+      "total_seizures": 5,
+      "train": {
+        "recordings": 7,
+        "seizures": 3
+      },
+      "val": {
+        "recordings": 5,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb09",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 7,
+        "seizures": 1
+      },
+      "total_recordings": 19,
+      "total_seizures": 4,
+      "train": {
+        "recordings": 7,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 5,
+        "seizures": 2
+      }
+    },
+    {
+      "case_id": "chb10",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 5,
+        "seizures": 4
+      },
+      "total_recordings": 25,
+      "total_seizures": 7,
+      "train": {
+        "recordings": 17,
+        "seizures": 2
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb11",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 1,
+        "seizures": 1
+      },
+      "total_recordings": 35,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 33,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 1,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb12",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 5,
+        "seizures": 10
+      },
+      "total_recordings": 24,
+      "total_seizures": 40,
+      "train": {
+        "recordings": 17,
+        "seizures": 29
+      },
+      "val": {
+        "recordings": 2,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb13",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 7,
+        "seizures": 8
+      },
+      "total_recordings": 33,
+      "total_seizures": 12,
+      "train": {
+        "recordings": 23,
+        "seizures": 2
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 2
+      }
+    },
+    {
+      "case_id": "chb14",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 8,
+        "seizures": 1
+      },
+      "total_recordings": 26,
+      "total_seizures": 8,
+      "train": {
+        "recordings": 12,
+        "seizures": 6
+      },
+      "val": {
+        "recordings": 6,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb15",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 7,
+        "seizures": 7
+      },
+      "total_recordings": 40,
+      "total_seizures": 20,
+      "train": {
+        "recordings": 30,
+        "seizures": 11
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 2
+      }
+    },
+    {
+      "case_id": "chb16",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 3,
+        "seizures": 6
+      },
+      "total_recordings": 19,
+      "total_seizures": 10,
+      "train": {
+        "recordings": 14,
+        "seizures": 3
+      },
+      "val": {
+        "recordings": 2,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb17",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 12,
+        "seizures": 1
+      },
+      "total_recordings": 21,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 1,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 8,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb18",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 5,
+        "seizures": 3
+      },
+      "total_recordings": 36,
+      "total_seizures": 6,
+      "train": {
+        "recordings": 29,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 2,
+        "seizures": 2
+      }
+    },
+    {
+      "case_id": "chb19",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 1,
+        "seizures": 1
+      },
+      "total_recordings": 30,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 28,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 1,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb20",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 9,
+        "seizures": 1
+      },
+      "total_recordings": 29,
+      "total_seizures": 8,
+      "train": {
+        "recordings": 13,
+        "seizures": 6
+      },
+      "val": {
+        "recordings": 7,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb21",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 12,
+        "seizures": 1
+      },
+      "total_recordings": 33,
+      "total_seizures": 4,
+      "train": {
+        "recordings": 20,
+        "seizures": 2
+      },
+      "val": {
+        "recordings": 1,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb22",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 7,
+        "seizures": 1
+      },
+      "total_recordings": 31,
+      "total_seizures": 3,
+      "train": {
+        "recordings": 21,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 3,
+        "seizures": 1
+      }
+    },
+    {
+      "case_id": "chb23",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 6,
+        "seizures": 4
+      },
+      "total_recordings": 9,
+      "total_seizures": 7,
+      "train": {
+        "recordings": 2,
+        "seizures": 1
+      },
+      "val": {
+        "recordings": 1,
+        "seizures": 2
+      }
+    },
+    {
+      "case_id": "chb24",
+      "require_seizure_in_each_split": true,
+      "test": {
+        "recordings": 5,
+        "seizures": 1
+      },
+      "total_recordings": 22,
+      "total_seizures": 16,
+      "train": {
+        "recordings": 15,
+        "seizures": 14
+      },
+      "val": {
+        "recordings": 2,
+        "seizures": 1
+      }
+    }
+  ],
+  "cases_without_full_event_coverage": [],
+  "recording_count": 686,
+  "split_ratios": {
+    "test": 0.2,
+    "train": 0.7,
+    "val": 0.1
+  },
+  "strategy": "casewise_chronological_recording_groups"
+}
