@@ -11,6 +11,7 @@ All results below use the verified CHB-MIT v1.0.0 EDF corpus, the fixed 17-chann
 | `run_01` | balanced sampled windows | `3_of_5`, threshold 0.430 | 60/62 = 96.77% | 41.26 | 11.0 s |
 | `run_03_mixed_hardneg` | original normals plus 2:1 unique hard negatives; class-balanced batches | `5_of_10`, threshold 0.910 | 36/62 = 58.06% | 0.341 | 13.5 s |
 | `run_04_score_tcn` | causal 10-score TCN over frozen `run_03` CNN outputs | `5_of_10`, threshold 0.650 | 40/62 = 64.52% | 0.422 | 14.0 s |
+| `run_05_temporal_hardneg` | 474 separated persistent train-only hard negatives, sampled at 2x provenance weight | `10_of_20`, threshold 0.980 | 18/62 = 29.03% | 1.232 | 29.0 s |
 
 The policy and threshold for each row were selected on validation only. The continuous test set was then evaluated once for that predeclared selection.
 
@@ -25,6 +26,12 @@ Of the 11 missed validation seizures, eight contain at least one ictal window ab
 `run_04_score_tcn` trained a causal TCN on ten consecutive frozen-CNN score logits, with all model selection performed on validation. It reached 19/29 validation events at `0.4375` FAR/h and 40/62 test events at `0.4219` FAR/h. Thus, its test operating point is stable relative to validation, but the validation Pareto trade-off is unfavorable for a low-FAR selection: compared with `run_03_mixed_hardneg`, it gains one validation event while increasing false alarms from 26 to 74.
 
 The validation comparison identifies two events recovered by the TCN (`chb18_31` and `chb20_16`) but one newly missed event (`chb03_34`). Ten seizures remain missed, including 47 s, 64 s, and 81 s events. This rejects the hypothesis that short duration alone explains the residual errors. Several events that had isolated high CNN scores in `run_03` are instead assigned sub-threshold TCN scores, while the TCN also increases persistent non-seizure alarms in the same difficult recordings (`chb09_09`, `chb07_14`, `chb20_26`). A score-only TCN with this sampling and architecture is therefore retained as a negative ablation, not selected as the final low-FAR model.
+
+## Persistent Temporal Hard-Negative Ablation
+
+Only 474 separated train-only score contexts met the strict persistent-negative criterion (at least 3 scores above 0.91 in a fully interictal 10-window context), despite 5,451 requested examples. `run_05_temporal_hardneg` retained all such contexts, used a 2x provenance sampling weight without duplicating samples, and early-stopped at epoch 12 (best epoch 6). Its validation-selected policy detected 14/29 events at `0.4138` FAR/h. The reconciled test result is 18/62 events at `1.2318` FAR/h with 29.0 s median delay. This is worse than `run_03` on both test sensitivity and FAR, so persistent score-context mining in this form is a negative ablation.
+
+The reconciliation is based entirely on the saved validation/test score arrays and does not re-run inference or use test results for model selection. Future event-evaluation summaries must be selected from persisted score arrays before publication.
 
 ## Paper-Safe Conclusion
 
