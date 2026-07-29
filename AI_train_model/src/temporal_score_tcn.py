@@ -31,6 +31,7 @@ class TemporalScoreTCN(nn.Module):
 
 
 def _score_to_logit(probabilities):
+    probabilities = np.asarray(probabilities, dtype=np.float32)
     clipped = np.clip(probabilities, 1e-4, 1.0 - 1e-4)
     return np.log(clipped / (1.0 - clipped)).astype(np.float32)
 
@@ -204,6 +205,8 @@ def train_tcn(model, device, train_x, train_y, val_x, val_y, options, output_pat
                     loss = validation_criterion(model(inputs), targets)
                 validation_loss += loss.item() * len(inputs)
         validation_loss /= len(val_dataset)
+        if not np.isfinite(validation_loss):
+            raise FloatingPointError("Temporal TCN validation loss is not finite")
         print(f"TCN Epoch [{epoch + 1:2d}/{options['epochs']}] | Val Loss: {validation_loss:.4f}")
         if validation_loss < best_loss - early["min_delta"]:
             best_loss = validation_loss
@@ -216,6 +219,8 @@ def train_tcn(model, device, train_x, train_y, val_x, val_y, options, output_pat
             stopped_early = True
             print(f"TCN early stopping at epoch {epoch + 1}")
             break
+    if best_epoch == 0:
+        raise RuntimeError("Temporal TCN did not produce a valid checkpoint")
     return TemporalTrainingResult(best_epoch, best_loss, epoch + 1, stopped_early)
 
 
