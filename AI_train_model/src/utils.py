@@ -1,5 +1,6 @@
 import os
 import random
+import re
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -8,7 +9,19 @@ import seaborn as sns
 # Helper path logic
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
-outputs_dir = os.path.join(project_dir, "outputs")
+
+
+def get_outputs_dir(run_id=None):
+    """Resolve an isolated experiment directory without changing baseline paths."""
+    resolved_run_id = os.environ.get("CHBMIT_RUN_ID", "") if run_id is None else run_id
+    if not resolved_run_id:
+        return os.path.join(project_dir, "outputs")
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_-]*", resolved_run_id):
+        raise ValueError("CHBMIT_RUN_ID must contain only letters, digits, underscores, or hyphens")
+    return os.path.join(project_dir, "outputs", resolved_run_id)
+
+
+outputs_dir = get_outputs_dir()
 
 def set_seed(seed=42):
     """

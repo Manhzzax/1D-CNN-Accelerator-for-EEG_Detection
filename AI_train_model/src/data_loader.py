@@ -8,6 +8,8 @@ import torch
 import yaml
 from torch.utils.data import Dataset
 
+from .utils import outputs_dir
+
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
@@ -70,7 +72,10 @@ def get_train_val_test_datasets():
     config = load_config()
     data_config = config["data"]
     model_config = config["model"]
-    prepared_dir = os.path.join(project_dir, "data", data_config["prepared_output_dir"])
+    prepared_dir_name = os.environ.get(
+        "CHBMIT_PREPARED_OUTPUT_DIR", data_config["prepared_output_dir"]
+    )
+    prepared_dir = os.path.join(project_dir, "data", prepared_dir_name)
     expected_channels = model_config["input_channels"]
     expected_length = model_config["input_length"]
 
@@ -99,11 +104,11 @@ def get_train_val_test_datasets():
     val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
     test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
 
-    outputs_dir = os.path.join(project_dir, "outputs")
     os.makedirs(outputs_dir, exist_ok=True)
     np.save(os.path.join(outputs_dir, "scaler_mean.npy"), mean)
     np.save(os.path.join(outputs_dir, "scaler_scale.npy"), std)
     split_summary = {
+        "prepared_output_dir": prepared_dir_name,
         "channels": channels.tolist(),
         "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},
         "val": {"samples": len(val_y), "ictal": int(val_y.sum()), "recordings": len(val_record_set)},

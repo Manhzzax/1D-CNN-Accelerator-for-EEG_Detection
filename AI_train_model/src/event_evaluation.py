@@ -93,7 +93,51 @@ def score_continuous_recordings(model, device, rows, preprocessing, batch_size, 
     }
 
 
-def event_metrics(scores, threshold, sample_rate, window_sec, refractory_sec):
+def _validate_temporal_policy(positive_windows, decision_window_windows):
+    if positive_windows < 1 or decision_window_windows < 1:
+        raise ValueError("Temporal policy window counts must be positive")
+    if positive_windows > decision_window_windows:
+        raise ValueError("positive_windows cannot exceed decision_window_windows")
+
+
+def _generate_alarms(
+    starts,
+    probabilities,
+    threshold,
+    refractory_samples,
+    positive_windows,
+    decision_window_windows,
+):
+    """Confirm an alarm only when the temporal policy is satisfied."""
+    _validate_temporal_policy(positive_windows, decision_window_windows)
+    threshold_hits = probabilities >= threshold
+    hit_count = 0
+    alarms = []
+    next_allowed = -1
+
+    for index, start in enumerate(starts):
+        hit_count += int(threshold_hits[index])
+        if index >= decision_window_windows:
+            hit_count -= int(threshold_hits[index - decision_window_windows])
+        if index + 1 < decision_window_windows or hit_count < positive_windows:
+            continue
+        if start < next_allowed:
+            continue
+        alarms.append(int(start))
+        next_allowed = int(start) + refractory_samples
+    return alarms
+
+
+def event_metrics(
+    scores,
+    threshold,
+    sample_rate,
+    window_sec,
+    refractory_sec,
+    positive_windows=1,
+    decision_window_windows=1,
+    policy_name="single_window",
+):
     """Compute seizure-event sensitivity, false alarms/hour, and detection delay."""
     window_samples = int(window_sec * sample_rate)
     refractory_samples = int(refractory_sec * sample_rate)
@@ -110,13 +154,14 @@ def event_metrics(scores, threshold, sample_rate, window_sec, refractory_sec):
         offset_end = scores["record_offsets"][record_index + 1]
         record_starts = start_samples[offset_start:offset_end]
         record_probabilities = probabilities[offset_start:offset_end]
-        alarms = []
-        next_allowed = -1
-        for start, probability in zip(record_starts, record_probabilities):
-            if probability < threshold or start < next_allowed:
-                continue
-            alarms.append(int(start))
-            next_allowed = int(start) + refractory_samples
+        alarms = _generate_alarms(
+            record_starts,
+            record_probabilities,
+            threshold,
+            refractory_samples,
+            positive_windows,
+            decision_window_windows,
+        )
 
         intervals = record["seizure_intervals"]
         total_events += len(intervals)
@@ -136,6 +181,9 @@ def event_metrics(scores, threshold, sample_rate, window_sec, refractory_sec):
                 false_alarms += 1
 
     return {
+        "policy_name": policy_name,
+        "positive_windows": int(positive_windows),
+        "decision_window_windows": int(decision_window_windows),
         "threshold": float(threshold),
         "event_sensitivity": float(detected_events / total_events) if total_events else 0.0,
         "detected_events": detected_events,
@@ -148,22 +196,46 @@ def event_metrics(scores, threshold, sample_rate, window_sec, refractory_sec):
     }
 
 
+def _temporal_policies(evaluation):
+    policies = evaluation.get(
+        "temporal_policies",
+        [{"name": "single_window", "positive_windows": 1, "decision_window_windows": 1}],
+    )
+    if not policies:
+        raise ValueError("At least one temporal policy is required")
+    normalized = []
+    for policy in policies:
+        name = str(policy["name"])
+        positive_windows = int(policy["positive_windows"])
+        decision_window_windows = int(policy["decision_window_windows"])
+        _validate_temporal_policy(positive_windows, decision_window_windows)
+        normalized.append({
+            "name": name,
+            "positive_windows": positive_windows,
+            "decision_window_windows": decision_window_windows,
+        })
+    return normalized
+
+
 def choose_threshold(validation_scores, preprocessing, evaluation):
     thresholds = np.arange(
         evaluation["threshold_min"],
         evaluation["threshold_max"] + evaluation["threshold_step"] / 2,
         evaluation["threshold_step"],
     )
-    metrics = [
-        event_metrics(
-            validation_scores,
-            threshold,
-            preprocessing["sample_rate_hz"],
-            preprocessing["window_sec"],
-            evaluation["refractory_sec"],
-        )
-        for threshold in thresholds
-    ]
+    metrics = []
+    for policy in _temporal_policies(evaluation):
+        for threshold in thresholds:
+            metrics.append(event_metrics(
+                validation_scores,
+                threshold,
+                preprocessing["sample_rate_hz"],
+                preprocessing["window_sec"],
+                evaluation["refractory_sec"],
+                positive_windows=policy["positive_windows"],
+                decision_window_windows=policy["decision_window_windows"],
+                policy_name=policy["name"],
+            ))
     eligible = [
         result for result in metrics
         if result["false_alarms_per_hour"] <= evaluation["target_false_alarms_per_hour"]

@@ -16,6 +16,9 @@ data:
 
   # Directory under AI_train_model/data/ for prepared train/validation/test windows
   prepared_output_dir: "chbmit_prepared_v1"
+
+  # Created by train-only hard-negative mining; select it with CHBMIT_PREPARED_OUTPUT_DIR.
+  hard_negative_output_dir: "chbmit_prepared_hardneg_v1"
   
   # Split ratios for train, validation, and test datasets
   split_ratios:
@@ -43,12 +46,37 @@ preprocessing:
     test: 10.0
 
 evaluation:
+  # Empty means the baseline checkpoint in AI_train_model/outputs/.
+  source_model_run_id: ""
   continuous_batch_size: 512
   threshold_min: 0.05
   threshold_max: 0.99
   threshold_step: 0.01
   refractory_sec: 30
   target_false_alarms_per_hour: 0.5
+  # Select policy and threshold only on the validation recordings.
+  temporal_policies:
+    - name: "single_window"
+      positive_windows: 1
+      decision_window_windows: 1
+    - name: "2_of_3"
+      positive_windows: 2
+      decision_window_windows: 3
+    - name: "3_of_5"
+      positive_windows: 3
+      decision_window_windows: 5
+    - name: "5_of_10"
+      positive_windows: 5
+      decision_window_windows: 10
+    - name: "10_of_20"
+      positive_windows: 10
+      decision_window_windows: 20
+
+hard_negative_mining:
+  # Empty means the baseline in AI_train_model/outputs/.
+  source_run_id: ""
+  normal_to_seizure_ratio: 5.0
+  candidate_batch_size: 512
 
 training:
   epochs: 30
