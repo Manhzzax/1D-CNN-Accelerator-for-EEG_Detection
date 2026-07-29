@@ -8,6 +8,7 @@ import torch
 import yaml
 from torch.utils.data import Dataset
 
+from .feature_representation import load_feature_spec, save_feature_spec
 from .utils import outputs_dir
 
 
@@ -120,6 +121,7 @@ def get_train_val_test_datasets():
         "CHBMIT_PREPARED_OUTPUT_DIR", data_config["prepared_output_dir"]
     )
     prepared_dir = os.path.join(project_dir, "data", prepared_dir_name)
+    feature_spec = load_feature_spec(prepared_dir)
     expected_channels = model_config["input_channels"]
     expected_length = model_config["input_length"]
 
@@ -159,6 +161,7 @@ def get_train_val_test_datasets():
         std = np.ones(expected_channels, dtype=np.float32)
 
     os.makedirs(outputs_dir, exist_ok=True)
+    save_feature_spec(outputs_dir, feature_spec)
     np.save(os.path.join(outputs_dir, "scaler_mean.npy"), mean)
     np.save(os.path.join(outputs_dir, "scaler_scale.npy"), std)
     with open(os.path.join(outputs_dir, "normalization_spec.json"), "w", encoding="utf-8") as output_file:
@@ -174,6 +177,7 @@ def get_train_val_test_datasets():
     split_summary = {
         "prepared_output_dir": prepared_dir_name,
         "normalization_mode": normalization_mode,
+        "feature_representation": feature_spec,
         "channels": channels.tolist(),
         "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},
         "val": {"samples": len(val_y), "ictal": int(val_y.sum()), "recordings": len(val_record_set)},
@@ -185,7 +189,7 @@ def get_train_val_test_datasets():
 
     print("Loaded locked prepared splits:")
     for split_name, split in split_summary.items():
-        if split_name in {"channels", "prepared_output_dir", "normalization_mode"}:
+        if split_name in {"channels", "prepared_output_dir", "normalization_mode", "feature_representation"}:
             continue
         print(
             f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "

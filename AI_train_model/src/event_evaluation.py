@@ -12,6 +12,7 @@ from .chbmit_preparation import (
     filter_eeg,
     intervals_to_samples,
 )
+from .feature_representation import transform_windows
 
 
 def load_split_recordings(protocol_dir, split_name):
@@ -26,6 +27,7 @@ def load_split_recordings(protocol_dir, split_name):
 def score_continuous_recordings(
     model, device, rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_std,
     normalization_mode="train_channel_zscore", recording_normalization=None,
+    feature_spec=None,
 ):
     """Run model probabilities for every non-overlapping window in each recording."""
     import mne
@@ -33,6 +35,9 @@ def score_continuous_recordings(
     sample_rate = preprocessing["sample_rate_hz"]
     window_samples = int(preprocessing["window_sec"] * sample_rate)
     stride_samples = int(preprocessing["stride_sec"] * sample_rate)
+    feature_spec = feature_spec or {"name": "raw", "input_shape": [17, window_samples]}
+    if feature_spec["name"] != "raw" and normalization_mode != "train_channel_zscore":
+        raise ValueError("DWT continuous inference currently supports train_channel_zscore only")
     model.eval()
     all_probabilities = []
     all_record_indices = []
@@ -56,7 +61,7 @@ def score_continuous_recordings(
             preprocessing["bandpass_high_hz"],
             preprocessing["notch_hz"],
         )
-        if normalization_mode == "train_channel_zscore":
+        if normalization_mode == "train_channel_zscore" and feature_spec["name"] == "raw":
             data = (data - scaler_mean[:, None]) / scaler_std[:, None]
         elif normalization_mode == "per_recording_zscore":
             if recording_normalization is None or row["recording_id"] not in recording_normalization:
@@ -75,6 +80,9 @@ def score_continuous_recordings(
                 batch = np.stack(
                     [data[:, start:start + window_samples] for start in batch_starts], axis=0
                 )
+                if feature_spec["name"] != "raw":
+                    batch = transform_windows(batch, feature_spec, batch_size=len(batch))
+                    batch = (batch - scaler_mean[None, :, None]) / scaler_std[None, :, None]
                 inputs = torch.from_numpy(batch).to(device, non_blocking=True)
                 if use_amp:
                     with torch.amp.autocast(device_type="cuda"):

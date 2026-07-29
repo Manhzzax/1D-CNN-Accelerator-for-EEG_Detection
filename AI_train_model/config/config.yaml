@@ -52,6 +52,13 @@ model:
 preprocessing:
   # Override per run with CHBMIT_NORMALIZATION_MODE; primary protocol remains train-only z-score.
   normalization_mode: "train_channel_zscore"
+  # Override with CHBMIT_FEATURE_REPRESENTATION. Raw remains the primary baseline.
+  feature_representation: "raw"
+  dwt:
+    wavelet: "db4"
+    level: 3
+    mode: "periodization"
+  feature_transform_batch_size: 512
   sample_rate_hz: 256
   window_sec: 1
   stride_sec: 1

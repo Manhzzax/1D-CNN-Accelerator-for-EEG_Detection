@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 from scipy.signal import butter, iirnotch, sosfiltfilt, filtfilt
 
+from .feature_representation import save_feature_spec, transform_windows
 from .chbmit_montage import CANONICAL_BIPOLAR_17, resolve_canonical_bipolar_17
 
 
@@ -121,7 +122,7 @@ class SplitCollector:
     def add_normal(self, signal, metadata):
         self.normal_reservoir.add(signal, metadata)
 
-    def save(self, output_path, split_name):
+    def save(self, output_path, split_name, feature_spec, feature_batch_size):
         signals = self.positive_signals + self.normal_reservoir.signals
         labels = np.concatenate((
             np.ones(len(self.positive_signals), dtype=np.int64),
@@ -133,6 +134,7 @@ class SplitCollector:
 
         order = self.random_state.permutation(len(signals))
         x = np.stack(signals, axis=0)[order]
+        x = transform_windows(x, feature_spec, batch_size=feature_batch_size)
         y = labels[order]
         recording_ids = np.asarray([metadata[index]["recording_id"] for index in order])
         start_samples = np.asarray([metadata[index]["start_sample"] for index in order], dtype=np.int64)
@@ -175,7 +177,7 @@ def calculate_normal_targets(rows, preprocessing):
     return counts
 
 
-def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed):
+def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed, feature_spec=None):
     """Prepare sampled windows without changing the locked recording split."""
     rows = load_locked_split_manifest(protocol_dir)
     sample_rate = preprocessing["sample_rate_hz"]
@@ -184,6 +186,11 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed):
     guard_samples = int(preprocessing["interictal_guard_sec"] * sample_rate)
     output_path = Path(output_dir)
     output_path.mkdir(parents=True, exist_ok=True)
+    if feature_spec is None:
+        feature_spec = {"name": "raw", "input_shape": [17, window_samples]}
+    feature_batch_size = int(preprocessing.get("feature_transform_batch_size", 512))
+    if feature_batch_size < 1:
+        raise ValueError("feature_transform_batch_size must be positive")
 
     counts = calculate_normal_targets(rows, preprocessing)
     collectors = {
@@ -239,8 +246,10 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed):
     split_outputs = {}
     for split_name in SPLIT_NAMES:
         split_outputs[split_name] = collectors[split_name].save(
-            output_path / f"chbmit_{split_name}.npz", split_name
+            output_path / f"chbmit_{split_name}.npz", split_name, feature_spec, feature_batch_size
         )
+
+    save_feature_spec(output_path, feature_spec)
 
     with (output_path / "test_continuous_recordings.csv").open("w", newline="", encoding="utf-8") as output_file:
         test_rows = [row for row in rows if row["split"] == "test"]
@@ -257,6 +266,7 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed):
         "bandpass_hz": [preprocessing["bandpass_low_hz"], preprocessing["bandpass_high_hz"]],
         "notch_hz": preprocessing["notch_hz"],
         "normal_to_seizure_ratio": preprocessing["normal_to_seizure_ratio"],
+        "feature_representation": feature_spec,
         "prepass_counts": counts,
         "outputs": split_outputs,
         "continuous_test_manifest": str(output_path / "test_continuous_recordings.csv"),

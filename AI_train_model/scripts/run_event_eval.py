@@ -10,6 +10,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, load_normalization_spec
+from src.feature_representation import load_feature_spec
 from src.event_evaluation import (
     choose_threshold,
     load_scores,
@@ -25,7 +26,7 @@ from src.utils import get_outputs_dir, outputs_dir
 
 def _load_or_score(
     split_name, source_outputs_dir, artifact_outputs_dir, model, device, rows, config, use_amp,
-    scaler_mean, scaler_std, normalization_mode, recording_normalization,
+    scaler_mean, scaler_std, normalization_mode, recording_normalization, feature_spec,
 ):
     source_score_path = os.path.join(source_outputs_dir, f"continuous_{split_name}_scores.npz")
     can_reuse = (
@@ -47,6 +48,7 @@ def _load_or_score(
         scaler_std,
         normalization_mode,
         recording_normalization,
+        feature_spec,
     ), False
 
 
@@ -67,6 +69,7 @@ def main():
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     scaler_mean = np.load(os.path.join(source_outputs_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))
+    feature_spec = load_feature_spec(source_outputs_dir)
     normalization_mode = load_normalization_spec(source_outputs_dir)["mode"]
     recording_normalization = None
     if normalization_mode == "per_recording_zscore":
@@ -90,7 +93,7 @@ def main():
     validation_rows = load_split_recordings(protocol_dir, "val")
     validation_scores, reused_validation_scores = _load_or_score(
         "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std,
-        normalization_mode, recording_normalization,
+        normalization_mode, recording_normalization, feature_spec,
     )
     validation_score_path = os.path.join(outputs_dir, "continuous_val_scores.npz")
     # Select thresholds from the exact persisted score representation used by
@@ -113,7 +116,7 @@ def main():
         test_rows = load_split_recordings(protocol_dir, "test")
         test_scores, reused_test_scores = _load_or_score(
             "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std,
-            normalization_mode, recording_normalization,
+            normalization_mode, recording_normalization, feature_spec,
         )
         test_score_path = os.path.join(outputs_dir, "continuous_test_scores.npz")
         save_scores(test_score_path, test_scores)
@@ -131,6 +134,7 @@ def main():
     summary = {
         "source_model_outputs_dir": source_outputs_dir,
         "artifact_outputs_dir": outputs_dir,
+        "feature_representation": feature_spec,
         "reused_source_continuous_scores": {
             "validation": reused_validation_scores,
             "test": reused_test_scores,
