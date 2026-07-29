@@ -40,6 +40,14 @@ model:
     temporal_kernel: 31
     refinement_kernel: 15
     dropout: 0.25
+  parallel_multikernel_1dcnn:
+    # Raw channel-mixing short/long branches, then compact refinement.
+    branch_filters: 16
+    short_kernel: 15
+    long_kernel: 31
+    refinement_filters: 32
+    refinement_kernel: 5
+    dropout: 0.25
 
 preprocessing:
   # Override per run with CHBMIT_NORMALIZATION_MODE; primary protocol remains train-only z-score.

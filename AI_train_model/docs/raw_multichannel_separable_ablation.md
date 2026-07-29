@@ -45,3 +45,13 @@ The follow-up `run_07` keeps the same raw separable architecture but computes an
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_NORMALIZATION_MODE=per_recording_zscore CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_v1 CHBMIT_RUN_ID=run_07_separable_perrecord_z python main.py --mode train
 ```
+
+## Parallel Multi-Kernel Raw Ablation
+
+`parallel_multikernel_1dcnn` provides a controlled raw-signal comparison to the separable model. It runs two channel-mixing temporal branches in parallel: kernel 15 targets short transients and kernel 31 targets longer rhythmic structure. Their 32 merged features are average-pooled, refined by a kernel-5 convolution, average-pooled again, and classified using global average pooling. The model uses no recurrent or attention blocks and remains suitable for a future parallel convolution mapping on KV260.
+
+The first run keeps the primary train-only channel-wise z-score and original prepared dataset:
+
+```bash
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_ARCHITECTURE=parallel_multikernel_1dcnn CHBMIT_NORMALIZATION_MODE=train_channel_zscore CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_v1 CHBMIT_RUN_ID=run_08_parallel_multikernel_raw python main.py --mode train
+```

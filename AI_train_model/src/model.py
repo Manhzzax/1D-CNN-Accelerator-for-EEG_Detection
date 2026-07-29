@@ -142,6 +142,55 @@ class SeparableEEG1DCNN(nn.Module):
         return self.classifier(x)
 
 
+class ParallelMultiKernelEEG1DCNN(nn.Module):
+    """Raw EEG CNN with short and long temporal receptive fields in parallel."""
+
+    def __init__(
+        self,
+        in_channels,
+        num_classes,
+        branch_filters=16,
+        short_kernel=15,
+        long_kernel=31,
+        refinement_filters=32,
+        refinement_kernel=5,
+        dropout=0.25,
+    ):
+        super().__init__()
+        if any(kernel % 2 == 0 for kernel in (short_kernel, long_kernel, refinement_kernel)):
+            raise ValueError("Parallel multi-kernel convolutions must use odd kernels")
+        self.architecture_name = "parallel_multikernel_1dcnn"
+        self.short_branch = nn.Conv1d(
+            in_channels, branch_filters, kernel_size=short_kernel, padding=short_kernel // 2, bias=False
+        )
+        self.long_branch = nn.Conv1d(
+            in_channels, branch_filters, kernel_size=long_kernel, padding=long_kernel // 2, bias=False
+        )
+        merged_channels = branch_filters * 2
+        self.merge_bn = nn.BatchNorm1d(merged_channels)
+        self.refine = nn.Conv1d(
+            merged_channels,
+            refinement_filters,
+            kernel_size=refinement_kernel,
+            padding=refinement_kernel // 2,
+            bias=False,
+        )
+        self.refine_bn = nn.BatchNorm1d(refinement_filters)
+        self.activation = nn.ReLU()
+        self.pool = nn.AvgPool1d(kernel_size=4, stride=4)
+        self.dropout = nn.Dropout(dropout)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(refinement_filters, num_classes)
+
+    def forward(self, x):
+        short_features = self.short_branch(x)
+        long_features = self.long_branch(x)
+        x = self.pool(self.activation(self.merge_bn(torch.cat((short_features, long_features), dim=1))))
+        x = self.pool(self.activation(self.refine_bn(self.refine(x))))
+        x = self.dropout(self.global_pool(x).squeeze(-1))
+        return self.classifier(x)
+
+
 def build_model(architecture=None, model_config=None):
     """Create a configured model; environment override keeps ablations isolated."""
     if model_config is None:
@@ -163,6 +212,18 @@ def build_model(architecture=None, model_config=None):
             temporal_filters_per_channel=int(options["temporal_filters_per_channel"]),
             spatial_filters=int(options["spatial_filters"]),
             temporal_kernel=int(options["temporal_kernel"]),
+            refinement_kernel=int(options["refinement_kernel"]),
+            dropout=float(options["dropout"]),
+        )
+    if architecture == "parallel_multikernel_1dcnn":
+        options = model_config["parallel_multikernel_1dcnn"]
+        return ParallelMultiKernelEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            branch_filters=int(options["branch_filters"]),
+            short_kernel=int(options["short_kernel"]),
+            long_kernel=int(options["long_kernel"]),
+            refinement_filters=int(options["refinement_filters"]),
             refinement_kernel=int(options["refinement_kernel"]),
             dropout=float(options["dropout"]),
         )
