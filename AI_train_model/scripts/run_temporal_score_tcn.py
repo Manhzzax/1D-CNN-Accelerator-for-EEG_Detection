@@ -2,6 +2,7 @@
 
 import os
 import sys
+from pathlib import Path
 
 import numpy as np
 import torch
@@ -70,11 +71,16 @@ def main():
     print("=" * 60)
     print("TRAINING CAUSAL TEMPORAL SCORE-TCN")
     print("=" * 60)
-    train_scores = _load_or_score(
-        source_output_dir, "train", base_model, device, load_split_recordings(protocol_dir, "train"),
-        config, use_amp, scaler_mean, scaler_std,
-    )
-    save_scores(os.path.join(outputs_dir, "base_train_scores.npz"), train_scores)
+    train_score_cache = os.path.join(outputs_dir, "base_train_scores.npz")
+    if os.path.isfile(train_score_cache) and Path(train_score_cache).with_suffix(".records.json").is_file():
+        print(f"Reusing cached train scores: {train_score_cache}")
+        train_scores = load_scores(train_score_cache)
+    else:
+        train_scores = _load_or_score(
+            source_output_dir, "train", base_model, device, load_split_recordings(protocol_dir, "train"),
+            config, use_amp, scaler_mean, scaler_std,
+        )
+        save_scores(train_score_cache, train_scores)
     val_scores = _load_or_score(
         source_output_dir, "val", base_model, device, load_split_recordings(protocol_dir, "val"),
         config, use_amp, scaler_mean, scaler_std,
