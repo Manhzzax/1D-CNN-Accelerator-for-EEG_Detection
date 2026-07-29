@@ -32,6 +32,8 @@ cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && python main.py 
 
 The dataset is written to `data/chbmit_prepared_temporal_hardneg_v1`. Train it as a separate run and select its threshold/policy on validation only.
 
+If the strict temporal criterion produces fewer candidates than the requested ratio, the default behavior retains every eligible separated candidate and records `candidate_limited: true` in the summary. Do not lower the criterion merely to fill the ratio; that would change the ablation from persistent alarm-like negatives to ordinary high-score negatives.
+
 ## Retrain And Evaluate
 
 Train with the new prepared dataset and write all outputs to a separate run directory:

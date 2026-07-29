@@ -93,6 +93,9 @@ temporal_hard_negative_mining:
   decision_window_windows: 10
   min_hits_in_context: 3
   min_separation_sec: 10
+  # Persistent false-alarm contexts can be rare; keep all available rather
+  # than weakening the criterion merely to reach the requested ratio.
+  allow_fewer_than_target: true
 
 temporal_score_tcn:
   # Frozen 1-second CNN whose score stream becomes the TCN input.

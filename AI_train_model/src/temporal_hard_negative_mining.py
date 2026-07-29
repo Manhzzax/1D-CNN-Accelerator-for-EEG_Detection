@@ -125,6 +125,7 @@ def mine_temporal_hard_negative_windows(
     decision_windows,
     min_hits,
     min_separation_sec,
+    allow_fewer_than_target,
     seed,
     source_model_path,
 ):
@@ -137,8 +138,6 @@ def mine_temporal_hard_negative_windows(
     target_dir = Path(output_dir)
     if target_dir.exists() and any(target_dir.iterdir()):
         raise FileExistsError(f"Temporal hard-negative output already exists and is non-empty: {target_dir}")
-    target_dir.mkdir(parents=True, exist_ok=True)
-
     source_x, source_y, source_records, source_starts, channels = _load_source_train_windows(source_dir)
     positive_count = int(source_y.sum())
     source_normal = source_y == 0
@@ -188,13 +187,16 @@ def mine_temporal_hard_negative_windows(
         candidates.extend((hits, score, row_index, start) for start, hits, score in selected)
 
     candidates.sort(key=lambda item: (-item[0], -item[1], item[2], item[3]))
-    if len(candidates) < target_count:
+    candidate_limited = len(candidates) < target_count
+    if candidate_limited and not allow_fewer_than_target:
         raise RuntimeError(
             f"Only {len(candidates)} separated persistent hard negatives are available; "
             f"need {target_count}. Lower min_hits, lower min_separation_sec, or lower the ratio."
         )
+    selected_count = min(target_count, len(candidates))
+    target_dir.mkdir(parents=True, exist_ok=True)
     selected_by_row = defaultdict(list)
-    for hits, score, row_index, start in candidates[:target_count]:
+    for hits, score, row_index, start in candidates[:selected_count]:
         selected_by_row[row_index].append((start, hits, score))
 
     normal_signals = []
@@ -212,7 +214,7 @@ def mine_temporal_hard_negative_windows(
             normal_starts.append(start)
             normal_scores.append(score)
             normal_hits.append(hits)
-        print(f"  Extracted temporal hard negatives: {len(normal_signals)}/{target_count}")
+        print(f"  Extracted temporal hard negatives: {len(normal_signals)}/{selected_count}")
 
     x = np.concatenate((source_x, np.stack(normal_signals, axis=0)), axis=0)
     y = np.concatenate((source_y, np.zeros(len(normal_signals), dtype=np.int64)))
@@ -238,6 +240,9 @@ def mine_temporal_hard_negative_windows(
         "total_normal_windows": int((y == 0).sum()),
         "total_normal_to_seizure_ratio": float((y == 0).sum() / positive_count),
         "hard_negative_to_seizure_ratio": hard_negative_to_seizure_ratio,
+        "requested_hard_negative_windows": target_count,
+        "candidate_limited": candidate_limited,
+        "allow_fewer_than_target": allow_fewer_than_target,
         "threshold": threshold,
         "decision_window_windows": decision_windows,
         "min_hits_in_context": min_hits,
