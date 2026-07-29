@@ -7,10 +7,11 @@ Select a compact seizure detector using validation continuous EEG only. The test
 The selection objective is the locked event-level benchmark:
 
 1. satisfy validation FAR/h <= 0.50;
-2. maximize validation event sensitivity;
-3. break ties with lower median detection delay, then lower FAR/h.
+2. satisfy validation 1:1-window accuracy and balanced accuracy >= 90%, and ictal F1 >= 0.85;
+3. maximize validation event sensitivity;
+4. break ties with higher validation accuracy, lower median detection delay, then lower FAR/h.
 
-A validation pass requires sensitivity >= 90%, FAR/h <= 0.50, and median delay <= 10 s. It is a screening gate, not a test result.
+A validation pass requires event sensitivity >= 90%, FAR/h <= 0.50, median delay <= 10 s, window accuracy >= 90%, balanced accuracy >= 90%, and ictal F1 >= 0.85. It is a screening gate, not a test result.
 
 ## First Controlled Sweep
 

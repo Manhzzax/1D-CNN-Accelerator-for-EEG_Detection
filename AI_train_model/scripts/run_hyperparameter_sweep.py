@@ -38,6 +38,8 @@ def _load_result(run_id):
     path = os.path.join(outputs_root, run_id, "event_metrics.json")
     with open(path, "r", encoding="utf-8") as input_file:
         summary = json.load(input_file)
+    with open(os.path.join(outputs_root, run_id, "validation_window_metrics.json"), "r", encoding="utf-8") as input_file:
+        window = json.load(input_file)
     selected = summary["threshold_selection"]
     return {
         "run_id": run_id,
@@ -50,6 +52,10 @@ def _load_result(run_id):
         "threshold": selected["threshold"],
         "policy_name": selected["policy_name"],
         "target_far_met": summary["target_false_alarms_per_hour_met_on_validation"],
+        "validation_window_accuracy": window["accuracy"],
+        "validation_balanced_accuracy": window["balanced_accuracy"],
+        "validation_ictal_f1": window["f1"],
+        "validation_auroc": window["auroc"],
     }
 
 
@@ -59,7 +65,10 @@ def _rank_key(row):
     return (
         row["target_far_met"],
         row["event_sensitivity"] >= 0.90,
+        row["validation_window_accuracy"] >= 0.90,
+        row["validation_ictal_f1"] >= 0.85,
         row["event_sensitivity"],
+        row["validation_window_accuracy"],
         -delay,
         -row["false_alarms_per_hour"],
     )
@@ -99,6 +108,9 @@ def main():
             and result["false_alarms_per_hour"] <= 0.50
             and result["median_detection_delay_sec"] is not None
             and result["median_detection_delay_sec"] <= 10.0
+            and result["validation_window_accuracy"] >= 0.90
+            and result["validation_balanced_accuracy"] >= 0.90
+            and result["validation_ictal_f1"] >= 0.85
         )
         results.append(result)
 
@@ -118,7 +130,8 @@ def main():
         "Validation winner: "
         f"{winner['run_id']} | sensitivity={winner['event_sensitivity']:.4f} | "
         f"FAR/h={winner['false_alarms_per_hour']:.4f} | "
-        f"delay={winner['median_detection_delay_sec']}"
+        f"delay={winner['median_detection_delay_sec']} | "
+        f"validation_accuracy={winner['validation_window_accuracy']:.4f}"
     )
     print(f"Leaderboard: {os.path.join(sweep_dir, 'validation_leaderboard.csv')}")
     print("No test recording was scored by this sweep.")

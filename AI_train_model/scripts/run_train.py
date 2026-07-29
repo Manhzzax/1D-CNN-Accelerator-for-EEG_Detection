@@ -39,6 +39,37 @@ def _env_bool(name, default):
     raise ValueError(f"{name} must be one of true/false/1/0")
 
 
+def _window_metrics(targets, probabilities):
+    predictions = (probabilities >= 0.5).astype(np.int64)
+    return {
+        "accuracy": float(np.mean(predictions == targets)),
+        "balanced_accuracy": float(balanced_accuracy_score(targets, predictions)),
+        "sensitivity": float(recall_score(targets, predictions, zero_division=0)),
+        "precision": float(precision_score(targets, predictions, zero_division=0)),
+        "f1": float(f1_score(targets, predictions, zero_division=0)),
+        "auroc": float(roc_auc_score(targets, probabilities)),
+        "average_precision": float(average_precision_score(targets, probabilities)),
+        "threshold": 0.5,
+    }
+
+
+def _score_window_loader(model, loader, device, use_amp):
+    probabilities = []
+    targets = []
+    model.eval()
+    with torch.no_grad():
+        for inputs, batch_targets in loader:
+            inputs = inputs.to(device, non_blocking=True)
+            if use_amp:
+                with torch.amp.autocast(device_type="cuda"):
+                    outputs = model(inputs)
+            else:
+                outputs = model(inputs)
+            probabilities.extend(torch.softmax(outputs, dim=1)[:, 1].cpu().numpy())
+            targets.extend(batch_targets.numpy())
+    return np.asarray(probabilities), np.asarray(targets)
+
+
 def main():
     config = load_config()
     
@@ -267,54 +298,21 @@ def main():
         json.dump(hyperparameters, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
 
-    # Validation-only search trials must not consume the held-out test metrics.
-    if _env_bool('CHBMIT_SKIP_TEST_EVALUATION', False):
-        print("Test evaluation skipped by CHBMIT_SKIP_TEST_EVALUATION.")
-        return
-
-    # 8. Evaluate on Test Set
-    print("\nEvaluating best model on Test Set...")
+    # Persist validation metrics from the selected checkpoint. Validation is 1:1
+    # sampled in the locked protocol, so its raw accuracy is interpretable.
     best_model = build_model_from_run(outputs_dir).to(device)
     best_model.load_state_dict(
         torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device, weights_only=True)
     )
-    best_model.eval()
-    
-    all_probs = []
-    all_targets = []
-    
-    with torch.no_grad():
-        for inputs, targets in test_loader:
-            inputs = inputs.to(device)
-            if use_amp:
-                with torch.amp.autocast(device_type="cuda"):
-                    outputs = best_model(inputs)
-            else:
-                outputs = best_model(inputs)
-            probabilities = torch.softmax(outputs, dim=1)[:, 1]
-            all_probs.extend(probabilities.cpu().numpy())
-            all_targets.extend(targets.numpy())
-            
-    all_probs = np.array(all_probs)
-    all_preds = (all_probs >= 0.5).astype(np.int64)
-    all_targets = np.array(all_targets)
-    
-    # Metrics calculation
-    test_acc = 100. * np.sum(all_preds == all_targets) / len(all_targets)
-    print(f"  Test Accuracy: {test_acc:.2f}%")
-    
-    report = classification_report(all_targets, all_preds, target_names=['Non-Seizure', 'Seizure'], digits=4)
-    cm = confusion_matrix(all_targets, all_preds)
-    window_metrics = {
-        "accuracy": float(test_acc / 100.0),
-        "balanced_accuracy": float(balanced_accuracy_score(all_targets, all_preds)),
-        "sensitivity": float(recall_score(all_targets, all_preds, zero_division=0)),
-        "precision": float(precision_score(all_targets, all_preds, zero_division=0)),
-        "f1": float(f1_score(all_targets, all_preds, zero_division=0)),
-        "auroc": float(roc_auc_score(all_targets, all_probs)),
-        "average_precision": float(average_precision_score(all_targets, all_probs)),
-        "threshold": 0.5,
-    }
+    validation_probabilities, validation_targets = _score_window_loader(
+        best_model, val_loader, device, use_amp
+    )
+    validation_window_metrics = _window_metrics(validation_targets, validation_probabilities)
+    with open(os.path.join(outputs_dir, "validation_window_metrics.json"), "w") as output_file:
+        json.dump(validation_window_metrics, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
+    print(f"Validation window metrics: {json.dumps(validation_window_metrics, sort_keys=True)}")
+
     training_summary = {
         "epochs_requested": epochs,
         "epochs_completed": len(train_losses),
@@ -328,9 +326,37 @@ def main():
             "patience": early_stopping_patience,
             "min_delta": min_delta,
         },
-        "window_test_metrics": window_metrics,
         "hyperparameters": hyperparameters,
+        "window_validation_metrics": validation_window_metrics,
     }
+
+    # Validation-only search trials must not consume the held-out test metrics.
+    if _env_bool('CHBMIT_SKIP_TEST_EVALUATION', False):
+        with open(os.path.join(outputs_dir, "training_summary.json"), "w") as output_file:
+            json.dump(training_summary, output_file, indent=2, sort_keys=True)
+            output_file.write("\n")
+        print("Test evaluation skipped by CHBMIT_SKIP_TEST_EVALUATION.")
+        return
+
+    # 8. Evaluate on Test Set
+    print("\nEvaluating best model on Test Set...")
+    best_model = build_model_from_run(outputs_dir).to(device)
+    best_model.load_state_dict(
+        torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device, weights_only=True)
+    )
+    best_model.eval()
+    
+    all_probs, all_targets = _score_window_loader(best_model, test_loader, device, use_amp)
+    all_preds = (all_probs >= 0.5).astype(np.int64)
+    
+    # Metrics calculation
+    test_acc = 100. * np.sum(all_preds == all_targets) / len(all_targets)
+    print(f"  Test Accuracy: {test_acc:.2f}%")
+    
+    report = classification_report(all_targets, all_preds, target_names=['Non-Seizure', 'Seizure'], digits=4)
+    cm = confusion_matrix(all_targets, all_preds)
+    window_metrics = _window_metrics(all_targets, all_probs)
+    training_summary["window_test_metrics"] = window_metrics
     
     print("\nClassification Report:")
     print(report)

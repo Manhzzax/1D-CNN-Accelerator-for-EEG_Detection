@@ -11,8 +11,9 @@ The official primary benchmark is event-level detection on continuous held-out E
 | Event sensitivity | Detected annotated seizures / all annotated seizures | >= 90% | >= 95% |
 | FAR/h | False seizure alarms / interictal monitoring hours | <= 0.50/h | <= 0.20/h |
 | Median detection delay | Alarm time minus annotated seizure onset, detected events only | <= 10 s | <= 8 s |
+| Validation window accuracy (1:1 sampled set) | Correct window predictions / validation windows | >= 90% | >= 95% |
 
-All three metrics must be reported together. A run does not pass merely because it has high sensitivity or high window accuracy. The strong target is the target for the final FPGA-aware model; the minimum target is the gate for a credible controlled ablation.
+All primary metrics and the validation accuracy gate must be reported together. A run does not pass merely because it has high sensitivity or high window accuracy. The strong target is the target for the final FPGA-aware model; the minimum target is the gate for a credible controlled ablation.
 
 ## Why These Targets
 
