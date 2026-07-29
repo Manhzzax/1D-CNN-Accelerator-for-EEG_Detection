@@ -24,9 +24,14 @@ def load_config():
 class EEGDataset(Dataset):
     """Tensor dataset with canonical `(samples, channels, time)` EEG inputs."""
 
-    def __init__(self, x, y):
+    def __init__(self, x, y, sampling_weights=None):
         self.x = torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))
         self.y = torch.from_numpy(np.ascontiguousarray(y, dtype=np.int64))
+        if sampling_weights is None:
+            sampling_weights = np.ones(len(y), dtype=np.float32)
+        self.sampling_weights = torch.from_numpy(
+            np.ascontiguousarray(sampling_weights, dtype=np.float32)
+        )
 
     def __len__(self):
         return len(self.y)
@@ -51,16 +56,23 @@ def _load_prepared_split(prepared_dir, split_name, expected_channels, expected_l
         y = np.asarray(data["y"], dtype=np.int64)
         recording_ids = np.asarray(data["recording_id"])
         channels = np.asarray(data["channels"]).astype(str)
+        sampling_weights = (
+            np.asarray(data["sampling_weight"], dtype=np.float32)
+            if "sampling_weight" in data.files
+            else np.ones(len(y), dtype=np.float32)
+        )
 
     if x.ndim != 3 or x.shape[1:] != (expected_channels, expected_length):
         raise ValueError(
             f"Unexpected {split_name} shape {x.shape}; expected (N, {expected_channels}, {expected_length})"
         )
-    if len(x) != len(y) or len(y) != len(recording_ids):
+    if len(x) != len(y) or len(y) != len(recording_ids) or len(y) != len(sampling_weights):
         raise ValueError(f"Inconsistent sample counts in {path}")
+    if not np.all(np.isfinite(sampling_weights)) or np.any(sampling_weights <= 0):
+        raise ValueError(f"Sampling weights in {path} must be finite and positive")
     if len(channels) != expected_channels:
         raise ValueError(f"Prepared {split_name} channel count does not match config")
-    return x, y, recording_ids, channels, path
+    return x, y, recording_ids, channels, sampling_weights, path
 
 
 def _scale_split(x, mean, std):
@@ -79,13 +91,13 @@ def get_train_val_test_datasets():
     expected_channels = model_config["input_channels"]
     expected_length = model_config["input_length"]
 
-    train_x, train_y, train_records, channels, _ = _load_prepared_split(
+    train_x, train_y, train_records, channels, train_weights, _ = _load_prepared_split(
         prepared_dir, "train", expected_channels, expected_length
     )
-    val_x, val_y, val_records, val_channels, _ = _load_prepared_split(
+    val_x, val_y, val_records, val_channels, val_weights, _ = _load_prepared_split(
         prepared_dir, "val", expected_channels, expected_length
     )
-    test_x, test_y, test_records, test_channels, _ = _load_prepared_split(
+    test_x, test_y, test_records, test_channels, test_weights, _ = _load_prepared_split(
         prepared_dir, "test", expected_channels, expected_length
     )
     if not (np.array_equal(channels, val_channels) and np.array_equal(channels, test_channels)):
@@ -127,4 +139,8 @@ def get_train_val_test_datasets():
             f"{split['recordings']} recordings"
         )
 
-    return EEGDataset(train_x, train_y), EEGDataset(val_x, val_y), EEGDataset(test_x, test_y)
+    return (
+        EEGDataset(train_x, train_y, train_weights),
+        EEGDataset(val_x, val_y, val_weights),
+        EEGDataset(test_x, test_y, test_weights),
+    )

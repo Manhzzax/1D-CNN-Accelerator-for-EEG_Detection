@@ -96,6 +96,8 @@ temporal_hard_negative_mining:
   # Persistent false-alarm contexts can be rare; keep all available rather
   # than weakening the criterion merely to reach the requested ratio.
   allow_fewer_than_target: true
+  # Applied only in the class-balanced sampler; preserves diversity without duplicating files.
+  hard_negative_sampling_multiplier: 2.0
 
 temporal_score_tcn:
   # Frozen 1-second CNN whose score stream becomes the TCN input.

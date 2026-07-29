@@ -53,13 +53,22 @@ def main():
         class_counts = torch.bincount(train_dataset.y, minlength=2).to(torch.float64)
         if torch.any(class_counts == 0):
             raise ValueError("Class-balanced batches require both training classes")
-        sample_weights = (1.0 / class_counts[train_dataset.y]).to(torch.double)
+        sample_weights = torch.empty(len(train_dataset), dtype=torch.double)
+        importance = train_dataset.sampling_weights.to(torch.double)
+        for class_index in range(len(class_counts)):
+            class_mask = train_dataset.y == class_index
+            class_importance = importance[class_mask]
+            sample_weights[class_mask] = class_importance / class_importance.sum()
         train_sampler = WeightedRandomSampler(
             sample_weights,
             num_samples=len(sample_weights),
             replacement=True,
         )
-        print(f"Class-balanced training batches enabled; source counts: {class_counts.tolist()}")
+        print(
+            "Class-balanced training batches enabled; source counts: "
+            f"{class_counts.tolist()} | sampling weight range: "
+            f"{importance.min().item():.1f}-{importance.max().item():.1f}"
+        )
     
     # Enable multiple workers and pinned memory for server optimization
     train_loader = DataLoader(

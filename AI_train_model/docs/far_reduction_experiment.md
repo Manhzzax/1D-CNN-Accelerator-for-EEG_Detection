@@ -34,6 +34,8 @@ The dataset is written to `data/chbmit_prepared_temporal_hardneg_v1`. Train it a
 
 If the strict temporal criterion produces fewer candidates than the requested ratio, the default behavior retains every eligible separated candidate and records `candidate_limited: true` in the summary. Do not lower the criterion merely to fill the ratio; that would change the ablation from persistent alarm-like negatives to ordinary high-score negatives.
 
+The temporal dataset records provenance sampling weights instead of duplicating scarce hard negatives. With the default multiplier of 2, class-balanced training keeps ictal and normal draws equal while increasing the hard-negative share of normal draws from about 8% to about 15%.
+
 ## Retrain And Evaluate
 
 Train with the new prepared dataset and write all outputs to a separate run directory:

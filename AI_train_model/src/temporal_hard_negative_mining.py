@@ -126,12 +126,15 @@ def mine_temporal_hard_negative_windows(
     min_hits,
     min_separation_sec,
     allow_fewer_than_target,
+    hard_negative_sampling_multiplier,
     seed,
     source_model_path,
 ):
     """Build a mixed dataset with separated, persistent train-only hard negatives."""
     if hard_negative_to_seizure_ratio <= 0:
         raise ValueError("hard_negative_to_seizure_ratio must be positive")
+    if hard_negative_sampling_multiplier < 1.0:
+        raise ValueError("hard_negative_sampling_multiplier must be at least 1")
     if not 1 <= min_hits <= decision_windows:
         raise ValueError("min_hits must be between 1 and decision_windows")
     source_dir = Path(source_prepared_dir)
@@ -220,11 +223,15 @@ def mine_temporal_hard_negative_windows(
     y = np.concatenate((source_y, np.zeros(len(normal_signals), dtype=np.int64)))
     recording_ids = np.concatenate((source_records, np.asarray(normal_records)))
     starts = np.concatenate((source_starts, np.asarray(normal_starts, dtype=np.int64)))
+    sampling_weight = np.concatenate((
+        np.ones(len(source_y), dtype=np.float32),
+        np.full(len(normal_signals), hard_negative_sampling_multiplier, dtype=np.float32),
+    ))
     order = np.random.default_rng(seed).permutation(len(y))
     np.savez_compressed(
         target_dir / "chbmit_train.npz",
         X=x[order], y=y[order], recording_id=recording_ids[order],
-        start_sample=starts[order], channels=channels, split="train",
+        start_sample=starts[order], channels=channels, sampling_weight=sampling_weight[order], split="train",
     )
     _copy_fixed_splits(source_dir, target_dir)
 
@@ -243,6 +250,7 @@ def mine_temporal_hard_negative_windows(
         "requested_hard_negative_windows": target_count,
         "candidate_limited": candidate_limited,
         "allow_fewer_than_target": allow_fewer_than_target,
+        "hard_negative_sampling_multiplier": hard_negative_sampling_multiplier,
         "threshold": threshold,
         "decision_window_windows": decision_windows,
         "min_hits_in_context": min_hits,

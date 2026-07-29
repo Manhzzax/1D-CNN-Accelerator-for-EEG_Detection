@@ -70,6 +70,7 @@ def main():
         min_hits=int(mining["min_hits_in_context"]),
         min_separation_sec=float(mining["min_separation_sec"]),
         allow_fewer_than_target=bool(mining["allow_fewer_than_target"]),
+        hard_negative_sampling_multiplier=float(mining["hard_negative_sampling_multiplier"]),
         seed=config["data"]["seed"],
         source_model_path=source_model_path,
     )
