@@ -12,6 +12,7 @@ from scripts import (
     run_event_eval,
     run_event_reconcile,
     run_hard_negative_mining,
+    run_hyperparameter_sweep,
     run_temporal_hard_negative_mining,
     run_plan,
     run_preprocess,
@@ -25,7 +26,7 @@ def main():
     parser = argparse.ArgumentParser(description="EEG Seizure Detection 1D-CNN Accelerator Pipeline")
     parser.add_argument(
         "--mode", 
-        choices=["audit", "plan", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "all"],
+        choices=["audit", "plan", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "hyperparameter_sweep", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "all"],
         default="all",
         help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'event_eval' (continuous metrics), 'quantize' (Quantize & export), or 'all' (Run all)."
     )
@@ -42,6 +43,8 @@ def main():
         run_hard_negative_mining.main()
     elif args.mode == "mine_temporal_hard_negatives":
         run_temporal_hard_negative_mining.main()
+    elif args.mode == "hyperparameter_sweep":
+        run_hyperparameter_sweep.main()
     elif args.mode == "temporal_score_tcn":
         run_temporal_score_tcn.main()
     elif args.mode == "eda":

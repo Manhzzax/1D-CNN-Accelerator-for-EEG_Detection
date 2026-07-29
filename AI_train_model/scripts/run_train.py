@@ -26,6 +26,19 @@ from src.data_loader import load_config, get_train_val_test_datasets
 from src.model import build_model, build_model_from_run, save_model_spec
 from src.utils import set_seed, plot_training_history, plot_confusion_matrix, outputs_dir
 
+
+def _env_bool(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return default
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be one of true/false/1/0")
+
+
 def main():
     config = load_config()
     
@@ -44,10 +57,12 @@ def main():
     # 3. Get datasets
     train_dataset, val_dataset, test_dataset = get_train_val_test_datasets()
     
-    batch_size = config['training']['batch_size']
+    batch_size = int(os.environ.get('CHBMIT_TRAIN_BATCH_SIZE', config['training']['batch_size']))
     num_workers = config['training'].get('num_workers', 4)
     pin_memory = config['training'].get('pin_memory', True)
-    class_balanced_batches = config['training'].get('class_balanced_batches', False)
+    class_balanced_batches = _env_bool(
+        'CHBMIT_CLASS_BALANCED_BATCHES', config['training'].get('class_balanced_batches', False)
+    )
     train_sampler = None
     if class_balanced_batches:
         class_counts = torch.bincount(train_dataset.y, minlength=2).to(torch.float64)
@@ -96,11 +111,13 @@ def main():
     )
     
     # 5. Set loss, optimizer, and AMP Scaler
+    learning_rate = float(os.environ.get('CHBMIT_TRAIN_LEARNING_RATE', config['training']['learning_rate']))
+    weight_decay = float(os.environ.get('CHBMIT_TRAIN_WEIGHT_DECAY', config['training']['weight_decay']))
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(
         model.parameters(), 
-        lr=config['training']['learning_rate'], 
-        weight_decay=config['training']['weight_decay']
+        lr=learning_rate,
+        weight_decay=weight_decay,
     )
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, 
@@ -119,12 +136,14 @@ def main():
         print("Standard single-precision (FP32) training enabled.")
         
     # 6. Training loop
-    epochs = config['training']['epochs']
+    epochs = int(os.environ.get('CHBMIT_TRAIN_EPOCHS', config['training']['epochs']))
     early_stopping = config['training'].get('early_stopping', {})
     early_stopping_enabled = early_stopping.get('enabled', False)
     early_stopping_monitor = early_stopping.get('monitor', 'val_loss')
     min_epochs = int(early_stopping.get('min_epochs', 1))
-    early_stopping_patience = int(early_stopping.get('patience', epochs))
+    early_stopping_patience = int(os.environ.get(
+        'CHBMIT_EARLY_STOPPING_PATIENCE', early_stopping.get('patience', epochs)
+    ))
     min_delta = float(early_stopping.get('min_delta', 0.0))
     if early_stopping_monitor != 'val_loss':
         raise ValueError("Only val_loss early stopping is supported")
@@ -237,6 +256,22 @@ def main():
     # 7. Plot history
     plot_training_history(train_losses, val_losses, train_accs, val_accs)
     
+    hyperparameters = {
+        "batch_size": batch_size,
+        "class_balanced_batches": class_balanced_batches,
+        "epochs": epochs,
+        "learning_rate": learning_rate,
+        "weight_decay": weight_decay,
+    }
+    with open(os.path.join(outputs_dir, "hyperparameters.json"), "w") as output_file:
+        json.dump(hyperparameters, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
+
+    # Validation-only search trials must not consume the held-out test metrics.
+    if _env_bool('CHBMIT_SKIP_TEST_EVALUATION', False):
+        print("Test evaluation skipped by CHBMIT_SKIP_TEST_EVALUATION.")
+        return
+
     # 8. Evaluate on Test Set
     print("\nEvaluating best model on Test Set...")
     best_model = build_model_from_run(outputs_dir).to(device)
@@ -294,6 +329,7 @@ def main():
             "min_delta": min_delta,
         },
         "window_test_metrics": window_metrics,
+        "hyperparameters": hyperparameters,
     }
     
     print("\nClassification Report:")

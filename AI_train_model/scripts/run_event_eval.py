@@ -80,6 +80,13 @@ def main():
     print("=" * 60)
     print("RUNNING CONTINUOUS EVENT-LEVEL EVALUATION")
     print("=" * 60)
+    requested_splits = {
+        split.strip() for split in os.environ.get("CHBMIT_EVENT_EVAL_SPLITS", "val,test").split(",") if split.strip()
+    }
+    if not requested_splits or not requested_splits <= {"val", "test"}:
+        raise ValueError("CHBMIT_EVENT_EVAL_SPLITS must be val, test, or val,test")
+    if "val" not in requested_splits:
+        raise ValueError("Validation scores are required to select a threshold and temporal policy")
     validation_rows = load_split_recordings(protocol_dir, "val")
     validation_scores, reused_validation_scores = _load_or_score(
         "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std,
@@ -100,24 +107,27 @@ def main():
         f"threshold: {selected['threshold']:.3f} | target FAR met: {target_met}"
     )
 
-    test_rows = load_split_recordings(protocol_dir, "test")
-    test_scores, reused_test_scores = _load_or_score(
-        "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std,
-        normalization_mode, recording_normalization,
-    )
-    test_score_path = os.path.join(outputs_dir, "continuous_test_scores.npz")
-    save_scores(test_score_path, test_scores)
-    test_scores = load_scores(test_score_path)
-    test_result = event_metrics(
-        test_scores,
-        selected["threshold"],
-        config["preprocessing"]["sample_rate_hz"],
-        config["preprocessing"]["window_sec"],
-        config["evaluation"]["refractory_sec"],
-        positive_windows=selected["positive_windows"],
-        decision_window_windows=selected["decision_window_windows"],
-        policy_name=selected["policy_name"],
-    )
+    test_result = None
+    reused_test_scores = None
+    if "test" in requested_splits:
+        test_rows = load_split_recordings(protocol_dir, "test")
+        test_scores, reused_test_scores = _load_or_score(
+            "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std,
+            normalization_mode, recording_normalization,
+        )
+        test_score_path = os.path.join(outputs_dir, "continuous_test_scores.npz")
+        save_scores(test_score_path, test_scores)
+        test_scores = load_scores(test_score_path)
+        test_result = event_metrics(
+            test_scores,
+            selected["threshold"],
+            config["preprocessing"]["sample_rate_hz"],
+            config["preprocessing"]["window_sec"],
+            config["evaluation"]["refractory_sec"],
+            positive_windows=selected["positive_windows"],
+            decision_window_windows=selected["decision_window_windows"],
+            policy_name=selected["policy_name"],
+        )
     summary = {
         "source_model_outputs_dir": source_outputs_dir,
         "artifact_outputs_dir": outputs_dir,
@@ -125,6 +135,7 @@ def main():
             "validation": reused_validation_scores,
             "test": reused_test_scores,
         },
+        "evaluated_splits": sorted(requested_splits),
         "threshold_selection": selected,
         "target_false_alarms_per_hour_met_on_validation": target_met,
         "test_event_metrics": test_result,
@@ -132,7 +143,10 @@ def main():
     with open(os.path.join(outputs_dir, "event_metrics.json"), "w", encoding="utf-8") as output_file:
         json.dump(summary, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
-    print(f"Test event metrics: {json.dumps(test_result, sort_keys=True)}")
+    if test_result is None:
+        print(f"Validation event metrics: {json.dumps(selected, sort_keys=True)}")
+    else:
+        print(f"Test event metrics: {json.dumps(test_result, sort_keys=True)}")
 
 
 if __name__ == "__main__":
