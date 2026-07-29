@@ -50,4 +50,10 @@ Evaluate that exact checkpoint and scaler continuously, while preserving the sam
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_RUN_ID=run_03_mixed_hardneg CHBMIT_RUN_ID=run_03_mixed_hardneg python main.py --mode event_eval
 ```
 
+Event evaluation now persists score arrays before validation policy selection, so its JSON summary and diagnostics share one score representation. To repair a historical run without loading a model or re-running EDF inference, reconcile its summary from its already saved validation/test score arrays:
+
+```bash
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_RUN_ID=run_05_temporal_hardneg python main.py --mode reconcile_event_metrics
+```
+
 Do not commit EDF files, NPZ datasets, checkpoints, or continuous-score arrays. Commit only concise summaries, CSV sweeps, reports, and plots under `server_results/`.

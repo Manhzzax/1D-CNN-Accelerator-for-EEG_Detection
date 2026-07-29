@@ -71,10 +71,14 @@ def main():
     validation_scores, reused_validation_scores = _load_or_score(
         "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std
     )
+    validation_score_path = os.path.join(outputs_dir, "continuous_val_scores.npz")
+    # Select thresholds from the exact persisted score representation used by
+    # diagnostics and later reproducibility checks.
+    save_scores(validation_score_path, validation_scores)
+    validation_scores = load_scores(validation_score_path)
     selected, sweep, target_met = choose_threshold(
         validation_scores, config["preprocessing"], config["evaluation"]
     )
-    save_scores(os.path.join(outputs_dir, "continuous_val_scores.npz"), validation_scores)
     write_threshold_sweep(os.path.join(outputs_dir, "validation_threshold_sweep.csv"), sweep)
     print(
         f"Selected validation policy: {selected['policy_name']} "
@@ -86,6 +90,9 @@ def main():
     test_scores, reused_test_scores = _load_or_score(
         "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std
     )
+    test_score_path = os.path.join(outputs_dir, "continuous_test_scores.npz")
+    save_scores(test_score_path, test_scores)
+    test_scores = load_scores(test_score_path)
     test_result = event_metrics(
         test_scores,
         selected["threshold"],
@@ -96,7 +103,6 @@ def main():
         decision_window_windows=selected["decision_window_windows"],
         policy_name=selected["policy_name"],
     )
-    save_scores(os.path.join(outputs_dir, "continuous_test_scores.npz"), test_scores)
     summary = {
         "source_model_outputs_dir": source_outputs_dir,
         "artifact_outputs_dir": outputs_dir,
