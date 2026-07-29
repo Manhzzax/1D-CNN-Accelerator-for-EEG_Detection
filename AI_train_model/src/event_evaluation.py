@@ -265,6 +265,25 @@ def save_scores(path, scores):
         output_file.write("\n")
 
 
+def load_scores(path):
+    """Load previously scored continuous recordings and their event metadata."""
+    score_path = Path(path)
+    records_path = score_path.with_suffix(".records.json")
+    if not score_path.is_file() or not records_path.is_file():
+        raise FileNotFoundError(f"Missing continuous score artifacts for reuse: {score_path}")
+    with np.load(score_path, allow_pickle=False) as source:
+        required = {"probabilities", "record_indices", "start_samples", "record_offsets"}
+        missing = required - set(source.files)
+        if missing:
+            raise ValueError(f"Continuous scores missing fields: {sorted(missing)}")
+        scores = {name: np.asarray(source[name]) for name in required}
+    with records_path.open("r", encoding="utf-8") as input_file:
+        scores["records"] = json.load(input_file)
+    if len(scores["record_offsets"]) != len(scores["records"]) + 1:
+        raise ValueError("Continuous score record offsets do not match metadata")
+    return scores
+
+
 def write_threshold_sweep(path, metrics):
     fields = list(metrics[0].keys())
     with Path(path).open("w", newline="", encoding="utf-8") as output_file:

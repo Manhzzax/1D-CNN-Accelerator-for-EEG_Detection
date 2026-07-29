@@ -48,6 +48,8 @@ preprocessing:
 evaluation:
   # Empty means the baseline checkpoint in AI_train_model/outputs/.
   source_model_run_id: ""
+  # Reuse score arrays only when writing a separate artifact run for the same source model.
+  reuse_source_continuous_scores: true
   continuous_batch_size: 512
   threshold_min: 0.05
   threshold_max: 0.99

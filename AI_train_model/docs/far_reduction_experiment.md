@@ -4,7 +4,7 @@ This protocol follows the locked CHB-MIT case-wise chronological split. Validati
 
 ## Baseline Temporal Policy
 
-The baseline checkpoint remains in `AI_train_model/outputs`. Run the validation-selected temporal-policy sweep into a separate artifact directory:
+The baseline checkpoint remains in `AI_train_model/outputs`. When its existing continuous-score artifacts are present, this command reuses them and does not rerun EDF inference. Run the validation-selected temporal-policy sweep into a separate artifact directory:
 
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_RUN_ID=run_01_temporal_policy python main.py --mode event_eval

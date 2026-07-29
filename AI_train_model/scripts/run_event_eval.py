@@ -12,6 +12,7 @@ sys.path.append(project_dir)
 from src.data_loader import load_config
 from src.event_evaluation import (
     choose_threshold,
+    load_scores,
     load_split_recordings,
     save_scores,
     score_continuous_recordings,
@@ -20,6 +21,28 @@ from src.event_evaluation import (
 )
 from src.model import EEG1DCNN
 from src.utils import get_outputs_dir, outputs_dir
+
+
+def _load_or_score(split_name, source_outputs_dir, artifact_outputs_dir, model, device, rows, config, use_amp, scaler_mean, scaler_std):
+    source_score_path = os.path.join(source_outputs_dir, f"continuous_{split_name}_scores.npz")
+    can_reuse = (
+        config["evaluation"].get("reuse_source_continuous_scores", False)
+        and source_outputs_dir != artifact_outputs_dir
+        and os.path.isfile(source_score_path)
+    )
+    if can_reuse:
+        print(f"Reusing source {split_name} continuous scores: {source_score_path}")
+        return load_scores(source_score_path), True
+    return score_continuous_recordings(
+        model,
+        device,
+        rows,
+        config["preprocessing"],
+        config["evaluation"]["continuous_batch_size"],
+        use_amp,
+        scaler_mean,
+        scaler_std,
+    ), False
 
 
 def main():
@@ -37,7 +60,6 @@ def main():
     use_amp = config["training"].get("use_amp", False) and device.type == "cuda"
     model = EEG1DCNN().to(device)
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
-    batch_size = config["evaluation"]["continuous_batch_size"]
     scaler_mean = np.load(os.path.join(source_outputs_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))
     os.makedirs(outputs_dir, exist_ok=True)
@@ -46,8 +68,8 @@ def main():
     print("RUNNING CONTINUOUS EVENT-LEVEL EVALUATION")
     print("=" * 60)
     validation_rows = load_split_recordings(protocol_dir, "val")
-    validation_scores = score_continuous_recordings(
-        model, device, validation_rows, config["preprocessing"], batch_size, use_amp, scaler_mean, scaler_std
+    validation_scores, reused_validation_scores = _load_or_score(
+        "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std
     )
     selected, sweep, target_met = choose_threshold(
         validation_scores, config["preprocessing"], config["evaluation"]
@@ -61,8 +83,8 @@ def main():
     )
 
     test_rows = load_split_recordings(protocol_dir, "test")
-    test_scores = score_continuous_recordings(
-        model, device, test_rows, config["preprocessing"], batch_size, use_amp, scaler_mean, scaler_std
+    test_scores, reused_test_scores = _load_or_score(
+        "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std
     )
     test_result = event_metrics(
         test_scores,
@@ -78,6 +100,10 @@ def main():
     summary = {
         "source_model_outputs_dir": source_outputs_dir,
         "artifact_outputs_dir": outputs_dir,
+        "reused_source_continuous_scores": {
+            "validation": reused_validation_scores,
+            "test": reused_test_scores,
+        },
         "threshold_selection": selected,
         "target_false_alarms_per_hour_met_on_validation": target_met,
         "test_event_metrics": test_result,
