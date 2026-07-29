@@ -81,6 +81,19 @@ hard_negative_mining:
   hard_negative_to_seizure_ratio: 2.0
   candidate_batch_size: 512
 
+temporal_hard_negative_mining:
+  # Mine only train recordings using score contexts from the selected run_03 model.
+  source_run_id: "run_03_mixed_hardneg"
+  # run_04 contains an unmodified cached train stream from this source model.
+  score_cache_run_id: "run_04_score_tcn"
+  output_dir: "chbmit_prepared_temporal_hardneg_v1"
+  hard_negative_to_seizure_ratio: 1.0
+  candidate_batch_size: 512
+  threshold: 0.91
+  decision_window_windows: 10
+  min_hits_in_context: 3
+  min_separation_sec: 10
+
 temporal_score_tcn:
   # Frozen 1-second CNN whose score stream becomes the TCN input.
   source_model_run_id: "run_03_mixed_hardneg"
