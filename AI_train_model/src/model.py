@@ -17,7 +17,7 @@ class EEG1DCNN(nn.Module):
     def __init__(self, in_channels=None, input_length=None, num_classes=None):
         """
         EEG 1D-CNN Model for Seizure Detection (adapted for CHB-MIT multi-channel data)
-        Input shape: (batch_size, in_channels, input_length) -> e.g. (batch, 23, 256)
+        Input shape: (batch_size, in_channels, input_length) -> e.g. (batch, 17, 256)
         Total parameters: ~70K (well under the 100K limit)
         """
         super(EEG1DCNN, self).__init__()
@@ -87,7 +87,7 @@ class EEG1DCNN(nn.Module):
 
 if __name__ == "__main__":
     # Test the model parameters and shape for CHB-MIT settings
-    model = EEG1DCNN(in_channels=23, input_length=256, num_classes=2)
+    model = EEG1DCNN(in_channels=17, input_length=256, num_classes=2)
     print(model)
     
     # Calculate parameter count
@@ -97,7 +97,7 @@ if __name__ == "__main__":
     print(f"Trainable Parameters: {trainable_params:,}")
     
     # Test input
-    test_input = torch.randn(2, 23, 256)
+    test_input = torch.randn(2, 17, 256)
     test_output = model(test_input)
     print(f"Input Shape: {test_input.shape}")
     print(f"Output Shape: {test_output.shape}")

@@ -5,7 +5,17 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
 import numpy as np
-from sklearn.metrics import classification_report, confusion_matrix
+from sklearn.metrics import (
+    average_precision_score,
+    balanced_accuracy_score,
+    classification_report,
+    confusion_matrix,
+    f1_score,
+    precision_score,
+    recall_score,
+    roc_auc_score,
+)
+import json
 
 # Add project root directory to sys.path to enable src imports
 script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -177,7 +187,7 @@ def main():
     best_model.load_state_dict(torch.load(os.path.join(outputs_dir, "best_model.pth"), map_location=device))
     best_model.eval()
     
-    all_preds = []
+    all_probs = []
     all_targets = []
     
     with torch.no_grad():
@@ -188,19 +198,30 @@ def main():
                     outputs = best_model(inputs)
             else:
                 outputs = best_model(inputs)
-            _, predicted = outputs.max(1)
-            all_preds.extend(predicted.cpu().numpy())
+            probabilities = torch.softmax(outputs, dim=1)[:, 1]
+            all_probs.extend(probabilities.cpu().numpy())
             all_targets.extend(targets.numpy())
             
-    all_preds = np.array(all_preds)
+    all_probs = np.array(all_probs)
+    all_preds = (all_probs >= 0.5).astype(np.int64)
     all_targets = np.array(all_targets)
     
     # Metrics calculation
     test_acc = 100. * np.sum(all_preds == all_targets) / len(all_targets)
     print(f"  Test Accuracy: {test_acc:.2f}%")
     
-    report = classification_report(all_targets, all_preds, target_names=['Non-Seizure', 'Seizure'])
+    report = classification_report(all_targets, all_preds, target_names=['Non-Seizure', 'Seizure'], digits=4)
     cm = confusion_matrix(all_targets, all_preds)
+    window_metrics = {
+        "accuracy": float(test_acc / 100.0),
+        "balanced_accuracy": float(balanced_accuracy_score(all_targets, all_preds)),
+        "sensitivity": float(recall_score(all_targets, all_preds, zero_division=0)),
+        "precision": float(precision_score(all_targets, all_preds, zero_division=0)),
+        "f1": float(f1_score(all_targets, all_preds, zero_division=0)),
+        "auroc": float(roc_auc_score(all_targets, all_probs)),
+        "average_precision": float(average_precision_score(all_targets, all_probs)),
+        "threshold": 0.5,
+    }
     
     print("\nClassification Report:")
     print(report)
@@ -214,7 +235,15 @@ def main():
         f.write(report)
         f.write("\nConfusion Matrix:\n")
         f.write(str(cm))
+        f.write("\n\nWindow-Level Metrics:\n")
+        f.write(json.dumps(window_metrics, indent=2, sort_keys=True))
     print(f"Saved classification report to: {report_path}")
+    with open(os.path.join(outputs_dir, "window_metrics.json"), "w") as f:
+        json.dump(window_metrics, f, indent=2, sort_keys=True)
+        f.write("\n")
+    np.save(os.path.join(outputs_dir, "test_probabilities.npy"), all_probs)
+    np.save(os.path.join(outputs_dir, "test_targets.npy"), all_targets)
+    print(f"Window metrics: {json.dumps(window_metrics, sort_keys=True)}")
     
     # Plot and save CM
     plot_confusion_matrix(cm)

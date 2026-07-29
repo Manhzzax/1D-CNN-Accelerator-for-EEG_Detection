@@ -1,115 +1,125 @@
+"""Load locked CHB-MIT splits and fit normalization on training data only."""
+
+import json
 import os
-import yaml
+
 import numpy as np
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
 import torch
+import yaml
 from torch.utils.data import Dataset
 
-# Helper path logic
+
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
 config_path = os.path.join(project_dir, "config", "config.yaml")
 
+
 def load_config():
-    """
-    Loads project configurations from config.yaml.
-    """
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
-    return config
+    with open(config_path, "r", encoding="utf-8") as config_file:
+        return yaml.safe_load(config_file)
+
 
 class EEGDataset(Dataset):
-    """
-    Custom PyTorch Dataset for EEG signals.
-    Shape input to (batch_size, channels, length) for Conv1d.
-    For CHB-MIT: channels = 23, length = 256.
-    """
-    def __init__(self, X, y):
-        self.X = torch.tensor(X, dtype=torch.float32) # shape: (N, 23, 256)
-        self.y = torch.tensor(y, dtype=torch.long)     # shape: (N,)
-        
+    """Tensor dataset with canonical `(samples, channels, time)` EEG inputs."""
+
+    def __init__(self, x, y):
+        self.x = torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))
+        self.y = torch.from_numpy(np.ascontiguousarray(y, dtype=np.int64))
+
     def __len__(self):
         return len(self.y)
-        
-    def __getitem__(self, idx):
-        return self.X[idx], self.y[idx]
+
+    def __getitem__(self, index):
+        return self.x[index], self.y[index]
+
+
+def _load_prepared_split(prepared_dir, split_name, expected_channels, expected_length):
+    path = os.path.join(prepared_dir, f"chbmit_{split_name}.npz")
+    if not os.path.isfile(path):
+        raise FileNotFoundError(
+            f"Prepared {split_name} split is missing: {path}. Run `python main.py --mode preprocess`."
+        )
+
+    with np.load(path, allow_pickle=False) as data:
+        required = {"X", "y", "recording_id", "start_sample", "channels"}
+        missing = required - set(data.files)
+        if missing:
+            raise ValueError(f"Prepared split {path} is missing fields: {sorted(missing)}")
+        x = np.asarray(data["X"], dtype=np.float32)
+        y = np.asarray(data["y"], dtype=np.int64)
+        recording_ids = np.asarray(data["recording_id"])
+        channels = np.asarray(data["channels"]).astype(str)
+
+    if x.ndim != 3 or x.shape[1:] != (expected_channels, expected_length):
+        raise ValueError(
+            f"Unexpected {split_name} shape {x.shape}; expected (N, {expected_channels}, {expected_length})"
+        )
+    if len(x) != len(y) or len(y) != len(recording_ids):
+        raise ValueError(f"Inconsistent sample counts in {path}")
+    if len(channels) != expected_channels:
+        raise ValueError(f"Prepared {split_name} channel count does not match config")
+    return x, y, recording_ids, channels, path
+
+
+def _scale_split(x, mean, std):
+    return (x - mean[None, :, None]) / std[None, :, None]
+
 
 def get_train_val_test_datasets():
-    """
-    Loads preprocessed CHB-MIT segments (.npz), splits into Train/Val/Test,
-    applies channel-wise standardization using fitted parameters on the training set,
-    and returns PyTorch Datasets.
-    """
+    """Load immutable recording-grouped splits and prevent split/normalization leakage."""
     config = load_config()
-    data_dir = os.path.join(project_dir, "data")
-    preprocessed_path = os.path.join(data_dir, config['data']['preprocessed_filename'])
-    
-    if not os.path.exists(preprocessed_path):
-        print(f"\nERROR: Preprocessed dataset not found at: {preprocessed_path}")
-        print("Please run MNE preprocessing first using:")
-        print("  python main.py --mode preprocess\n")
-        raise FileNotFoundError(f"Missing preprocessed dataset file: {preprocessed_path}")
-        
-    print(f"Loading preprocessed dataset from {preprocessed_path}...")
-    data = np.load(preprocessed_path)
-    X = data['X'] # shape: (N, 23, 256)
-    y = data['y'] # shape: (N,)
-    
-    print(f"Loaded dataset shape: X={X.shape} | y={y.shape}")
-    
-    # Split: Train (80%), Val (10%), Test (10%)
-    test_ratio = config['data']['split_ratios']['test']
-    val_ratio = config['data']['split_ratios']['val']
-    train_ratio = config['data']['split_ratios']['train']
-    val_adjusted_ratio = val_ratio / (train_ratio + val_ratio)
-    
-    X_train_val, X_test, y_train_val, y_test = train_test_split(
-        X, y, test_size=test_ratio, random_state=config['data']['seed'], stratify=y
+    data_config = config["data"]
+    model_config = config["model"]
+    prepared_dir = os.path.join(project_dir, "data", data_config["prepared_output_dir"])
+    expected_channels = model_config["input_channels"]
+    expected_length = model_config["input_length"]
+
+    train_x, train_y, train_records, channels, _ = _load_prepared_split(
+        prepared_dir, "train", expected_channels, expected_length
     )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train_val, y_train_val, test_size=val_adjusted_ratio, random_state=config['data']['seed'], stratify=y_train_val
+    val_x, val_y, val_records, val_channels, _ = _load_prepared_split(
+        prepared_dir, "val", expected_channels, expected_length
     )
-    
-    # Channel-wise Z-score standardization:
-    # 1. Reshape inputs from (N, 23, 256) to (N * 256, 23) to scale channels independently
-    N_tr, C, L = X_train.shape
-    N_va = X_val.shape[0]
-    N_te = X_test.shape[0]
-    
-    X_train_flat = X_train.transpose(0, 2, 1).reshape(N_tr * L, C)
-    X_val_flat = X_val.transpose(0, 2, 1).reshape(N_va * L, C)
-    X_test_flat = X_test.transpose(0, 2, 1).reshape(N_te * L, C)
-    
-    # Fit scaler on training set flat matrix only to avoid leakage
-    scaler = StandardScaler()
-    X_train_scaled_flat = scaler.fit_transform(X_train_flat)
-    X_val_scaled_flat = scaler.transform(X_val_flat)
-    X_test_scaled_flat = scaler.transform(X_test_flat)
-    
-    # 2. Reshape scaled matrices back to (N, 23, 256)
-    X_train = X_train_scaled_flat.reshape(N_tr, L, C).transpose(0, 2, 1)
-    X_val = X_val_scaled_flat.reshape(N_va, L, C).transpose(0, 2, 1)
-    X_test = X_test_scaled_flat.reshape(N_te, L, C).transpose(0, 2, 1)
-    
-    # Save the scaler mean and scale for verification or hardware deployment scaling
+    test_x, test_y, test_records, test_channels, _ = _load_prepared_split(
+        prepared_dir, "test", expected_channels, expected_length
+    )
+    if not (np.array_equal(channels, val_channels) and np.array_equal(channels, test_channels)):
+        raise ValueError("Prepared splits do not share an identical channel order")
+
+    train_record_set = set(train_records.tolist())
+    val_record_set = set(val_records.tolist())
+    test_record_set = set(test_records.tolist())
+    if train_record_set & val_record_set or train_record_set & test_record_set or val_record_set & test_record_set:
+        raise ValueError("Recording leakage detected between prepared splits")
+
+    mean = train_x.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
+    std = train_x.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
+    std = np.maximum(std, np.finfo(np.float32).eps)
+    train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
+    val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
+    test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
+
     outputs_dir = os.path.join(project_dir, "outputs")
     os.makedirs(outputs_dir, exist_ok=True)
-    np.save(os.path.join(outputs_dir, "scaler_mean.npy"), scaler.mean_)
-    np.save(os.path.join(outputs_dir, "scaler_scale.npy"), scaler.scale_)
-    
-    print(f"Dataset Split Sizes:")
-    print(f"  Train: {X_train.shape[0]} samples")
-    print(f"  Val:   {X_val.shape[0]} samples")
-    print(f"  Test:  {X_test.shape[0]} samples")
-    
-    train_dataset = EEGDataset(X_train, y_train)
-    val_dataset = EEGDataset(X_val, y_val)
-    test_dataset = EEGDataset(X_test, y_test)
-    
-    return train_dataset, val_dataset, test_dataset
+    np.save(os.path.join(outputs_dir, "scaler_mean.npy"), mean)
+    np.save(os.path.join(outputs_dir, "scaler_scale.npy"), std)
+    split_summary = {
+        "channels": channels.tolist(),
+        "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},
+        "val": {"samples": len(val_y), "ictal": int(val_y.sum()), "recordings": len(val_record_set)},
+        "test": {"samples": len(test_y), "ictal": int(test_y.sum()), "recordings": len(test_record_set)},
+    }
+    with open(os.path.join(outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
+        json.dump(split_summary, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
 
-if __name__ == "__main__":
-    config = load_config()
-    print("Loaded configuration successfully:")
-    print(config)
+    print("Loaded locked prepared splits:")
+    for split_name, split in split_summary.items():
+        if split_name == "channels":
+            continue
+        print(
+            f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "
+            f"{split['recordings']} recordings"
+        )
+
+    return EEGDataset(train_x, train_y), EEGDataset(val_x, val_y), EEGDataset(test_x, test_y)

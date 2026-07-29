@@ -53,7 +53,7 @@ training:
   # Server-specific execution settings:
   num_workers: 4         # Number of subprocesses to use for data loading
   pin_memory: true       # Speed up CPU-to-GPU transfer (set True for GPU runs)
-  use_amp: false         # Set True to enable Automatic Mixed Precision (FP16) on CUDA GPUs
+  use_amp: true          # RTX 8000 CUDA training uses Automatic Mixed Precision (FP16)
   num_threads: 4         # Limit PyTorch CPU threads to avoid server core thrashing
 
 quantization:
