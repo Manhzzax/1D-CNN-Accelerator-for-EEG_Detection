@@ -146,11 +146,20 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
     """Write per-recording and per-case metrics from an already completed event run."""
     output_dir = Path(run_output_dir)
     event_summary_path = output_dir / "event_metrics.json"
+    temporal_summary_path = output_dir / "temporal_score_tcn_summary.json"
     score_path = output_dir / f"continuous_{split_name}_scores.npz"
-    if not event_summary_path.is_file():
-        raise FileNotFoundError(f"Missing event summary: {event_summary_path}")
+    if event_summary_path.is_file():
+        summary_path = event_summary_path
+    elif temporal_summary_path.is_file():
+        # The temporal TCN is evaluated in its own mode but writes the same
+        # threshold-selection contract needed for descriptive diagnostics.
+        summary_path = temporal_summary_path
+    else:
+        raise FileNotFoundError(
+            f"Missing event summary: expected {event_summary_path} or {temporal_summary_path}"
+        )
 
-    with event_summary_path.open("r", encoding="utf-8") as input_file:
+    with summary_path.open("r", encoding="utf-8") as input_file:
         event_summary = json.load(input_file)
     selected = event_summary["threshold_selection"]
     scores = load_scores(score_path)
