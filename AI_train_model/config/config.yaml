@@ -95,6 +95,12 @@ training:
   use_amp: true          # RTX 8000 CUDA training uses Automatic Mixed Precision (FP16)
   num_threads: 4         # Limit PyTorch CPU threads to avoid server core thrashing
   class_balanced_batches: true
+  early_stopping:
+    enabled: true
+    monitor: "val_loss"
+    min_epochs: 8
+    patience: 6
+    min_delta: 0.001
 
 quantization:
   q_scale_bits: 15        # Default fallback fractional bits

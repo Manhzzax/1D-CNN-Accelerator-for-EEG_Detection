@@ -106,7 +106,20 @@ def main():
         
     # 6. Training loop
     epochs = config['training']['epochs']
+    early_stopping = config['training'].get('early_stopping', {})
+    early_stopping_enabled = early_stopping.get('enabled', False)
+    early_stopping_monitor = early_stopping.get('monitor', 'val_loss')
+    min_epochs = int(early_stopping.get('min_epochs', 1))
+    early_stopping_patience = int(early_stopping.get('patience', epochs))
+    min_delta = float(early_stopping.get('min_delta', 0.0))
+    if early_stopping_monitor != 'val_loss':
+        raise ValueError("Only val_loss early stopping is supported")
+    if min_epochs < 1 or early_stopping_patience < 1 or min_delta < 0:
+        raise ValueError("Invalid early_stopping configuration")
     best_val_loss = float('inf')
+    best_epoch = 0
+    no_improvement_epochs = 0
+    stopped_early = False
     
     train_losses, val_losses = [], []
     train_accs, val_accs = [], []
@@ -183,11 +196,27 @@ def main():
         print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%")
         
         # Save best model
-        if epoch_val_loss < best_val_loss:
+        if epoch_val_loss < best_val_loss - min_delta:
             best_val_loss = epoch_val_loss
+            best_epoch = epoch + 1
+            no_improvement_epochs = 0
             model_save_path = os.path.join(outputs_dir, "best_model.pth")
             torch.save(model.state_dict(), model_save_path)
             print(f"  --> Saved new best model to {model_save_path}")
+        else:
+            no_improvement_epochs += 1
+
+        if (
+            early_stopping_enabled
+            and epoch + 1 >= min_epochs
+            and no_improvement_epochs >= early_stopping_patience
+        ):
+            stopped_early = True
+            print(
+                f"Early stopping at epoch {epoch + 1}: validation loss did not improve by "
+                f"at least {min_delta} for {no_improvement_epochs} epochs."
+            )
+            break
             
     print("\nTraining completed successfully.")
     
@@ -237,6 +266,21 @@ def main():
         "average_precision": float(average_precision_score(all_targets, all_probs)),
         "threshold": 0.5,
     }
+    training_summary = {
+        "epochs_requested": epochs,
+        "epochs_completed": len(train_losses),
+        "best_epoch": best_epoch,
+        "best_validation_loss": best_val_loss,
+        "stopped_early": stopped_early,
+        "early_stopping": {
+            "enabled": early_stopping_enabled,
+            "monitor": early_stopping_monitor,
+            "min_epochs": min_epochs,
+            "patience": early_stopping_patience,
+            "min_delta": min_delta,
+        },
+        "window_test_metrics": window_metrics,
+    }
     
     print("\nClassification Report:")
     print(report)
@@ -255,6 +299,9 @@ def main():
     print(f"Saved classification report to: {report_path}")
     with open(os.path.join(outputs_dir, "window_metrics.json"), "w") as f:
         json.dump(window_metrics, f, indent=2, sort_keys=True)
+        f.write("\n")
+    with open(os.path.join(outputs_dir, "training_summary.json"), "w") as f:
+        json.dump(training_summary, f, indent=2, sort_keys=True)
         f.write("\n")
     np.save(os.path.join(outputs_dir, "test_probabilities.npy"), all_probs)
     np.save(os.path.join(outputs_dir, "test_targets.npy"), all_targets)
