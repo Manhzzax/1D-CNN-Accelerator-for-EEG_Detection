@@ -79,6 +79,38 @@ def _scale_split(x, mean, std):
     return (x - mean[None, :, None]) / std[None, :, None]
 
 
+def _scale_per_recording(x, recording_ids):
+    """Normalize each recording independently without using seizure labels."""
+    scaled = np.empty_like(x, dtype=np.float32)
+    recording_stats = {}
+    for recording_id in np.unique(recording_ids):
+        indices = np.flatnonzero(recording_ids == recording_id)
+        recording = x[indices]
+        mean = recording.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
+        std = recording.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
+        std = np.maximum(std, np.finfo(np.float32).eps)
+        scaled[indices] = _scale_split(recording, mean, std)
+        recording_stats[str(recording_id)] = {"mean": mean.tolist(), "std": std.tolist()}
+    return scaled, recording_stats
+
+
+def get_normalization_mode(config):
+    mode = os.environ.get(
+        "CHBMIT_NORMALIZATION_MODE", config["preprocessing"].get("normalization_mode", "train_channel_zscore")
+    )
+    if mode not in {"train_channel_zscore", "per_recording_zscore"}:
+        raise ValueError(f"Unsupported CHB-MIT normalization mode: {mode}")
+    return mode
+
+
+def load_normalization_spec(output_dir):
+    path = os.path.join(output_dir, "normalization_spec.json")
+    if not os.path.isfile(path):
+        return {"mode": "train_channel_zscore", "source": "legacy_default"}
+    with open(path, "r", encoding="utf-8") as input_file:
+        return json.load(input_file)
+
+
 def get_train_val_test_datasets():
     """Load immutable recording-grouped splits and prevent split/normalization leakage."""
     config = load_config()
@@ -109,18 +141,39 @@ def get_train_val_test_datasets():
     if train_record_set & val_record_set or train_record_set & test_record_set or val_record_set & test_record_set:
         raise ValueError("Recording leakage detected between prepared splits")
 
-    mean = train_x.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
-    std = train_x.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
-    std = np.maximum(std, np.finfo(np.float32).eps)
-    train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
-    val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
-    test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
+    normalization_mode = get_normalization_mode(config)
+    if normalization_mode == "train_channel_zscore":
+        mean = train_x.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
+        std = train_x.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
+        std = np.maximum(std, np.finfo(np.float32).eps)
+        train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
+        val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
+        test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
+    else:
+        # Each split is transformed per recording, independently and without labels.
+        train_x, train_recording_stats = _scale_per_recording(train_x, train_records)
+        val_x, val_recording_stats = _scale_per_recording(val_x, val_records)
+        test_x, test_recording_stats = _scale_per_recording(test_x, test_records)
+        recording_stats = {**train_recording_stats, **val_recording_stats, **test_recording_stats}
+        mean = np.zeros(expected_channels, dtype=np.float32)
+        std = np.ones(expected_channels, dtype=np.float32)
 
     os.makedirs(outputs_dir, exist_ok=True)
     np.save(os.path.join(outputs_dir, "scaler_mean.npy"), mean)
     np.save(os.path.join(outputs_dir, "scaler_scale.npy"), std)
+    with open(os.path.join(outputs_dir, "normalization_spec.json"), "w", encoding="utf-8") as output_file:
+        json.dump({
+            "mode": normalization_mode,
+            "scope": "per_recording_unlabeled" if normalization_mode == "per_recording_zscore" else "train_only",
+        }, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
+    if normalization_mode == "per_recording_zscore":
+        with open(os.path.join(outputs_dir, "recording_normalization.json"), "w", encoding="utf-8") as output_file:
+            json.dump(recording_stats, output_file, sort_keys=True)
+            output_file.write("\n")
     split_summary = {
         "prepared_output_dir": prepared_dir_name,
+        "normalization_mode": normalization_mode,
         "channels": channels.tolist(),
         "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},
         "val": {"samples": len(val_y), "ictal": int(val_y.sum()), "recordings": len(val_record_set)},
@@ -132,7 +185,7 @@ def get_train_val_test_datasets():
 
     print("Loaded locked prepared splits:")
     for split_name, split in split_summary.items():
-        if split_name in {"channels", "prepared_output_dir"}:
+        if split_name in {"channels", "prepared_output_dir", "normalization_mode"}:
             continue
         print(
             f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "

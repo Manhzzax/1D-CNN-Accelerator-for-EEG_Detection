@@ -9,7 +9,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
-from src.data_loader import load_config
+from src.data_loader import load_config, load_normalization_spec
 from src.event_evaluation import (
     choose_threshold,
     load_scores,
@@ -23,7 +23,10 @@ from src.model import build_model_from_run
 from src.utils import get_outputs_dir, outputs_dir
 
 
-def _load_or_score(split_name, source_outputs_dir, artifact_outputs_dir, model, device, rows, config, use_amp, scaler_mean, scaler_std):
+def _load_or_score(
+    split_name, source_outputs_dir, artifact_outputs_dir, model, device, rows, config, use_amp,
+    scaler_mean, scaler_std, normalization_mode, recording_normalization,
+):
     source_score_path = os.path.join(source_outputs_dir, f"continuous_{split_name}_scores.npz")
     can_reuse = (
         config["evaluation"].get("reuse_source_continuous_scores", False)
@@ -42,6 +45,8 @@ def _load_or_score(split_name, source_outputs_dir, artifact_outputs_dir, model, 
         use_amp,
         scaler_mean,
         scaler_std,
+        normalization_mode,
+        recording_normalization,
     ), False
 
 
@@ -62,6 +67,14 @@ def main():
     model.load_state_dict(torch.load(model_path, map_location=device, weights_only=True))
     scaler_mean = np.load(os.path.join(source_outputs_dir, "scaler_mean.npy"))
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))
+    normalization_mode = load_normalization_spec(source_outputs_dir)["mode"]
+    recording_normalization = None
+    if normalization_mode == "per_recording_zscore":
+        stats_path = os.path.join(source_outputs_dir, "recording_normalization.json")
+        if not os.path.isfile(stats_path):
+            raise FileNotFoundError(f"Missing recording normalization artifact: {stats_path}")
+        with open(stats_path, "r", encoding="utf-8") as input_file:
+            recording_normalization = json.load(input_file)
     os.makedirs(outputs_dir, exist_ok=True)
 
     print("=" * 60)
@@ -69,7 +82,8 @@ def main():
     print("=" * 60)
     validation_rows = load_split_recordings(protocol_dir, "val")
     validation_scores, reused_validation_scores = _load_or_score(
-        "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std
+        "val", source_outputs_dir, outputs_dir, model, device, validation_rows, config, use_amp, scaler_mean, scaler_std,
+        normalization_mode, recording_normalization,
     )
     validation_score_path = os.path.join(outputs_dir, "continuous_val_scores.npz")
     # Select thresholds from the exact persisted score representation used by
@@ -88,7 +102,8 @@ def main():
 
     test_rows = load_split_recordings(protocol_dir, "test")
     test_scores, reused_test_scores = _load_or_score(
-        "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std
+        "test", source_outputs_dir, outputs_dir, model, device, test_rows, config, use_amp, scaler_mean, scaler_std,
+        normalization_mode, recording_normalization,
     )
     test_score_path = os.path.join(outputs_dir, "continuous_test_scores.npz")
     save_scores(test_score_path, test_scores)

@@ -37,3 +37,11 @@ Then evaluate exactly that recorded architecture:
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_RUN_ID=run_06_separable_raw CHBMIT_RUN_ID=run_06_separable_raw python main.py --mode event_eval
 ```
+
+## Recording-Scale Normalization Ablation
+
+The follow-up `run_07` keeps the same raw separable architecture but computes an unlabeled, channel-wise z-score independently for each recording. Statistics are calculated from the prepared recording windows and persisted with the run; continuous inference reloads exactly those same constants. This tests amplitude/scale robustness after `run_06` showed concentrated test false alarms in a small number of later recordings. It is selected on train/validation only and must be reported as an offline per-recording normalization ablation: a deployed system would need a causal warm-up or running estimator rather than a full-recording statistic.
+
+```bash
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_NORMALIZATION_MODE=per_recording_zscore CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_v1 CHBMIT_RUN_ID=run_07_separable_perrecord_z python main.py --mode train
+```

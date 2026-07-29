@@ -23,7 +23,10 @@ def load_split_recordings(protocol_dir, split_name):
     return rows
 
 
-def score_continuous_recordings(model, device, rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_std):
+def score_continuous_recordings(
+    model, device, rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_std,
+    normalization_mode="train_channel_zscore", recording_normalization=None,
+):
     """Run model probabilities for every non-overlapping window in each recording."""
     import mne
 
@@ -53,7 +56,17 @@ def score_continuous_recordings(model, device, rows, preprocessing, batch_size, 
             preprocessing["bandpass_high_hz"],
             preprocessing["notch_hz"],
         )
-        data = (data - scaler_mean[:, None]) / scaler_std[:, None]
+        if normalization_mode == "train_channel_zscore":
+            data = (data - scaler_mean[:, None]) / scaler_std[:, None]
+        elif normalization_mode == "per_recording_zscore":
+            if recording_normalization is None or row["recording_id"] not in recording_normalization:
+                raise ValueError(f"Missing saved normalization statistics for {row['recording_id']}")
+            stats = recording_normalization[row["recording_id"]]
+            recording_mean = np.asarray(stats["mean"], dtype=np.float32)[:, None]
+            recording_std = np.asarray(stats["std"], dtype=np.float32)[:, None]
+            data = (data - recording_mean) / recording_std
+        else:
+            raise ValueError(f"Unsupported continuous normalization mode: {normalization_mode}")
         starts = np.arange(0, data.shape[1] - window_samples + 1, stride_samples, dtype=np.int64)
         probabilities = []
         with torch.no_grad():
