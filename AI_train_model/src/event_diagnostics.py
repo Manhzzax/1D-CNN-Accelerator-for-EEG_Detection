@@ -62,6 +62,7 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
         case_id = record["recording_id"].split("/", 1)[0]
 
         for alarm in alarms:
+            alarm_index = int(np.searchsorted(starts, alarm))
             overlapping_events = [
                 event_index
                 for event_index, (start, end) in enumerate(intervals)
@@ -72,11 +73,14 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
                 "recording_id": record["recording_id"],
                 "alarm_start_sample": alarm,
                 "alarm_start_sec": alarm / sample_rate,
+                "alarm_probability": float(probabilities[alarm_index]),
                 "is_false_alarm": not bool(overlapping_events),
                 "overlapping_event_index": overlapping_events[0] if overlapping_events else None,
             })
 
         for event_index, (seizure_start, seizure_end) in enumerate(intervals):
+            overlapping_windows = (starts < seizure_end) & (starts + window_samples > seizure_start)
+            event_probabilities = probabilities[overlapping_windows]
             matching_alarms = [
                 alarm for alarm in alarms
                 if alarm < seizure_end and alarm + window_samples > seizure_start
@@ -89,6 +93,9 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
                 "seizure_start_sec": seizure_start / sample_rate,
                 "seizure_end_sec": seizure_end / sample_rate,
                 "seizure_duration_sec": (seizure_end - seizure_start) / sample_rate,
+                "overlapping_window_count": int(len(event_probabilities)),
+                "max_ictal_probability": float(event_probabilities.max()),
+                "ictal_windows_at_threshold": int((event_probabilities >= selected["threshold"]).sum()),
                 "detected": first_alarm is not None,
                 "first_alarm_sec": first_alarm / sample_rate if first_alarm is not None else None,
                 "detection_delay_sec": (
@@ -100,7 +107,7 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
     alarm_path = output_dir / f"event_diagnostics_{split_name}_alarms.csv"
     alarm_fields = [
         "case_id", "recording_id", "alarm_start_sample", "alarm_start_sec",
-        "is_false_alarm", "overlapping_event_index",
+        "alarm_probability", "is_false_alarm", "overlapping_event_index",
     ]
     with alarm_path.open("w", newline="", encoding="utf-8") as output_file:
         writer = csv.DictWriter(output_file, fieldnames=alarm_fields)
@@ -109,7 +116,8 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
     event_path = output_dir / f"event_diagnostics_{split_name}_events.csv"
     event_fields = [
         "case_id", "recording_id", "event_index", "seizure_start_sec", "seizure_end_sec",
-        "seizure_duration_sec", "detected", "first_alarm_sec", "detection_delay_sec",
+        "seizure_duration_sec", "overlapping_window_count", "max_ictal_probability",
+        "ictal_windows_at_threshold", "detected", "first_alarm_sec", "detection_delay_sec",
     ]
     with event_path.open("w", newline="", encoding="utf-8") as output_file:
         writer = csv.DictWriter(output_file, fieldnames=event_fields)
