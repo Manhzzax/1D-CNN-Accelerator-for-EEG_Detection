@@ -1,0 +1,25 @@
+{
+  "target_false_alarms_per_hour_met_on_validation": false,
+  "test_event_metrics": {
+    "detected_events": 52,
+    "event_sensitivity": 0.8387096774193549,
+    "false_alarms": 17978,
+    "false_alarms_per_hour": 60.673398905792396,
+    "interictal_hours": 296.3077777777778,
+    "mean_detection_delay_sec": 13.211538461538462,
+    "median_detection_delay_sec": 13.5,
+    "threshold": 0.5800000000000002,
+    "total_events": 62
+  },
+  "threshold_selection": {
+    "detected_events": 28,
+    "event_sensitivity": 0.9655172413793104,
+    "false_alarms": 10352,
+    "false_alarms_per_hour": 61.201625815987185,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 11.071428571428571,
+    "median_detection_delay_sec": 9.5,
+    "threshold": 0.5800000000000002,
+    "total_events": 29
+  }
+}
