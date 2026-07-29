@@ -44,6 +44,8 @@ Window accuracy must not be used as the primary outcome. The sampled test split 
 
 Can a hardware-aware architecture improve the validation event-sensitivity/FAR Pareto frontier beyond the two observed operating points, while preserving the 17-channel input and a deployment-compatible preprocessing chain?
 
+The next controlled experiment is a causal score-TCN over ten consecutive frozen-CNN scores. It is an inexpensive temporal-context ablation motivated by the validation evidence: the original CNN produces isolated seizure scores, but the current `5_of_10` rule requires five threshold hits. The TCN is trained from train score streams, selected on validation, and evaluated once on test.
+
 ## Immediate Diagnostic Commands
 
 Generate validation diagnostics for `run_03_mixed_hardneg` before selecting the next experiment:
