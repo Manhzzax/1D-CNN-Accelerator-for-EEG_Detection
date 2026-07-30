@@ -42,6 +42,9 @@ comparable targets. The detailed evidence and metric definitions are in
 [`AI_train_model/docs/paper_benchmark_comparison.md`](AI_train_model/docs/paper_benchmark_comparison.md)
 and
 [`AI_train_model/docs/benchmark_definition_and_comparability.md`](AI_train_model/docs/benchmark_definition_and_comparability.md).
+The full CHB-MIT literature tables, separated into prediction, continuous
+detection, and window-classification evidence, are in
+[`AI_train_model/docs/chbmit_literature_benchmark_tables.md`](AI_train_model/docs/chbmit_literature_benchmark_tables.md).
 
 ## Repository Layout
 

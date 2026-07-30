@@ -8,6 +8,10 @@ number assembled from incompatible studies. Segment/window accuracy is always
 reported, but it is never substituted for event sensitivity, false alarms per
 hour (FAR/h), or detection delay.
 
+The complete source-traceable literature tables, including a separate
+prediction table matching Zhang et al.'s format, are in
+[`chbmit_literature_benchmark_tables.md`](chbmit_literature_benchmark_tables.md).
+
 ## Verified External References
 
 | Reference | Evaluation setting | Segment accuracy | Event sensitivity | FAR/h | Delay | Use in this project |
