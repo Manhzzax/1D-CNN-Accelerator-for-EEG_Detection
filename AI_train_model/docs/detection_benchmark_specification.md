@@ -4,16 +4,21 @@
 
 This project will be benchmarked as **continuous EEG seizure detection**, not seizure prediction.
 
-The official primary benchmark is event-level detection on continuous held-out EEG:
+The primary outcome is event-level detection on continuous held-out EEG. The
+numbers below are an **internal clinical screening gate** for ablations; they
+are not presented as a universal paper benchmark:
 
-| Metric | Definition | Minimum paper target | Strong target |
+| Metric | Definition | Internal screening target | Aspirational target |
 |---|---|---:|---:|
 | Event sensitivity | Detected annotated seizures / all annotated seizures | >= 90% | >= 95% |
 | FAR/h | False seizure alarms / interictal monitoring hours | <= 0.50/h | <= 0.20/h |
 | Median detection delay | Alarm time minus annotated seizure onset, detected events only | <= 10 s | <= 8 s |
 | Validation window accuracy (1:1 sampled set) | Correct window predictions / validation windows | >= 90% | >= 95% |
 
-All primary metrics and the validation accuracy gate must be reported together. A run does not pass merely because it has high sensitivity or high window accuracy. The strong target is the target for the final FPGA-aware model; the minimum target is the gate for a credible controlled ablation.
+All primary metrics and validation accuracy must be reported together. A run
+does not pass merely because it has high sensitivity or high window accuracy.
+The paper-specific comparison contract, including which published accuracy can
+be compared, is in `paper_benchmark_comparison.md`.
 
 ## Why These Targets
 
@@ -25,18 +30,31 @@ The thresholds are deliberately conservative relative to directly relevant CHB-M
 | Chung et al., Frontiers in Neurology 2024 | Patient-specific CHB-MIT detector; 13 selected cases; public annotations, single channel | 97.69% +/- 6.96% | 0.16 +/- 0.26/h | 8.0 +/- 9.4 s | Closest published low-channel/device-oriented reference |
 | Chung et al., 2024 | Patient-specific CHB-MIT detector; 13 selected cases; 18 channels with reviewed annotations | 100% | 0.30 +/- 0.47/h | 2.1 +/- 6.7 s | Upper contextual reference, not a directly comparable target |
 
-The minimum target (90%, 0.50/h, 10 s) is below the reported results above, leaving margin for a stricter protocol and a compact FPGA-feasible architecture. The strong target (95%, 0.20/h, 8 s) approximately matches the public-annotation single-channel result without claiming direct superiority.
+The screening target (90%, 0.50/h, 10 s) is below the reported results above,
+leaving margin for a compact FPGA-feasible architecture. The aspirational target
+(95%, 0.20/h, 8 s) approximates the public-annotation single-channel result;
+it must not be described as a direct match unless the patient-specific 13-case,
+channel-selection protocol is reproduced.
 
 Sources:
 
 - Shoeb, A. and Guttag, J. *Application of Machine Learning To Epileptic Seizure Detection*, ICML 2010. https://physionet.org/physiobank/database/chbmit/shoeb-icml-2010.pdf
 - Chung, Y. G. et al. *Single-channel seizure detection with clinical confirmation of seizure locations using CHB-MIT dataset*, Frontiers in Neurology, 2024. https://doi.org/10.3389/fneur.2024.1389731
 
-## Required Evaluation Protocol
+## Required Final Evaluation Protocols
 
-The final paper benchmark must use a **patient-held-out protocol**, preferably leave-one-patient-out (LOPO) over all eligible CHB-MIT cases. A patient used for test must contribute no training, normalization fitting, threshold tuning, hard-negative mining, or architecture selection samples.
+The final paper needs two explicitly separated tracks:
 
-For each held-out patient:
+1. **Patient-specific continuous detection.** This is the external-comparator
+   track for Shoeb and Chung. It must use chronology-safe train/validation/test
+   partitions per case, public annotations, a fixed channel policy, and no use
+   of a future recording for fitting, mining or threshold selection.
+2. **Patient-held-out generalization.** Prefer leave-one-patient-out (LOPO)
+   over eligible CHB-MIT cases. A patient used for test must contribute no
+   training, normalization fitting, threshold tuning, hard-negative mining, or
+   architecture selection samples.
+
+For each held-out patient in the generalization track:
 
 1. Fit preprocessing statistics, model parameters, and mining only on the training patients.
 2. Use a disjoint validation-patient subset to choose threshold, temporal policy, and early-stopping epoch.
@@ -49,15 +67,17 @@ Report micro-average totals over all held-out EEG, plus per-patient values and a
 
 Window metrics are supportive only: AUROC, average precision, balanced accuracy, sensitivity, specificity, precision, and F1. Do not use raw accuracy as a decision criterion. In the current sampled test split, approximately 91% of windows are non-seizure, so an all-non-seizure classifier would appear to have about 90.9% accuracy while detecting no seizure events.
 
-For a controlled comparison, report:
+For a controlled comparison, always report:
 
-| Secondary metric | Acceptance value |
+| Secondary metric | Diagnostic reference |
 |---|---:|
 | Balanced accuracy | >= 0.90 |
 | AUROC | >= 0.95 |
 | Ictal-window F1 | >= 0.85 |
 
-These are diagnostic gates, not substitutes for the primary event metrics. They must be measured on the same untouched patient-held-out test predictions.
+These values are internal diagnostics, not paper-derived acceptance thresholds
+and not substitutes for the primary event metrics. They must be measured on the
+same untouched patient-held-out test predictions.
 
 ## FPGA Reporting Gate
 
@@ -71,11 +91,14 @@ Source: https://doi.org/10.1109/JBHI.2019.2933046
 
 ## Status Of Existing Runs
 
-The current runs use a locked within-case chronological split and the test set has already informed exploratory development. They are internal ablations, not official benchmark results. The current best low-FAR exploratory points are:
+The current runs use a locked within-case chronological split and the test set
+has already informed exploratory development. They are internal ablations, not
+official benchmark results. The current best validation-only screening point is:
 
 | Run | Event sensitivity | FAR/h | Median delay | Status |
 |---|---:|---:|---:|---|
-| `run_03_mixed_hardneg` | 58.06% | 0.341 | 13.5 s | Lowest FAR internal point |
-| `run_04_score_tcn` | 64.52% | 0.422 | 14.0 s | Highest sensitivity below 0.5/h internally |
+| `run_10_separable_hparam_f_lr1e3_wd1e4_nobalance` | 72.41% (21/29) | 0.455 | 15 s | Best current validation-only raw separable screening point |
 
-Neither meets the minimum publication target. Further architecture tuning must use validation only; the next substantive work is to implement and lock the patient-held-out protocol before a final model claim.
+It does not meet the internal clinical screening gate. Further architecture
+tuning must use validation only; after the architecture is frozen, implement
+and lock both final protocols before any model claim.

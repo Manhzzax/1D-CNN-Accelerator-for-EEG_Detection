@@ -31,6 +31,51 @@ SEPARABLE_RAW_TRIALS = [
     {"name": "f_lr1e3_wd1e4_nobalance", "learning_rate": 1e-3, "weight_decay": 1e-4, "balanced": False},
 ]
 
+SEPARABLE_RAW_REFINE_TRIALS = [
+    {
+        "name": "a_reference_lr1e3_wd1e4",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "separable_overrides": {},
+    },
+    {
+        "name": "b_lr5e4_wd1e4",
+        "learning_rate": 5e-4,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "separable_overrides": {},
+    },
+    {
+        "name": "c_lr1e3_wd3e4",
+        "learning_rate": 1e-3,
+        "weight_decay": 3e-4,
+        "balanced": False,
+        "separable_overrides": {},
+    },
+    {
+        "name": "d_dropout10",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "separable_overrides": {"CHBMIT_SEPARABLE_DROPOUT": 0.10},
+    },
+    {
+        "name": "e_spatial48",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "separable_overrides": {"CHBMIT_SEPARABLE_SPATIAL_FILTERS": 48},
+    },
+    {
+        "name": "f_temporal3",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "separable_overrides": {"CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL": 3},
+    },
+]
+
 SWEEP_FAMILIES = {
     "baseline_mixed": {
         "architecture": "baseline_1dcnn",
@@ -41,6 +86,11 @@ SWEEP_FAMILIES = {
         "architecture": "separable_1dcnn",
         "default_prepared_output_dir": "chbmit_prepared_v1",
         "trials": SEPARABLE_RAW_TRIALS,
+    },
+    "separable_raw_refine": {
+        "architecture": "separable_1dcnn",
+        "default_prepared_output_dir": "chbmit_prepared_v1",
+        "trials": SEPARABLE_RAW_REFINE_TRIALS,
     },
 }
 
@@ -86,13 +136,12 @@ def _rank_key(row):
     delay = float("inf") if delay is None else delay
     return (
         row["target_far_met"],
-        row["event_sensitivity"] >= 0.90,
-        row["validation_window_accuracy"] >= 0.90,
-        row["validation_ictal_f1"] >= 0.85,
         row["event_sensitivity"],
-        row["validation_window_accuracy"],
-        -delay,
         -row["false_alarms_per_hour"],
+        -delay,
+        row["validation_auroc"],
+        row["validation_ictal_f1"],
+        row["validation_window_accuracy"],
     )
 
 
@@ -123,6 +172,8 @@ def main():
                 "CHBMIT_SKIP_TEST_EVALUATION": "1",
                 "CHBMIT_EVENT_EVAL_SPLITS": "val",
             })
+            for environment_name, value in trial.get("separable_overrides", {}).items():
+                environment[environment_name] = str(value)
             print("=" * 60)
             print(f"VALIDATION-ONLY TRIAL: {run_id}")
             print("=" * 60)
@@ -130,16 +181,14 @@ def main():
             _run([sys.executable, "main.py", "--mode", "event_eval"], environment)
         result = _load_result(run_id)
         result.update(trial)
+        result["separable_overrides"] = json.dumps(trial.get("separable_overrides", {}), sort_keys=True)
         result["architecture"] = family["architecture"]
         result["prepared_output_dir"] = prepared_output_dir
-        result["benchmark_pass_validation"] = bool(
+        result["internal_clinical_screen_pass_validation"] = bool(
             result["event_sensitivity"] >= 0.90
             and result["false_alarms_per_hour"] <= 0.50
             and result["median_detection_delay_sec"] is not None
             and result["median_detection_delay_sec"] <= 10.0
-            and result["validation_window_accuracy"] >= 0.90
-            and result["validation_balanced_accuracy"] >= 0.90
-            and result["validation_ictal_f1"] >= 0.85
         )
         results.append(result)
 

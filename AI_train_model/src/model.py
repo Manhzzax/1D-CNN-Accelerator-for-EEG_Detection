@@ -1,5 +1,6 @@
 import json
 import os
+from copy import deepcopy
 import yaml
 import torch
 import torch.nn as nn
@@ -13,6 +14,37 @@ def load_config():
     with open(config_path, "r") as f:
         config = yaml.safe_load(f)
     return config
+
+
+def _apply_separable_environment_overrides(model_config):
+    """Apply explicit trial settings before creating a new separable model."""
+    overrides = {
+        "CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL": (
+            "temporal_filters_per_channel", int,
+        ),
+        "CHBMIT_SEPARABLE_SPATIAL_FILTERS": ("spatial_filters", int),
+        "CHBMIT_SEPARABLE_TEMPORAL_KERNEL": ("temporal_kernel", int),
+        "CHBMIT_SEPARABLE_REFINEMENT_KERNEL": ("refinement_kernel", int),
+        "CHBMIT_SEPARABLE_DROPOUT": ("dropout", float),
+    }
+    options = model_config["separable_1dcnn"]
+    for environment_name, (option_name, parser) in overrides.items():
+        value = os.environ.get(environment_name)
+        if value is not None:
+            options[option_name] = parser(value)
+    if options["temporal_filters_per_channel"] < 1 or options["spatial_filters"] < 1:
+        raise ValueError("Separable filter counts must be positive")
+    if not 0.0 <= options["dropout"] < 1.0:
+        raise ValueError("CHBMIT_SEPARABLE_DROPOUT must be in [0, 1)")
+    return model_config
+
+
+def effective_model_config(model_config=None):
+    """Return the exact model contract for a newly created model or saved run."""
+    if model_config is not None:
+        return deepcopy(model_config)
+    config = deepcopy(load_config()["model"])
+    return _apply_separable_environment_overrides(config)
 
 class EEG1DCNN(nn.Module):
     def __init__(self, in_channels=None, input_length=None, num_classes=None):
@@ -193,8 +225,7 @@ class ParallelMultiKernelEEG1DCNN(nn.Module):
 
 def build_model(architecture=None, model_config=None):
     """Create a configured model; environment override keeps ablations isolated."""
-    if model_config is None:
-        model_config = load_config()["model"]
+    model_config = effective_model_config(model_config)
     architecture = architecture or os.environ.get(
         "CHBMIT_MODEL_ARCHITECTURE", model_config.get("architecture", "baseline_1dcnn")
     )
@@ -232,7 +263,7 @@ def build_model(architecture=None, model_config=None):
 
 def save_model_spec(output_dir, model):
     """Persist the architecture contract alongside a checkpoint."""
-    model_config = load_config()["model"].copy()
+    model_config = effective_model_config()
     model_config["architecture"] = model.architecture_name
     spec = {
         "architecture": model.architecture_name,
