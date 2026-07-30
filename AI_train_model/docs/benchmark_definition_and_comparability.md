@@ -46,13 +46,21 @@ The aggregate is micro-averaged: total detected events divided by total events, 
 
 All values below use the locked 17-channel within-case chronological protocol and are exploratory because the test set has been observed during ablation development.
 
-| Role | Run | Test event sensitivity | FAR/h | Median delay |
+| Role | Run | Event result and split | FAR/h | Median delay |
 |---|---|---:|---:|---:|
+| Current causal screening reference | `run_21_raw_2s_temporal3` validation only | 23/29 = 79.31% | 0.467 | 17.0 s |
 | High-sensitivity reference | `run_01` | 60/62 = 96.77% | 41.26 | 11.0 s |
 | Low-FAR reference | `run_03_mixed_hardneg` | 36/62 = 58.06% | 0.341 | 13.5 s |
 | Higher-sensitivity sub-0.5 FAR point | `run_04_score_tcn` | 40/62 = 64.52% | 0.422 | 14.0 s |
 
-For a future low-FAR detector, a validation-selected point must improve the current Pareto frontier: more than 64.52% event sensitivity while staying at or below 0.422 FAR/h, with no worse than 14 s median delay. These are internal research targets, not clinical standards or a claim of superiority over papers with a different task/protocol.
+`run_21` is the current compact-model reference because it is the first
+validation-only causal point above 79% event sensitivity while remaining below
+0.5 FAR/h. A future candidate should exceed 79.31% sensitivity while retaining
+FAR <= 0.5/h and no worse than the 17 s median delay. The historical test
+results remain evidence of earlier trade-offs only; they were observed during
+ablation development and are not selection metrics. These are internal
+research targets, not clinical standards or a claim of superiority over papers
+with a different task/protocol.
 
 ## Publication Benchmark Required Later
 

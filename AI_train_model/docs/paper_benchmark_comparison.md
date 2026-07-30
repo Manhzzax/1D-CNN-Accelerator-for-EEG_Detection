@@ -44,27 +44,92 @@ The current exploratory test split contains about 91% non-seizure windows;
 therefore its raw accuracy must never be compared to a paper headline or used
 as a clinical selection objective.
 
-## Current Position (Validation Only)
+## Current Reference: `run_21_raw_2s_temporal3`
 
-The strongest raw separable 1D-CNN configuration so far is
-`run_10_separable_hparam_f_lr1e3_wd1e4_nobalance`:
+The current model reference is a raw 17-channel separable 1D-CNN trained with
+2-second windows at 256 Hz and a 1-second stride. It uses train-only channel
+z-score normalization, 5,013 trainable parameters, and a causal alarm time at
+the end of each 2-second input window. It is a **validation-only architecture
+screening result** under the locked within-case chronological split; no test
+inference was used to select it.
 
-| Item | Value |
+| Current-model item | Value |
 |---|---:|
-| Architecture | Raw 17-channel separable 1D-CNN |
-| Parameters | 3,908 |
-| 1:1 validation window accuracy | 86.93% |
-| Validation AUROC | 0.9426 |
-| Validation ictal F1 | 0.8701 |
-| Continuous validation event sensitivity | 21/29 = 72.41% |
-| Continuous validation FAR/h | 0.4552 |
-| Median detection delay | 15 s |
+| Validation window accuracy, 1:1 sampled windows | **90.0718%** |
+| Validation window sensitivity | 90.7645% |
+| Validation window F1 | 90.1401% |
+| Validation AUROC / average precision | 96.5802% / 96.9764% |
+| Causal validation event sensitivity | **23/29 = 79.31%** |
+| Causal FAR/h | **0.4671/h** |
+| Causal median detection delay | 17 s |
+| Training parameters / folded deployment values | 5,013 / 4,898 |
+| FP32 checkpoint / folded INT16 tensor package | 28,130 B / 10,030 B |
+| INT16-emulated validation accuracy | 90.0462% |
+| FP32-to-INT16 accuracy change | -0.0257 percentage points |
 
-Against Chung's public-annotation **patient-specific** single-channel result,
-this exploratory shared-model validation point is lower by 8.00 percentage
-points in segment accuracy and 25.28 percentage points in event sensitivity;
-its FAR/h is higher by 0.2952 and its median delay is 7 s longer. This is a
-gap analysis, not a direct head-to-head claim, because the protocols differ.
+The reproducible result summary is
+[`results/reference/run_21_raw_2s_temporal3/validation_summary.json`](../results/reference/run_21_raw_2s_temporal3/validation_summary.json).
+The fixed-point package and its report are under
+[`fpga/reference_run_21_int16/`](../fpga/reference_run_21_int16/).
+
+## Accuracy Benchmark: Classification Papers
+
+This table answers the narrow question, "how far is the current 90.07% window
+accuracy from published CHB-MIT classification headlines?" It is a directional
+gap analysis only, because their splits, channel counts, labels, windows, and
+class ratios differ.
+
+| Study | Task and protocol | Reported accuracy | Difference from current 90.07% | Hardware-size evidence |
+|---|---|---:|---:|---|
+| **Current `run_21`** | 17-channel ictal/non-seizure; 2 s; locked within-case chronological validation; 1:1 sampled windows | **90.07%** | 0.00 pp | 5,013 trainable parameters; 10,030 B INT16 tensors |
+| Chung et al. 2024, public labels | Patient-specific; 13 selected cases; one clinical channel; k-fold segment evaluation | 94.93% +/- 8.35% | -4.86 pp | Not reported in a directly comparable form |
+| Kashefi Amiri et al. 2025 | DWT + 1D CNN-LSTM; 10-fold classification | 96.94% +/- 1.22% | -6.87 pp | Reports complexity around 1.67e6; not a parameter count |
+| Alharthi et al. 2022 | Selected-channel 1D-CNN + Bi-LSTM + attention; integrated clinical/CHB-MIT data | up to 96.87% | -6.80 pp | Not reported in a directly comparable form |
+| Cao et al. 2025 | DWT feature fusion + CNN-Bi-LSTM classification; all 23 CHB-MIT cases | 98.43% | -8.36 pp | Paper describes high complexity; no comparable compact parameter count |
+
+The published numbers are not a valid claim that the current model is behind by
+exactly the listed margins. They do establish the present classification gap:
+the compact model has crossed 90% under the locked protocol, while published
+heavier or patient-specific classifiers report approximately 95-98% under
+different protocols.
+
+## Clinical Benchmark: Continuous Event Detection
+
+This table is more important than accuracy for a seizure detector. It includes
+only papers that report a continuous event sensitivity plus false-alarm rate.
+
+| Study | Evaluation setting | Event sensitivity | FAR/h | Delay | Comparison status |
+|---|---|---:|---:|---:|---|
+| **Current `run_21`** | Shared 17-channel model; locked within-case chronological validation; public CHB-MIT labels; causal window-end alarm | **79.31%** | **0.4671** | 17 s median | Current screening reference; not final test result |
+| Shoeb and Guttag 2010 | Patient-specific; 24 cases; 916 h continuous test EEG; 173 test seizures | 96% | 0.083 median | 3 s median | Historical continuous-detection comparator |
+| Chung et al. 2024, public labels | Patient-specific; 13 selected cases; single clinical channel | 97.69% +/- 6.96% | 0.16 +/- 0.26 | 8.0 +/- 9.4 s | Primary device-oriented comparator |
+| Chung et al. 2024, reviewed labels | Patient-specific; clinician-reviewed annotations | 99.62% +/- 1.39% | 0.22 +/- 0.34 | 3.3 +/- 5.5 s | Context only; labels are different |
+
+At the internal screening constraint of FAR <= 0.5/h, `run_21` reaches the
+constraint but remains below the external event-sensitivity references. Its
+gap to Chung's public-label mean is 18.38 percentage points in sensitivity and
+its FAR/h is 0.3071 higher. Delay is not subtracted numerically because the
+current value is a median while Chung reports mean +/- standard deviation.
+
+## Hardware Benchmark Position
+
+`run_21` is currently the only model in this repository with both a selected
+window-classification result and a verified fixed-point package. BatchNorm
+folding changes logits by at most `3.81e-06`; INT16 emulation preserves
+validation sensitivity and has 99.9743% prediction agreement with the folded
+FP32 model. This supports starting KV260 HLS/RTL work, but it is not yet an
+FPGA performance claim. The remaining hardware benchmark is post-synthesis
+resource use (LUT, FF, BRAM, DSP), clock, throughput, latency, power, and
+continuous event metrics after fixed-point deployment.
+
+## Benchmark Decision
+
+For the next model iterations, retain `run_21` as the **accuracy and compact
+hardware reference**. The next candidate must be compared on validation only
+and should improve the causal event frontier: event sensitivity above 79.31%
+while retaining FAR <= 0.5/h and not increasing the 17 s median delay. A final
+paper comparison requires the two protocol tracks below; current results are
+not evidence of superiority over any published paper.
 
 ## Protocol Required Before a Paper Claim
 
