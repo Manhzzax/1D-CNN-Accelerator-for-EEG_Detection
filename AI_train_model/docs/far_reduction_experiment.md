@@ -56,4 +56,4 @@ Event evaluation now persists score arrays before validation policy selection, s
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_RUN_ID=run_05_temporal_hardneg python main.py --mode reconcile_event_metrics
 ```
 
-Do not commit EDF files, NPZ datasets, checkpoints, or continuous-score arrays. Commit only concise summaries, CSV sweeps, reports, and plots under `server_results/`.
+Do not commit EDF files, NPZ datasets, or continuous-score arrays. Commit only concise summaries, CSV sweeps, reports, and plots under `results/archive/`; the selected compact reference checkpoint is versioned separately under `checkpoints/`.

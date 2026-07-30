@@ -224,4 +224,3 @@ AI_train_model/agent_notes/
 AI_train_model/data/*.csv
 AI_train_model/data/*.npz
 AI_train_model/outputs/
-AI_train_model/server_results/run_*/

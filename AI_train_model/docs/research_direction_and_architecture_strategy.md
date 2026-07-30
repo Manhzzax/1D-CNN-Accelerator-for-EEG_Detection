@@ -539,7 +539,7 @@ Second priority:
 7. Add configurable channel subsets.
 8. Add DWT feature frontend.
 9. Add QAT or INT8 path.
-10. Add experiment runner that saves all config/results in `server_results/run_XX`.
+10. Add experiment runner that saves concise committed artifacts in `results/archive/run_XX`.
 
 ---
 
@@ -554,4 +554,3 @@ The next correct implementation move is **not** to immediately add a larger mode
 5. quantify performance vs hardware cost under Q16.
 
 This path matches the project title and gives a stronger journal story than chasing high random-split accuracy.
-

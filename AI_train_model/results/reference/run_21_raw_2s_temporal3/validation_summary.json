@@ -1,0 +1,46 @@
+{
+  "run_id": "run_21_raw_2s_temporal3",
+  "status": "current_window_classification_reference",
+  "selection_split": "validation_only",
+  "test_evaluation": "skipped",
+  "input": {
+    "channels": 17,
+    "sample_rate_hz": 256,
+    "window_sec": 2.0,
+    "stride_sec": 1.0,
+    "feature_representation": "raw",
+    "normalization": "train_channel_zscore"
+  },
+  "model": {
+    "architecture": "separable_1dcnn",
+    "temporal_filters_per_channel": 3,
+    "parameter_count": 5013
+  },
+  "validation_window_metrics": {
+    "accuracy": 0.900718317085685,
+    "balanced_accuracy": 0.900718317085685,
+    "sensitivity": 0.9076449461262186,
+    "precision": 0.895242914979757,
+    "f1": 0.9014012738853503,
+    "auroc": 0.965802146632405,
+    "average_precision": 0.9697635462802112,
+    "threshold": 0.5
+  },
+  "causal_validation_event_policy": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "policy_name": "10_of_20",
+    "positive_windows": 10,
+    "decision_window_windows": 20,
+    "threshold": 0.975,
+    "detected_events": 23,
+    "total_events": 29,
+    "event_sensitivity": 0.7931034482758621,
+    "false_alarms_per_hour": 0.4671,
+    "median_detection_delay_sec": 17.0
+  },
+  "checkpoint": {
+    "path": "AI_train_model/checkpoints/best_model.pth",
+    "sha256_manifest": "AI_train_model/checkpoints/best_model.pth.sha256",
+    "size_bytes": 28130
+  }
+}
