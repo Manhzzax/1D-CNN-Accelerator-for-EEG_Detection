@@ -1,0 +1,81 @@
+{
+  "eligible_candidates": 76,
+  "evaluated_split": "val",
+  "internal_clinical_screen_pass_validation": false,
+  "policies": [
+    {
+      "decision_window_windows": 6,
+      "name": "3_of_6",
+      "positive_windows": 3
+    },
+    {
+      "decision_window_windows": 8,
+      "name": "4_of_8",
+      "positive_windows": 4
+    },
+    {
+      "decision_window_windows": 10,
+      "name": "5_of_10",
+      "positive_windows": 5
+    },
+    {
+      "decision_window_windows": 12,
+      "name": "6_of_12",
+      "positive_windows": 6
+    },
+    {
+      "decision_window_windows": 14,
+      "name": "7_of_14",
+      "positive_windows": 7
+    },
+    {
+      "decision_window_windows": 16,
+      "name": "8_of_16",
+      "positive_windows": 8
+    },
+    {
+      "decision_window_windows": 18,
+      "name": "9_of_18",
+      "positive_windows": 9
+    },
+    {
+      "decision_window_windows": 20,
+      "name": "10_of_20",
+      "positive_windows": 10
+    }
+  ],
+  "selected": {
+    "decision_window_windows": 18,
+    "detected_events": 20,
+    "event_sensitivity": 0.6896551724137931,
+    "false_alarms": 75,
+    "false_alarms_per_hour": 0.4434043601428747,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 21.55,
+    "median_detection_delay_sec": 14.0,
+    "policy_name": "9_of_18",
+    "positive_windows": 9,
+    "source_validation_balanced_accuracy": 0.8804347826086957,
+    "source_validation_ictal_f1": 0.8781241947951559,
+    "source_validation_window_accuracy": 0.8804347826086957,
+    "target_far_met": true,
+    "threshold": 0.9840000000000001,
+    "total_events": 29
+  },
+  "source_run_id": "run_18_multiscale_separable_c_wide_2x48",
+  "source_validation_window_metrics": {
+    "accuracy": 0.8804347826086957,
+    "auroc": 0.9530899040098311,
+    "average_precision": 0.9556791141494262,
+    "balanced_accuracy": 0.8804347826086957,
+    "f1": 0.8781241947951559,
+    "precision": 0.8954282711508145,
+    "sensitivity": 0.8614762386248737,
+    "threshold": 0.5
+  },
+  "threshold_range": {
+    "maximum": 0.9990000000000001,
+    "minimum": 0.85,
+    "step": 0.0010000000000000009
+  }
+}

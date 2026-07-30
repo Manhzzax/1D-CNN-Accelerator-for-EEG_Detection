@@ -1,0 +1,82 @@
+{
+  "eligible_candidates": 188,
+  "evaluated_split": "val",
+  "internal_clinical_screen_pass_validation": false,
+  "policies": [
+    {
+      "decision_window_windows": 6,
+      "name": "3_of_6",
+      "positive_windows": 3
+    },
+    {
+      "decision_window_windows": 8,
+      "name": "4_of_8",
+      "positive_windows": 4
+    },
+    {
+      "decision_window_windows": 10,
+      "name": "5_of_10",
+      "positive_windows": 5
+    },
+    {
+      "decision_window_windows": 12,
+      "name": "6_of_12",
+      "positive_windows": 6
+    },
+    {
+      "decision_window_windows": 14,
+      "name": "7_of_14",
+      "positive_windows": 7
+    },
+    {
+      "decision_window_windows": 16,
+      "name": "8_of_16",
+      "positive_windows": 8
+    },
+    {
+      "decision_window_windows": 18,
+      "name": "9_of_18",
+      "positive_windows": 9
+    },
+    {
+      "decision_window_windows": 20,
+      "name": "10_of_20",
+      "positive_windows": 10
+    }
+  ],
+  "selected": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "decision_window_windows": 14,
+    "detected_events": 21,
+    "event_sensitivity": 0.7241379310344828,
+    "false_alarms": 77,
+    "false_alarms_per_hour": 0.45522847641335135,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 20.428571428571427,
+    "median_detection_delay_sec": 14.0,
+    "policy_name": "7_of_14",
+    "positive_windows": 7,
+    "source_validation_balanced_accuracy": 0.8756319514661275,
+    "source_validation_ictal_f1": 0.8711367207962284,
+    "source_validation_window_accuracy": 0.8756319514661274,
+    "target_far_met": true,
+    "threshold": 0.9770000000000001,
+    "total_events": 29
+  },
+  "source_run_id": "run_13_separable_refine_f_temporal3",
+  "source_validation_window_metrics": {
+    "accuracy": 0.8756319514661274,
+    "auroc": 0.9453926201359546,
+    "average_precision": 0.9502878538868861,
+    "balanced_accuracy": 0.8756319514661275,
+    "f1": 0.8711367207962284,
+    "precision": 0.903804347826087,
+    "sensitivity": 0.8407482305358949,
+    "threshold": 0.5
+  },
+  "threshold_range": {
+    "maximum": 0.9990000000000001,
+    "minimum": 0.85,
+    "step": 0.0010000000000000009
+  }
+}
