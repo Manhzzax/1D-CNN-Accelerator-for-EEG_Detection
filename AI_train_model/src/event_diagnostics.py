@@ -60,8 +60,9 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
         offset_end = int(scores["record_offsets"][record_index + 1])
         starts = scores["start_samples"][offset_start:offset_end]
         probabilities = scores["probabilities"][offset_start:offset_end]
+        window_ends = starts + window_samples
         alarms = generate_alarms(
-            starts,
+            window_ends,
             probabilities,
             selected["threshold"],
             refractory_samples,
@@ -72,29 +73,29 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
         case_id = record["recording_id"].split("/", 1)[0]
 
         for alarm in alarms:
-            alarm_index = int(np.searchsorted(starts, alarm))
+            alarm_index = int(np.searchsorted(window_ends, alarm))
             overlapping_events = [
                 event_index
                 for event_index, (start, end) in enumerate(intervals)
-                if alarm < end and alarm + window_samples > start
+                if start <= alarm < end
             ]
             alarm_rows.append({
                 "case_id": case_id,
                 "recording_id": record["recording_id"],
-                "alarm_start_sample": alarm,
-                "alarm_start_sec": alarm / sample_rate,
+                "alarm_time_sample": alarm,
+                "alarm_time_sec": alarm / sample_rate,
                 "alarm_probability": float(probabilities[alarm_index]),
                 "is_false_alarm": not bool(overlapping_events),
                 "overlapping_event_index": overlapping_events[0] if overlapping_events else None,
             })
 
         for event_index, (seizure_start, seizure_end) in enumerate(intervals):
-            overlapping_windows = (starts < seizure_end) & (starts + window_samples > seizure_start)
-            event_probabilities = probabilities[overlapping_windows]
+            ictal_decision_windows = (window_ends >= seizure_start) & (window_ends < seizure_end)
+            event_probabilities = probabilities[ictal_decision_windows]
             event_threshold_hits = event_probabilities >= selected["threshold"]
             matching_alarms = [
                 alarm for alarm in alarms
-                if alarm < seizure_end and alarm + window_samples > seizure_start
+                if seizure_start <= alarm < seizure_end
             ]
             first_alarm = min(matching_alarms) if matching_alarms else None
             event_rows.append({
@@ -104,8 +105,8 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
                 "seizure_start_sec": seizure_start / sample_rate,
                 "seizure_end_sec": seizure_end / sample_rate,
                 "seizure_duration_sec": (seizure_end - seizure_start) / sample_rate,
-                "overlapping_window_count": int(len(event_probabilities)),
-                "max_ictal_probability": float(event_probabilities.max()),
+                "ictal_decision_window_count": int(len(event_probabilities)),
+                "max_ictal_probability": float(event_probabilities.max()) if len(event_probabilities) else None,
                 "ictal_windows_at_threshold": int(event_threshold_hits.sum()),
                 "max_ictal_hits_in_decision_window": int(max_hits_in_window(
                     event_threshold_hits,
@@ -121,7 +122,7 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
 
     alarm_path = output_dir / f"event_diagnostics_{split_name}_alarms.csv"
     alarm_fields = [
-        "case_id", "recording_id", "alarm_start_sample", "alarm_start_sec",
+        "case_id", "recording_id", "alarm_time_sample", "alarm_time_sec",
         "alarm_probability", "is_false_alarm", "overlapping_event_index",
     ]
     with alarm_path.open("w", newline="", encoding="utf-8") as output_file:
@@ -131,7 +132,7 @@ def _write_alarm_and_event_tables(output_dir, split_name, scores, selected, prep
     event_path = output_dir / f"event_diagnostics_{split_name}_events.csv"
     event_fields = [
         "case_id", "recording_id", "event_index", "seizure_start_sec", "seizure_end_sec",
-        "seizure_duration_sec", "overlapping_window_count", "max_ictal_probability",
+        "seizure_duration_sec", "ictal_decision_window_count", "max_ictal_probability",
         "ictal_windows_at_threshold", "max_ictal_hits_in_decision_window", "detected",
         "first_alarm_sec", "detection_delay_sec",
     ]

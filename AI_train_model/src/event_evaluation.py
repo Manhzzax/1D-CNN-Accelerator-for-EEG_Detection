@@ -125,30 +125,30 @@ def _validate_temporal_policy(positive_windows, decision_window_windows):
 
 
 def generate_alarms(
-    starts,
+    decision_times,
     probabilities,
     threshold,
     refractory_samples,
     positive_windows,
     decision_window_windows,
 ):
-    """Confirm an alarm only when the temporal policy is satisfied."""
+    """Confirm alarms at causal decision times after the input window is complete."""
     _validate_temporal_policy(positive_windows, decision_window_windows)
     threshold_hits = probabilities >= threshold
     hit_count = 0
     alarms = []
     next_allowed = -1
 
-    for index, start in enumerate(starts):
+    for index, decision_time in enumerate(decision_times):
         hit_count += int(threshold_hits[index])
         if index >= decision_window_windows:
             hit_count -= int(threshold_hits[index - decision_window_windows])
         if index + 1 < decision_window_windows or hit_count < positive_windows:
             continue
-        if start < next_allowed:
+        if decision_time < next_allowed:
             continue
-        alarms.append(int(start))
-        next_allowed = int(start) + refractory_samples
+        alarms.append(int(decision_time))
+        next_allowed = int(decision_time) + refractory_samples
     return alarms
 
 
@@ -177,9 +177,10 @@ def event_metrics(
         offset_start = scores["record_offsets"][record_index]
         offset_end = scores["record_offsets"][record_index + 1]
         record_starts = start_samples[offset_start:offset_end]
+        record_window_ends = record_starts + window_samples
         record_probabilities = probabilities[offset_start:offset_end]
         alarms = generate_alarms(
-            record_starts,
+            record_window_ends,
             record_probabilities,
             threshold,
             refractory_samples,
@@ -195,17 +196,18 @@ def event_metrics(
         for seizure_start, seizure_end in intervals:
             event_alarms = [
                 alarm for alarm in alarms
-                if alarm < seizure_end and alarm + window_samples > seizure_start
+                if seizure_start <= alarm < seizure_end
             ]
             if event_alarms:
                 detected_events += 1
-                delays.append(max(0.0, (min(event_alarms) - seizure_start) / sample_rate))
+                delays.append((min(event_alarms) - seizure_start) / sample_rate)
         for alarm in alarms:
-            if not any(alarm < end and alarm + window_samples > start for start, end in intervals):
+            if not any(start <= alarm < end for start, end in intervals):
                 false_alarms += 1
 
     return {
         "policy_name": policy_name,
+        "alarm_timestamp_mode": "window_end_causal",
         "positive_windows": int(positive_windows),
         "decision_window_windows": int(decision_window_windows),
         "threshold": float(threshold),

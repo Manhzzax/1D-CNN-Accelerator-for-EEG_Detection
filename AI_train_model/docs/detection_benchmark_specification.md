@@ -59,9 +59,18 @@ For each held-out patient in the generalization track:
 1. Fit preprocessing statistics, model parameters, and mining only on the training patients.
 2. Use a disjoint validation-patient subset to choose threshold, temporal policy, and early-stopping epoch.
 3. Run one continuous inference pass over all held-out recordings.
-4. Count an event as detected if the confirmed alarm overlaps its annotated ictal interval. Count every alarm outside an ictal interval as a false alarm, applying one prespecified refractory period.
+4. Timestamp an alarm at the **end** of its input window, because the model
+   cannot produce that score until the full window has arrived. Count an event
+   as detected only if the confirmed causal alarm timestamp is within its
+   annotated ictal interval. Count every other alarm as a false alarm, applying
+   one prespecified refractory period.
 
 Report micro-average totals over all held-out EEG, plus per-patient values and a 95% confidence interval obtained by patient-level bootstrap. Repeat the complete training for at least three fixed seeds. The input montage, sample rate, filters, normalization, window/stride, temporal policy, refractory time, and total interictal hours must be fixed before final testing.
+
+The current Butterworth/notch preprocessing is zero-phase offline filtering and
+is acceptable only for exploratory score selection. Before an FPGA real-time
+claim, replace it with a causal/stateful filter and remeasure the full event
+protocol; the window-end alarm convention remains required in both modes.
 
 ## Secondary Metrics
 
