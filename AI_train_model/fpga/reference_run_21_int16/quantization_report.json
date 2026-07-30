@@ -1,0 +1,68 @@
+{
+  "batchnorm_fold_max_logit_abs_delta": 3.814697265625e-06,
+  "calibration": {
+    "activation_max_abs": {
+      "input": 23.108020782470703,
+      "refine_depthwise": 7.307750701904297,
+      "refine_relu": 13.493277549743652,
+      "spatial_relu": 16.312040328979492,
+      "temporal_relu": 33.80670166015625
+    },
+    "activation_scales": {
+      "input": 0.0007052223512213722,
+      "refine_depthwise": 0.00022302165904429142,
+      "refine_relu": 0.0004117947187641118,
+      "spatial_relu": 0.000497819157352809,
+      "temporal_relu": 0.0010317301449676885
+    },
+    "split": "train",
+    "windows": 1024
+  },
+  "deployment_status": "integer reference package exported; FPGA synthesis and hardware-in-the-loop validation pending",
+  "observed_accumulator_max_abs": {
+    "classifier": 4337920357,
+    "refine_depthwise": 2328674082,
+    "refine_pointwise": 1545656677,
+    "spatial_pointwise": 2228274584,
+    "temporal_depthwise": 2257439519
+  },
+  "source_run_id": "run_21_raw_2s_temporal3",
+  "validation": {
+    "float_fused": {
+      "accuracy": 0.900718317085685,
+      "confusion_matrix": [
+        [
+          1742,
+          207
+        ],
+        [
+          180,
+          1769
+        ]
+      ],
+      "f1": 0.9014012738853503,
+      "precision": 0.895242914979757,
+      "sensitivity": 0.9076449461262186
+    },
+    "int16_emulated": {
+      "accuracy": 0.9004617752693689,
+      "confusion_matrix": [
+        [
+          1741,
+          208
+        ],
+        [
+          180,
+          1769
+        ]
+      ],
+      "f1": 0.901171676006113,
+      "precision": 0.894790085988872,
+      "sensitivity": 0.9076449461262186
+    },
+    "max_logit_abs_error": 0.8851263694634162,
+    "prediction_agreement": 0.9997434581836839,
+    "split": "val",
+    "windows": 3898
+  }
+}

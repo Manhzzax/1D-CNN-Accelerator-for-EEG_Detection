@@ -1,0 +1,256 @@
+{
+  "activation_scales": {
+    "input": 0.0007052223512213722,
+    "refine_depthwise": 0.00022302165904429142,
+    "refine_relu": 0.0004117947187641118,
+    "spatial_relu": 0.000497819157352809,
+    "temporal_relu": 0.0010317301449676885
+  },
+  "architecture": "separable_1dcnn",
+  "checkpoint_sha256": "c55b430b00deb5b67b92fb36f7208e89d629fb5f6c8f5e2b41180f69cb3b91f8",
+  "fixed_point": {
+    "accumulator_dtype": "int64_reference",
+    "bias_dtype": "int32",
+    "rounding": "nearest; nonnegative average pools use floor((sum + divisor/2) / divisor)",
+    "weight_dtype": "int16",
+    "zero_point": 0
+  },
+  "format_version": 1,
+  "input": {
+    "channel_order": [
+      "FP1-F7",
+      "F7-T7",
+      "T7-P7",
+      "P7-O1",
+      "FP1-F3",
+      "F3-C3",
+      "C3-P3",
+      "P3-O1",
+      "FP2-F4",
+      "F4-C4",
+      "C4-P4",
+      "P4-O2",
+      "FP2-F8",
+      "F8-T8",
+      "P8-O2",
+      "FZ-CZ",
+      "CZ-PZ"
+    ],
+    "dtype": "int16",
+    "scale": 0.0007052223512213722,
+    "shape": [
+      1,
+      17,
+      512
+    ]
+  },
+  "layers": [
+    {
+      "activation": "relu",
+      "bias": "temporal_depthwise_bias",
+      "groups": 17,
+      "kernel": 31,
+      "name": "temporal_depthwise",
+      "op": "conv1d",
+      "output_scale": 0.0010317301449676885,
+      "padding": 15,
+      "weight": "temporal_depthwise_weight"
+    },
+    {
+      "activation": "relu",
+      "bias": "spatial_pointwise_bias",
+      "groups": 1,
+      "kernel": 1,
+      "name": "spatial_pointwise",
+      "op": "conv1d",
+      "output_scale": 0.000497819157352809,
+      "padding": 0,
+      "weight": "spatial_pointwise_weight"
+    },
+    {
+      "kernel": 4,
+      "name": "pool_1",
+      "op": "average_pool1d",
+      "stride": 4
+    },
+    {
+      "activation": "none",
+      "bias": null,
+      "groups": 32,
+      "kernel": 15,
+      "name": "refine_depthwise",
+      "op": "conv1d",
+      "output_scale": 0.00022302165904429142,
+      "padding": 7,
+      "weight": "refine_depthwise_weight"
+    },
+    {
+      "activation": "relu",
+      "bias": "refine_pointwise_bias",
+      "groups": 1,
+      "kernel": 1,
+      "name": "refine_pointwise",
+      "op": "conv1d",
+      "output_scale": 0.0004117947187641118,
+      "padding": 0,
+      "weight": "refine_pointwise_weight"
+    },
+    {
+      "kernel": 4,
+      "name": "pool_2",
+      "op": "average_pool1d",
+      "stride": 4
+    },
+    {
+      "name": "global_average",
+      "op": "adaptive_average_pool1d",
+      "output_length": 1
+    },
+    {
+      "bias": "classifier_bias",
+      "logit_scale": 4.911503333604765e-09,
+      "name": "classifier",
+      "op": "linear",
+      "weight": "classifier_weight"
+    }
+  ],
+  "parameter_count": 5013,
+  "preprocessing_contract": {
+    "bandpass_hz": [
+      0.5,
+      45.0
+    ],
+    "notch_hz": 60.0,
+    "sample_rate_hz": 256,
+    "warning": "The current corpus preparation uses offline zero-phase filtering. This package starts at normalized window input; causal FPGA filtering remains a separate validation task."
+  },
+  "source_run_id": "run_21_raw_2s_temporal3",
+  "tensors": [
+    {
+      "bytes": 3162,
+      "dtype": "int16",
+      "elements": 1581,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "temporal_depthwise_weight",
+      "path": "tensors/temporal_depthwise_weight.int16.bin",
+      "scale": 4.0460619523497805e-05,
+      "shape": [
+        51,
+        1,
+        31
+      ]
+    },
+    {
+      "bytes": 204,
+      "dtype": "int32",
+      "elements": 51,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "temporal_depthwise_bias",
+      "path": "tensors/temporal_depthwise_bias.int32.bin",
+      "scale": 2.853373323223448e-08,
+      "shape": [
+        51
+      ]
+    },
+    {
+      "bytes": 3264,
+      "dtype": "int16",
+      "elements": 1632,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "spatial_pointwise_weight",
+      "path": "tensors/spatial_pointwise_weight.int16.bin",
+      "scale": 2.1672757809099636e-05,
+      "shape": [
+        32,
+        51,
+        1
+      ]
+    },
+    {
+      "bytes": 128,
+      "dtype": "int32",
+      "elements": 32,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "spatial_pointwise_bias",
+      "path": "tensors/spatial_pointwise_bias.int32.bin",
+      "scale": 2.236043755623197e-08,
+      "shape": [
+        32
+      ]
+    },
+    {
+      "bytes": 960,
+      "dtype": "int16",
+      "elements": 480,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "refine_depthwise_weight",
+      "path": "tensors/refine_depthwise_weight.int16.bin",
+      "scale": 1.0885463103051261e-05,
+      "shape": [
+        32,
+        1,
+        15
+      ]
+    },
+    {
+      "bytes": 2048,
+      "dtype": "int16",
+      "elements": 1024,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "refine_pointwise_weight",
+      "path": "tensors/refine_pointwise_weight.int16.bin",
+      "scale": 7.723959400273513e-05,
+      "shape": [
+        32,
+        32,
+        1
+      ]
+    },
+    {
+      "bytes": 128,
+      "dtype": "int32",
+      "elements": 32,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "refine_pointwise_bias",
+      "path": "tensors/refine_pointwise_bias.int32.bin",
+      "scale": 1.722610239839749e-08,
+      "shape": [
+        32
+      ]
+    },
+    {
+      "bytes": 128,
+      "dtype": "int16",
+      "elements": 64,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "classifier_weight",
+      "path": "tensors/classifier_weight.int16.bin",
+      "scale": 1.1927067322148488e-05,
+      "shape": [
+        2,
+        32
+      ]
+    },
+    {
+      "bytes": 8,
+      "dtype": "int32",
+      "elements": 2,
+      "endianness": "little",
+      "layout": "row_major_flattened",
+      "name": "classifier_bias",
+      "path": "tensors/classifier_bias.int32.bin",
+      "scale": 4.911503333604765e-09,
+      "shape": [
+        2
+      ]
+    }
+  ]
+}
