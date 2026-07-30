@@ -1,11 +1,19 @@
 # CHB-MIT Benchmark Data
 
-These CSV files are the machine-readable exports of Tables B and C in
-`docs/chbmit_literature_benchmark_tables.md`.
+These compact publication-facing CSV files are the exports of Tables B and C
+in `docs/chbmit_literature_benchmark_tables.md`.
 
 They use a semicolon (`;`) delimiter so Excel displays the fields as separate
-columns in the project's locale. Import them with `;` as the delimiter in other
-tools.
+columns in the project's locale. Numeric metrics use a decimal comma to prevent
+Excel from treating a decimal point as a thousands separator. Import them with
+`;` as the delimiter in other tools.
+
+- Table B contains nine columns for continuous event detection: method,
+  channels, coverage, input/model, event sensitivity, FAR/h, delay, window
+  accuracy, and evidence.
+- Table C contains seven columns for window classification and compactness:
+  method, coverage/split, representation/model, accuracy, seizure sensitivity,
+  model size/efficiency, and evidence.
 
 - `chbmit_continuous_detection_benchmark.csv`: event-level seizure-detection
   comparison. Use this file for clinical benchmark figures.
