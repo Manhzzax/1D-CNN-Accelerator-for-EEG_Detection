@@ -76,6 +76,50 @@ SEPARABLE_RAW_REFINE_TRIALS = [
     },
 ]
 
+MULTISCALE_SEPARABLE_RAW_TRIALS = [
+    {
+        "name": "a_compact_1x32",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "multiscale_overrides": {
+            "CHBMIT_MULTISCALE_TEMPORAL_FILTERS_PER_BRANCH": 1,
+            "CHBMIT_MULTISCALE_SPATIAL_FILTERS": 32,
+        },
+    },
+    {
+        "name": "b_wide_2x32",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "multiscale_overrides": {
+            "CHBMIT_MULTISCALE_TEMPORAL_FILTERS_PER_BRANCH": 2,
+            "CHBMIT_MULTISCALE_SPATIAL_FILTERS": 32,
+        },
+    },
+    {
+        "name": "c_wide_2x48",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "multiscale_overrides": {
+            "CHBMIT_MULTISCALE_TEMPORAL_FILTERS_PER_BRANCH": 2,
+            "CHBMIT_MULTISCALE_SPATIAL_FILTERS": 48,
+        },
+    },
+    {
+        "name": "d_wide_dropout10",
+        "learning_rate": 1e-3,
+        "weight_decay": 1e-4,
+        "balanced": False,
+        "multiscale_overrides": {
+            "CHBMIT_MULTISCALE_TEMPORAL_FILTERS_PER_BRANCH": 2,
+            "CHBMIT_MULTISCALE_SPATIAL_FILTERS": 32,
+            "CHBMIT_MULTISCALE_DROPOUT": 0.10,
+        },
+    },
+]
+
 SWEEP_FAMILIES = {
     "baseline_mixed": {
         "architecture": "baseline_1dcnn",
@@ -91,6 +135,11 @@ SWEEP_FAMILIES = {
         "architecture": "separable_1dcnn",
         "default_prepared_output_dir": "chbmit_prepared_v1",
         "trials": SEPARABLE_RAW_REFINE_TRIALS,
+    },
+    "multiscale_separable_raw": {
+        "architecture": "multiscale_separable_1dcnn",
+        "default_prepared_output_dir": "chbmit_prepared_v1",
+        "trials": MULTISCALE_SEPARABLE_RAW_TRIALS,
     },
 }
 
@@ -174,6 +223,8 @@ def main():
             })
             for environment_name, value in trial.get("separable_overrides", {}).items():
                 environment[environment_name] = str(value)
+            for environment_name, value in trial.get("multiscale_overrides", {}).items():
+                environment[environment_name] = str(value)
             print("=" * 60)
             print(f"VALIDATION-ONLY TRIAL: {run_id}")
             print("=" * 60)
@@ -182,6 +233,7 @@ def main():
         result = _load_result(run_id)
         result.update(trial)
         result["separable_overrides"] = json.dumps(trial.get("separable_overrides", {}), sort_keys=True)
+        result["multiscale_overrides"] = json.dumps(trial.get("multiscale_overrides", {}), sort_keys=True)
         result["architecture"] = family["architecture"]
         result["prepared_output_dir"] = prepared_output_dir
         result["internal_clinical_screen_pass_validation"] = bool(

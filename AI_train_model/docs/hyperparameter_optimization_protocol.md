@@ -52,6 +52,25 @@ Each trial changes one factor from the reference. All use non-balanced batches, 
 
 The script records each resolved layer configuration in `model_spec.json`; no test recording is scored.
 
+## Third Controlled Sweep: `multiscale_separable_raw`
+
+The hard-negative ablations show that calibration alone can make the detector
+too conservative: FAR falls but event sensitivity falls more. The next
+controlled comparison changes score representation rather than data labels. It
+uses two depthwise temporal paths (`15` and `63` samples) before the existing
+pointwise cross-channel mixing and compact refinement. This preserves the
+1D-CNN/FPGA implementation path while testing short and longer seizure rhythms.
+
+| Trial | Filters per channel per branch | Spatial filters | Dropout |
+|---|---:|---:|---:|
+| A | 1 | 32 | 0.25 |
+| B | 2 | 32 | 0.25 |
+| C | 2 | 48 | 0.25 |
+| D | 2 | 32 | 0.10 |
+
+All trials retain raw 17-channel data, non-balanced batches, `lr=1e-3`,
+`weight_decay=1e-4`, AMP and early stopping. The sweep remains validation-only.
+
 ## Execution
 
 Run one command from `AI_train_model`:
@@ -64,6 +83,12 @@ For the refinement sweep:
 
 ```bash
 CHBMIT_SWEEP_FAMILY=separable_raw_refine CHBMIT_SWEEP_ID=run_13_separable_refine python main.py --mode hyperparameter_sweep
+```
+
+For the multiscale separable sweep:
+
+```bash
+CHBMIT_SWEEP_FAMILY=multiscale_separable_raw CHBMIT_SWEEP_ID=run_18_multiscale_separable python main.py --mode hyperparameter_sweep
 ```
 
 The script creates one isolated output directory per trial and writes `outputs/<sweep_id>/validation_leaderboard.csv`. It sets `CHBMIT_SKIP_TEST_EVALUATION=1` and `CHBMIT_EVENT_EVAL_SPLITS=val`; therefore it does not produce or inspect test probabilities or test event metrics.

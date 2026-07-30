@@ -40,6 +40,15 @@ model:
     temporal_kernel: 31
     refinement_kernel: 15
     dropout: 0.25
+  multiscale_separable_1dcnn:
+    # Parallel depthwise 59 ms and 246 ms temporal receptive fields before
+    # pointwise cross-channel mixing. Kept compact for the FPGA path.
+    temporal_filters_per_branch: 1
+    spatial_filters: 32
+    short_kernel: 15
+    long_kernel: 63
+    refinement_kernel: 15
+    dropout: 0.25
   parallel_multikernel_1dcnn:
     # Raw channel-mixing short/long branches, then compact refinement.
     branch_filters: 16

@@ -39,12 +39,41 @@ def _apply_separable_environment_overrides(model_config):
     return model_config
 
 
+def _apply_multiscale_separable_environment_overrides(model_config):
+    """Apply explicit trial settings before creating a multiscale separable model."""
+    overrides = {
+        "CHBMIT_MULTISCALE_TEMPORAL_FILTERS_PER_BRANCH": (
+            "temporal_filters_per_branch", int,
+        ),
+        "CHBMIT_MULTISCALE_SPATIAL_FILTERS": ("spatial_filters", int),
+        "CHBMIT_MULTISCALE_SHORT_KERNEL": ("short_kernel", int),
+        "CHBMIT_MULTISCALE_LONG_KERNEL": ("long_kernel", int),
+        "CHBMIT_MULTISCALE_REFINEMENT_KERNEL": ("refinement_kernel", int),
+        "CHBMIT_MULTISCALE_DROPOUT": ("dropout", float),
+    }
+    options = model_config["multiscale_separable_1dcnn"]
+    for environment_name, (option_name, parser) in overrides.items():
+        value = os.environ.get(environment_name)
+        if value is not None:
+            options[option_name] = parser(value)
+    if options["temporal_filters_per_branch"] < 1 or options["spatial_filters"] < 1:
+        raise ValueError("Multiscale separable filter counts must be positive")
+    if any(options[name] < 1 or options[name] % 2 == 0 for name in (
+        "short_kernel", "long_kernel", "refinement_kernel",
+    )):
+        raise ValueError("Multiscale separable kernels must be positive odd integers")
+    if not 0.0 <= options["dropout"] < 1.0:
+        raise ValueError("CHBMIT_MULTISCALE_DROPOUT must be in [0, 1)")
+    return model_config
+
+
 def effective_model_config(model_config=None):
     """Return the exact model contract for a newly created model or saved run."""
     if model_config is not None:
         return deepcopy(model_config)
     config = deepcopy(load_config()["model"])
-    return _apply_separable_environment_overrides(config)
+    config = _apply_separable_environment_overrides(config)
+    return _apply_multiscale_separable_environment_overrides(config)
 
 class EEG1DCNN(nn.Module):
     def __init__(self, in_channels=None, input_length=None, num_classes=None):
@@ -174,6 +203,76 @@ class SeparableEEG1DCNN(nn.Module):
         return self.classifier(x)
 
 
+class MultiScaleSeparableEEG1DCNN(nn.Module):
+    """Compact EEGNet-style CNN with short and long depthwise temporal paths."""
+
+    def __init__(
+        self,
+        in_channels,
+        num_classes,
+        temporal_filters_per_branch=1,
+        spatial_filters=32,
+        short_kernel=15,
+        long_kernel=63,
+        refinement_kernel=15,
+        dropout=0.25,
+    ):
+        super().__init__()
+        if any(kernel % 2 == 0 for kernel in (short_kernel, long_kernel, refinement_kernel)):
+            raise ValueError("Multiscale separable temporal kernels must be odd")
+        self.architecture_name = "multiscale_separable_1dcnn"
+        branch_channels = in_channels * temporal_filters_per_branch
+        self.short_depthwise = nn.Conv1d(
+            in_channels,
+            branch_channels,
+            kernel_size=short_kernel,
+            padding=short_kernel // 2,
+            groups=in_channels,
+            bias=False,
+        )
+        self.long_depthwise = nn.Conv1d(
+            in_channels,
+            branch_channels,
+            kernel_size=long_kernel,
+            padding=long_kernel // 2,
+            groups=in_channels,
+            bias=False,
+        )
+        temporal_channels = branch_channels * 2
+        self.temporal_bn = nn.BatchNorm1d(temporal_channels)
+        self.spatial_pointwise = nn.Conv1d(
+            temporal_channels, spatial_filters, kernel_size=1, bias=False
+        )
+        self.spatial_bn = nn.BatchNorm1d(spatial_filters)
+        self.refine_depthwise = nn.Conv1d(
+            spatial_filters,
+            spatial_filters,
+            kernel_size=refinement_kernel,
+            padding=refinement_kernel // 2,
+            groups=spatial_filters,
+            bias=False,
+        )
+        self.refine_pointwise = nn.Conv1d(
+            spatial_filters, spatial_filters, kernel_size=1, bias=False
+        )
+        self.refine_bn = nn.BatchNorm1d(spatial_filters)
+        self.activation = nn.ReLU()
+        self.pool = nn.AvgPool1d(kernel_size=4, stride=4)
+        self.dropout = nn.Dropout(dropout)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(spatial_filters, num_classes)
+
+    def forward(self, x):
+        short_features = self.short_depthwise(x)
+        long_features = self.long_depthwise(x)
+        x = torch.cat((short_features, long_features), dim=1)
+        x = self.activation(self.temporal_bn(x))
+        x = self.pool(self.activation(self.spatial_bn(self.spatial_pointwise(x))))
+        x = self.pool(self.activation(self.refine_bn(self.refine_pointwise(self.refine_depthwise(x)))))
+        x = self.dropout(self.global_pool(x).squeeze(-1))
+        return self.classifier(x)
+
+
 class ParallelMultiKernelEEG1DCNN(nn.Module):
     """Raw EEG CNN with short and long temporal receptive fields in parallel."""
 
@@ -243,6 +342,18 @@ def build_model(architecture=None, model_config=None):
             temporal_filters_per_channel=int(options["temporal_filters_per_channel"]),
             spatial_filters=int(options["spatial_filters"]),
             temporal_kernel=int(options["temporal_kernel"]),
+            refinement_kernel=int(options["refinement_kernel"]),
+            dropout=float(options["dropout"]),
+        )
+    if architecture == "multiscale_separable_1dcnn":
+        options = model_config["multiscale_separable_1dcnn"]
+        return MultiScaleSeparableEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            temporal_filters_per_branch=int(options["temporal_filters_per_branch"]),
+            spatial_filters=int(options["spatial_filters"]),
+            short_kernel=int(options["short_kernel"]),
+            long_kernel=int(options["long_kernel"]),
             refinement_kernel=int(options["refinement_kernel"]),
             dropout=float(options["dropout"]),
         )
