@@ -28,6 +28,10 @@ Machine-readable exports of Tables B and C are in
 [`../benchmarks/chbmit_continuous_detection_benchmark.csv`](../benchmarks/chbmit_continuous_detection_benchmark.csv)
 and
 [`../benchmarks/chbmit_window_hardware_benchmark.csv`](../benchmarks/chbmit_window_hardware_benchmark.csv).
+The publication-ready LaTeX source for Table C is
+[`tables/table_c_window_hardware_benchmark.tex`](tables/table_c_window_hardware_benchmark.tex).
+It ranks only the strictly comparable FP32/INT16 EpiSepNet variants; it does
+not assign global ranks across heterogeneous literature protocols.
 
 ## A. Seizure Prediction on CHB-MIT
 
