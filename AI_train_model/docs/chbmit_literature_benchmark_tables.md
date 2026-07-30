@@ -24,6 +24,10 @@ and it is not a prediction result.
 
 The count and provenance of all available result rows are recorded in
 [`chbmit_benchmark_evidence_inventory.md`](chbmit_benchmark_evidence_inventory.md).
+Machine-readable exports of Tables B and C are in
+[`../benchmarks/chbmit_continuous_detection_benchmark.csv`](../benchmarks/chbmit_continuous_detection_benchmark.csv)
+and
+[`../benchmarks/chbmit_window_hardware_benchmark.csv`](../benchmarks/chbmit_window_hardware_benchmark.csv).
 
 ## A. Seizure Prediction on CHB-MIT
 
