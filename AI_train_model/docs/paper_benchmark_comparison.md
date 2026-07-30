@@ -48,14 +48,15 @@ The current exploratory test split contains about 91% non-seizure windows;
 therefore its raw accuracy must never be compared to a paper headline or used
 as a clinical selection objective.
 
-## Current Reference: `run_21_raw_2s_temporal3`
+## Current Reference: EpiSepNet-5K
 
-The current model reference is a raw 17-channel separable 1D-CNN trained with
-2-second windows at 256 Hz and a 1-second stride. It uses train-only channel
-z-score normalization, 5,013 trainable parameters, and a causal alarm time at
-the end of each 2-second input window. It is a **validation-only architecture
-screening result** under the locked within-case chronological split; no test
-inference was used to select it.
+**EpiSepNet-5K** is a raw 17-channel separable 1D-CNN trained with 2-second
+windows at 256 Hz and a 1-second stride. It uses train-only channel z-score
+normalization, 5,013 trainable parameters, and a causal alarm time at the end
+of each 2-second input window. Its source experiment is
+`run_21_raw_2s_temporal3`. It is a **validation-only architecture screening
+result** under the locked within-case chronological split; no test inference
+was used to select it.
 
 | Current-model item | Value |
 |---|---:|
@@ -85,7 +86,7 @@ class ratios differ.
 
 | Study | Task and protocol | Reported accuracy | Difference from current 90.07% | Hardware-size evidence |
 |---|---|---:|---:|---|
-| **Current `run_21`** | 17-channel ictal/non-seizure; 2 s; locked within-case chronological validation; 1:1 sampled windows | **90.07%** | 0.00 pp | 5,013 trainable parameters; 10,030 B INT16 tensors |
+| **EpiSepNet-5K** | 17-channel ictal/non-seizure; 2 s; locked within-case chronological validation; 1:1 sampled windows | **90.07%** | 0.00 pp | 5,013 trainable parameters; 10,030 B INT16 tensors |
 | Chung et al. 2024, public labels | Patient-specific; 13 selected cases; one clinical channel; k-fold segment evaluation | 94.93% +/- 8.35% | -4.86 pp | Not reported in a directly comparable form |
 | Kashefi Amiri et al. 2025 | DWT + 1D CNN-LSTM; 10-fold classification | 96.94% +/- 1.22% | -6.87 pp | Reports complexity around 1.67e6; not a parameter count |
 | Alharthi et al. 2022 | Selected-channel 1D-CNN + Bi-LSTM + attention; integrated clinical/CHB-MIT data | up to 96.87% | -6.80 pp | Not reported in a directly comparable form |
@@ -104,12 +105,12 @@ only papers that report a continuous event sensitivity plus false-alarm rate.
 
 | Study | Evaluation setting | Event sensitivity | FAR/h | Delay | Comparison status |
 |---|---|---:|---:|---:|---|
-| **Current `run_21`** | Shared 17-channel model; locked within-case chronological validation; public CHB-MIT labels; causal window-end alarm | **79.31%** | **0.4671** | 17 s median | Current screening reference; not final test result |
+| **EpiSepNet-5K** | Shared 17-channel model; locked within-case chronological validation; public CHB-MIT labels; causal window-end alarm | **79.31%** | **0.4671** | 17 s median | Current screening reference; not final test result |
 | Shoeb and Guttag 2010 | Patient-specific; 24 cases; 916 h continuous test EEG; 173 test seizures | 96% | 0.083 median | 3 s median | Historical continuous-detection comparator |
 | Chung et al. 2024, public labels | Patient-specific; 13 selected cases; single clinical channel | 97.69% +/- 6.96% | 0.16 +/- 0.26 | 8.0 +/- 9.4 s | Primary device-oriented comparator |
 | Chung et al. 2024, reviewed labels | Patient-specific; clinician-reviewed annotations | 99.62% +/- 1.39% | 0.22 +/- 0.34 | 3.3 +/- 5.5 s | Context only; labels are different |
 
-At the internal screening constraint of FAR <= 0.5/h, `run_21` reaches the
+At the internal screening constraint of FAR <= 0.5/h, EpiSepNet-5K reaches the
 constraint but remains below the external event-sensitivity references. Its
 gap to Chung's public-label mean is 18.38 percentage points in sensitivity and
 its FAR/h is 0.3071 higher. Delay is not subtracted numerically because the
@@ -117,7 +118,7 @@ current value is a median while Chung reports mean +/- standard deviation.
 
 ## Hardware Benchmark Position
 
-`run_21` is currently the only model in this repository with both a selected
+EpiSepNet-5K is currently the only model in this repository with both a selected
 window-classification result and a verified fixed-point package. BatchNorm
 folding changes logits by at most `3.81e-06`; INT16 emulation preserves
 validation sensitivity and has 99.9743% prediction agreement with the folded
@@ -128,7 +129,7 @@ continuous event metrics after fixed-point deployment.
 
 ## Benchmark Decision
 
-For the next model iterations, retain `run_21` as the **accuracy and compact
+For the next model iterations, retain EpiSepNet-5K as the **accuracy and compact
 hardware reference**. The next candidate must be compared on validation only
 and should improve the causal event frontier: event sensitivity above 79.31%
 while retaining FAR <= 0.5/h and not increasing the 17 s median delay. A final

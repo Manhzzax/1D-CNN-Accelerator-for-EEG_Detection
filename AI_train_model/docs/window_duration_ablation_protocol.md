@@ -34,12 +34,13 @@ the more expensive 4-second ablation.
 The zero-phase filtering remains offline exploratory preprocessing. A final
 FPGA claim still requires causal/stateful filtering and a full remeasurement.
 
-## Recorded Result: `run_21_raw_2s_temporal3`
+## Recorded Result: EpiSepNet-5K
 
-This run is the current **window-classification reference**. It preserves the
-raw separable temporal3 training configuration and changes only the input
-window from 1 s to 2 s. Model selection used the lowest validation loss at
-epoch 24; no test inference was run.
+**EpiSepNet-5K** is the current **window-classification reference**. Its
+evidence run, `run_21_raw_2s_temporal3`, preserves the raw separable temporal3
+training configuration and changes only the input window from 1 s to 2 s.
+Model selection used the lowest validation loss at epoch 24; no test inference
+was run.
 
 | Validation window metric | Value |
 |---|---:|
@@ -59,5 +60,5 @@ This event-level point meets the internal FAR constraint (`<= 0.5/h`) and
 improves event sensitivity over the 1-second causal baseline (21/29). It is
 not, however, a predeclared clinical replacement under the selection rule
 above: its FAR is slightly higher than `0.4552/h` and its median delay is
-higher than 14 s. Therefore `run_21` is locked as the window-level accuracy
+higher than 14 s. Therefore EpiSepNet-5K is locked as the window-level accuracy
 reference and a promising low-FAR event candidate, not a final clinical claim.

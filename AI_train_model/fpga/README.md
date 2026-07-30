@@ -17,10 +17,10 @@ The current package starts at filtered and normalized EEG windows. The corpus
 preprocessing still uses offline zero-phase filters, so causal FPGA filtering
 and hardware-in-the-loop event evaluation remain separate work.
 
-## Verified `run_21` Package
+## Verified EpiSepNet-5K Package
 
 The committed package at `reference_run_21_int16/` was generated from
-`run_21_raw_2s_temporal3`, whose checkpoint SHA-256 is
+EpiSepNet-5K evidence run `run_21_raw_2s_temporal3`, whose checkpoint SHA-256 is
 `c55b430b00deb5b67b92fb36f7208e89d629fb5f6c8f5e2b41180f69cb3b91f8`.
 
 | Check | Result |

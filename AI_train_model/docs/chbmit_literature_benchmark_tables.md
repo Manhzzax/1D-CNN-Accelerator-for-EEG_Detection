@@ -22,6 +22,9 @@ The current project is in the **continuous detection** track. Its 90.07%
 number belongs only to the balanced-window table; it is not event sensitivity
 and it is not a prediction result.
 
+The count and provenance of all available result rows are recorded in
+[`chbmit_benchmark_evidence_inventory.md`](chbmit_benchmark_evidence_inventory.md).
+
 ## A. Seizure Prediction on CHB-MIT
 
 This reproduces and extends the structure of Zhang et al. Table IV. `SPH` is
@@ -67,7 +70,7 @@ held-out test evidence.
 | Khanmohammadi et al. | 5 | NR | Time statistics + spectral power | Adaptive distance change-point detector | 96.00 | 0.12 | 4.2 | NR | Secondary: P02, p. 9 |
 | Chung et al., 2024, public labels | 1, clinical per case | 13 selected cases | 4 s time series + parallel stacked 2D-CNN | **97.69 +/- 6.96** | **0.16 +/- 0.26** | 8.0 +/- 9.4 | 94.93 +/- 8.35 | Primary; direct P02, pp. 5, 7-8. Patient-specific k-fold. |
 | Chung et al., 2024, reviewed labels | 1, clinical per case | 13 selected cases | 4 s time series + parallel stacked 2D-CNN | 99.62 +/- 1.39 | 0.22 +/- 0.34 | 3.3 +/- 5.5 | 98.18 +/- 1.83 | Context only: clinician re-annotations differ from public labels; direct P02, pp. 6, 8. |
-| **Current `run_21_raw_2s_temporal3`** | **17** | **validation: 29 events** | **2 s raw window + compact separable 1D-CNN; causal 10-of-20 policy** | **79.31 (23/29)** | **0.4671** | **17 median** | **90.07 balanced-window** | Validation-only locked within-case chronological screening; not a final paper result. |
+| **EpiSepNet-5K** | **17** | **validation: 29 events** | **2 s raw window + compact separable 1D-CNN; causal 10-of-20 policy** | **79.31 (23/29)** | **0.4671** | **17 median** | **90.07 balanced-window** | Evidence run `run_21_raw_2s_temporal3`; validation-only screening, not a final paper result. |
 
 **Continuous-detection interpretation.** The current project meets its internal
 screening limit of `FAR <= 0.5/h`, but does not yet match the external
@@ -91,8 +94,8 @@ clinical false-alarm rate.
 | Ahlawat et al., 2026 preprint | 18 channels; protocol described on 686 EDF | Baseline 1D-CNN | 96.17 | NR | 1.63 MB FP32; 0.39 ms reported CPU latency | Direct: P19, pp. 2-3, 7. Preprint; split details must be checked. |
 | Ahlawat et al., 2026 preprint | 8 channels; 2:4 sparse | Pruned 1D-CNN | 95.15 | NR | 50% sparse weights; 55% channel reduction | Direct: P19, p. 7. Preprint; not event-level. |
 | Chen et al., 2026 | Pareto channel/frequency configurations | Channel-frequency selection | 82.17 to 99.83 | NR | 1 to 8 selected channels and 1 to 12 bands | Direct: P30, p. 4. Classification setting; details/split must be checked. |
-| **Current `run_21_raw_2s_temporal3`, FP32** | **17 channels; locked within-case chronological validation; 1:1 windows** | **Raw 2 s separable 1D-CNN** | **90.0718** | **90.7645** | **5,013 parameters; 28,130 B checkpoint** | Reproducible local result: `results/reference/run_21_raw_2s_temporal3/validation_summary.json` |
-| **Current `run_21_raw_2s_temporal3`, INT16 emulation** | **Same validation windows** | **BatchNorm-folded signed-INT16 tensor package** | **90.0462** | **90.7645** | **10,030 B tensors; 99.9743% FP32/INT16 agreement** | Reproducible local result: `fpga/reference_run_21_int16/quantization_report.json` |
+| **EpiSepNet-5K, FP32** | **17 channels; locked within-case chronological validation; 1:1 windows** | **Raw 2 s separable 1D-CNN** | **90.0718** | **90.7645** | **5,013 parameters; 28,130 B checkpoint** | Evidence run `run_21_raw_2s_temporal3`; local result: `results/reference/run_21_raw_2s_temporal3/validation_summary.json` |
+| **EpiSepNet-5K, INT16 emulation** | **Same validation windows** | **BatchNorm-folded signed-INT16 tensor package** | **90.0462** | **90.7645** | **10,030 B tensors; 99.9743% FP32/INT16 agreement** | Local result: `fpga/reference_run_21_int16/quantization_report.json` |
 
 ## D. How This Benchmark Must Be Used
 
@@ -102,7 +105,7 @@ clinical false-alarm rate.
   event sensitivity, FAR/h, and delay must always appear together.
 - Use Table C to report `accuracy` and deployment efficiency, with the
   sampling ratio, window length, channel count, and validation protocol.
-- `run_21` is the compact accuracy and fixed-point reference, not proof that it
+- EpiSepNet-5K is the compact accuracy and fixed-point reference, not proof that it
   outperforms any paper. Its next candidate must exceed 79.31% validation
   event sensitivity while retaining FAR <= 0.5/h and median delay <=17 s.
 - Before submission, verify every `secondary` row from its original paper and

@@ -5,14 +5,15 @@ corpus, with an FPGA-oriented deployment path for KV260.
 
 ## Current Reference
 
-The current reference is `run_21_raw_2s_temporal3`. It is a validation-only
-result under the locked within-case chronological protocol; test inference was
-intentionally skipped.
+The current reference model is **EpiSepNet-5K**. Its evidence run is
+`run_21_raw_2s_temporal3`; this is a validation-only result under the locked
+within-case chronological protocol, and test inference was intentionally
+skipped.
 
 | Item | Current value |
 |---|---:|
 | Input | 17 bipolar EEG channels, 2 s x 256 Hz, 1 s stride |
-| Backbone | Raw separable 1D-CNN, 3 temporal filters per channel |
+| Backbone | **EpiSepNet-5K**: raw separable 1D-CNN, 3 temporal filters per channel |
 | Trainable parameters | **5,013** |
 | Checkpoint size | **28 KB** |
 | Validation window accuracy | **90.07%** |
@@ -45,6 +46,8 @@ and
 The full CHB-MIT literature tables, separated into prediction, continuous
 detection, and window-classification evidence, are in
 [`AI_train_model/docs/chbmit_literature_benchmark_tables.md`](AI_train_model/docs/chbmit_literature_benchmark_tables.md).
+The model-name and experiment-ID convention is in
+[`AI_train_model/docs/model_identity.md`](AI_train_model/docs/model_identity.md).
 
 ## Repository Layout
 

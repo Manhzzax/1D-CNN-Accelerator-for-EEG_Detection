@@ -83,7 +83,7 @@ Draw-TextCell -Text "CHB-MIT SEIZURE DETECTION BENCHMARK" -Font $titleFont -Colo
 Draw-TextCell -Text "Detection only. Window accuracy, seizure-event sensitivity, FAR/h, and delay are separate metrics." -Font $subtitleFont -Color $muted -X 70 -Y 82 -Width 2260 -Height 32
 
 $graphics.FillRectangle([System.Drawing.SolidBrush]::new($lightTeal), 70, 126, 2260, 42)
-Draw-TextCell -Text "CURRENT HARDWARE REFERENCE: run_21_raw_2s_temporal3 | 17 channels | 2 s at 256 Hz | locked chronological validation | INT16 package verified" -Font $groupFont -Color $teal -X 82 -Y 128 -Width 2235 -Height 36
+Draw-TextCell -Text "CURRENT HARDWARE REFERENCE: EpiSepNet-5K | evidence run: run_21_raw_2s_temporal3 | 17 channels | 2 s at 256 Hz | INT16 package verified" -Font $groupFont -Color $teal -X 82 -Y 128 -Width 2235 -Height 36
 
 $y = 190
 $x = 70
@@ -101,14 +101,14 @@ Draw-TextCell -Text "A. CONTINUOUS EVENT DETECTION - PRIMARY CLINICAL COMPARISON
 $y += 34
 
 $eventRows = @(
-    @("Current run_21", "Shared model; 2 s raw window; 1:1 validation windows; causal 10-of-20", "17", "90.07%", "79.31% (23/29)", "0.467", "17 s median", "5,013 params${lineBreak}10.0 KB INT16 tensors", "Current screening reference${lineBreak}Validation only; not final test"),
+    @("EpiSepNet-5K", "Shared model; 2 s raw window; 1:1 validation windows; causal 10-of-20", "17", "90.07%", "79.31% (23/29)", "0.467", "17 s median", "5,013 params${lineBreak}10.0 KB INT16 tensors", "Current screening reference${lineBreak}Validation only; not final test"),
     @("Shoeb and Guttag, 2010", "Patient-specific continuous detection; 24 cases, 173 test seizures", "Full", "NR", "96.00%", "0.08", "50% <3 s${lineBreak}mean 4.6 s", "NR", "Historical event comparator"),
     @("Chung et al., 2024${lineBreak}public labels", "Patient-specific k-fold; 13 selected cases; 4 s single-channel CNN", "1", "94.93 +/- 8.35%", "97.69 +/- 6.96%", "0.16 +/- 0.26", "8.0 +/- 9.4 s", "Parameter count NR", "Primary low-channel comparator"),
     @("Chung et al., 2024${lineBreak}reviewed labels", "Patient-specific k-fold; clinician re-annotated labels; 4 s single-channel CNN", "1", "98.18 +/- 1.83%", "99.62 +/- 1.39%", "0.22 +/- 0.34", "3.3 +/- 5.5 s", "Parameter count NR", "Context only: labels differ")
 )
 foreach ($row in $eventRows) {
-    $fill = if ($row[0] -eq "Current run_21") { $lightTeal } else { [System.Drawing.Color]::White }
-    Draw-Row -Values $row -Y $y -Height 106 -Fill $fill -Bold ($row[0] -eq "Current run_21")
+    $fill = if ($row[0] -eq "EpiSepNet-5K") { $lightTeal } else { [System.Drawing.Color]::White }
+    Draw-Row -Values $row -Y $y -Height 106 -Fill $fill -Bold ($row[0] -eq "EpiSepNet-5K")
     $y += 106
 }
 
@@ -128,7 +128,7 @@ foreach ($row in $classificationRows) {
 }
 
 $graphics.FillRectangle([System.Drawing.SolidBrush]::new($navy), 70, $y + 24, 2260, 76)
-Draw-TextCell -Text "READING RULE: Compare run_21 directly only with detection studies that report event sensitivity, FAR/h, and delay. Accuracy rows use different windows, labels, sampling ratios, channels, and splits; they show context, not a numerical ranking." -Font $footerFont -Color ([System.Drawing.Color]::White) -X 94 -Y ($y + 28) -Width 2210 -Height 68
+Draw-TextCell -Text "READING RULE: Compare EpiSepNet-5K directly only with detection studies that report event sensitivity, FAR/h, and delay. Accuracy rows use different windows, labels, sampling ratios, channels, and splits; they show context, not a numerical ranking." -Font $footerFont -Color ([System.Drawing.Color]::White) -X 94 -Y ($y + 28) -Width 2210 -Height 68
 Draw-TextCell -Text "Sources: P02 Chung 2024; P05 Kashefi 2025; P06 Cao 2025; P12 Shoeb 2010; P19 Ahlawat 2026. Full source/page map: docs/chbmit_literature_benchmark_tables.md" -Font $footerFont -Color $muted -X 70 -Y ($y + 112) -Width 2260 -Height 26 -Alignment ([System.Drawing.StringAlignment]::Center)
 
 $bitmap.Save($OutputPath, [System.Drawing.Imaging.ImageFormat]::Png)

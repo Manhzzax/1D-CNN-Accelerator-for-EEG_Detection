@@ -17,8 +17,8 @@ The policy and threshold for each row were selected on validation only. The cont
 
 ## Current Validation Window Reference
 
-`run_21_raw_2s_temporal3` is the best current validation window-classification
-result under the locked within-case protocol: accuracy `90.07%`, balanced
+**EpiSepNet-5K** (`run_21_raw_2s_temporal3`) is the best current validation
+window-classification result under the locked within-case protocol: accuracy `90.07%`, balanced
 accuracy `90.07%`, sensitivity `90.76%`, F1 `90.14%`, AUROC `96.58%`, and
 average precision `96.98%`. It uses 2-second raw 17-channel windows at 256 Hz,
 a 1-second stride, train-only normalization, and the compact separable
