@@ -15,6 +15,20 @@ All results below use the verified CHB-MIT v1.0.0 EDF corpus, the fixed 17-chann
 
 The policy and threshold for each row were selected on validation only. The continuous test set was then evaluated once for that predeclared selection.
 
+## Current Validation Window Reference
+
+`run_21_raw_2s_temporal3` is the best current validation window-classification
+result under the locked within-case protocol: accuracy `90.07%`, balanced
+accuracy `90.07%`, sensitivity `90.76%`, F1 `90.14%`, AUROC `96.58%`, and
+average precision `96.98%`. It uses 2-second raw 17-channel windows at 256 Hz,
+a 1-second stride, train-only normalization, and the compact separable
+temporal3 CNN. Test inference was intentionally skipped.
+
+Its fine causal validation policy (`10_of_20`, threshold `0.975`, window-end
+timestamps) detects `23/29` events (`79.31%`) at `0.4671` FAR/h with a 17 s
+median delay. These event metrics must not be described as the 90.07%
+accuracy: window accuracy and event sensitivity measure different quantities.
+
 ## Validation Error Signature Of `run_03_mixed_hardneg`
 
 Validation records 18 of 29 seizure events and has FAR `0.1537/h`. The 26 false alarms are concentrated: `chb07/chb07_14.edf`, `chb20/chb20_26.edf`, and `chb09/chb09_09.edf` account for 16 alarms. In contrast, the 11 missed seizure events are distributed across `chb06`, `chb13`, `chb14`, `chb16`, `chb18`, `chb20`, `chb21`, and `chb23` recordings. This distinguishes a concentrated false-alarm failure from a distributed seizure-sensitivity failure and motivates timestamp-level review before architecture changes.

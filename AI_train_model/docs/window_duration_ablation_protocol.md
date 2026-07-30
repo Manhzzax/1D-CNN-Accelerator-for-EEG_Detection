@@ -33,3 +33,31 @@ the more expensive 4-second ablation.
 
 The zero-phase filtering remains offline exploratory preprocessing. A final
 FPGA claim still requires causal/stateful filtering and a full remeasurement.
+
+## Recorded Result: `run_21_raw_2s_temporal3`
+
+This run is the current **window-classification reference**. It preserves the
+raw separable temporal3 training configuration and changes only the input
+window from 1 s to 2 s. Model selection used the lowest validation loss at
+epoch 24; no test inference was run.
+
+| Validation window metric | Value |
+|---|---:|
+| Accuracy | **90.0718%** |
+| Balanced accuracy | 90.0718% |
+| Sensitivity | 90.7645% |
+| Precision | 89.5243% |
+| F1 | 90.1401% |
+| AUROC | 96.5802% |
+| Average precision | 96.9764% |
+
+The fine validation-only causal policy sweep selected `10_of_20` at threshold
+`0.975`. It detected **23/29 events (79.31%)**, with **0.4671 FAR/h** and a
+**17 s median detection delay**. Timestamps are at the 2-second window end.
+
+This event-level point meets the internal FAR constraint (`<= 0.5/h`) and
+improves event sensitivity over the 1-second causal baseline (21/29). It is
+not, however, a predeclared clinical replacement under the selection rule
+above: its FAR is slightly higher than `0.4552/h` and its median delay is
+higher than 14 s. Therefore `run_21` is locked as the window-level accuracy
+reference and a promising low-FAR event candidate, not a final clinical claim.
