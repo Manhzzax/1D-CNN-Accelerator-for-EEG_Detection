@@ -54,6 +54,7 @@ AI_train_model/
     reference/                 # Machine-readable summary of the current result
     archive/                   # Previous ablations retained for research evidence
   docs/                        # Protocols, paper knowledge base, and evidence records
+  fpga/                        # FPGA package contract and generated fixed-point exports
   config/                      # Default configuration
   src/                         # Data, model, and evaluation implementation
   scripts/                     # Pipeline entry points
@@ -75,3 +76,18 @@ cd AI_train_model && CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dc
 Do not select architecture, threshold, or temporal policy from test data. The
 next research objective is to improve causal event sensitivity while preserving
 the validation false-alarm constraint of 0.5/h.
+
+## FPGA Export
+
+The selected separable model has a dedicated deployment exporter. It folds
+BatchNorm, quantizes weights and calibrated activations, and emits binary
+tensors, normalization constants, a layer manifest, and RTL/HLS test vectors.
+Run it on the training server after the selected run output is present:
+
+```bash
+cd AI_train_model && CHBMIT_FPGA_SOURCE_RUN_ID=run_21_raw_2s_temporal3 CHBMIT_FPGA_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_2s_v1 CHBMIT_FPGA_OUTPUT_DIR=fpga/reference_run_21_int16 python main.py --mode export_fpga
+```
+
+The package is a hardware inference contract, not evidence of FPGA deployment.
+KV260 synthesis, latency/resource measurement, causal preprocessing, and
+hardware-in-the-loop validation remain required.

@@ -19,6 +19,7 @@ from scripts import (
     run_preprocess,
     run_temporal_score_tcn,
     run_eda,
+    run_fpga_export,
     run_train,
     run_quantize,
 )
@@ -27,7 +28,7 @@ def main():
     parser = argparse.ArgumentParser(description="EEG Seizure Detection 1D-CNN Accelerator Pipeline")
     parser.add_argument(
         "--mode", 
-        choices=["audit", "plan", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "hyperparameter_sweep", "temporal_policy_sweep", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "all"],
+        choices=["audit", "plan", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "hyperparameter_sweep", "temporal_policy_sweep", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "export_fpga", "all"],
         default="all",
         help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'event_eval' (continuous metrics), 'quantize' (Quantize & export), or 'all' (Run all)."
     )
@@ -62,6 +63,8 @@ def main():
         run_event_diagnostics.main()
     elif args.mode == "quantize":
         run_quantize.main()
+    elif args.mode == "export_fpga":
+        run_fpga_export.main()
     elif args.mode == "all":
         raise SystemExit(
             "The legacy full pipeline is disabled. Run audit and plan first; "
