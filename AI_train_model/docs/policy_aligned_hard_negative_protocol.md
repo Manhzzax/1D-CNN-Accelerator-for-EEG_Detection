@@ -27,7 +27,8 @@ validation or test recording is used for mining, selection or normalization.
 
 First inspect `temporal_hard_negative_mining_summary.json`. Train only if it
 contains a nonzero, diverse candidate set. The retrained model must be evaluated
-on validation-only continuous EEG with the frozen `7_of_14`, `0.977` policy.
+on validation-only continuous EEG with the frozen `7_of_14`, `0.977` policy;
+use `CHBMIT_EVENT_EVAL_FIXED_*` so the candidate does not retune the policy.
 
 Accept it only if it retains or improves 21/29 event detections while reducing
 FAR/h below 0.4493 or reducing median delay below 13 s. Otherwise retain the

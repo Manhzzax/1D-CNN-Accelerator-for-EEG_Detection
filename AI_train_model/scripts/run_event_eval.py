@@ -24,6 +24,33 @@ from src.model import build_model_from_run
 from src.utils import get_outputs_dir, outputs_dir
 
 
+def _fixed_policy_from_environment():
+    """Read an optional prespecified deployment policy for an ablation."""
+    threshold = os.environ.get("CHBMIT_EVENT_EVAL_FIXED_THRESHOLD")
+    positive_windows = os.environ.get("CHBMIT_EVENT_EVAL_FIXED_POSITIVE_WINDOWS")
+    decision_windows = os.environ.get("CHBMIT_EVENT_EVAL_FIXED_DECISION_WINDOWS")
+    provided = [value is not None for value in (threshold, positive_windows, decision_windows)]
+    if not any(provided):
+        return None
+    if not all(provided):
+        raise ValueError(
+            "Set CHBMIT_EVENT_EVAL_FIXED_THRESHOLD, "
+            "CHBMIT_EVENT_EVAL_FIXED_POSITIVE_WINDOWS, and "
+            "CHBMIT_EVENT_EVAL_FIXED_DECISION_WINDOWS together"
+        )
+    value = {
+        "threshold": float(threshold),
+        "positive_windows": int(positive_windows),
+        "decision_window_windows": int(decision_windows),
+        "policy_name": os.environ.get("CHBMIT_EVENT_EVAL_FIXED_POLICY_NAME", "fixed_policy"),
+    }
+    if not 0.0 < value["threshold"] < 1.0:
+        raise ValueError("CHBMIT_EVENT_EVAL_FIXED_THRESHOLD must be in (0, 1)")
+    if not 1 <= value["positive_windows"] <= value["decision_window_windows"]:
+        raise ValueError("Fixed positive windows must be in [1, decision window windows]")
+    return value
+
+
 def _load_or_score(
     split_name, source_outputs_dir, artifact_outputs_dir, model, device, rows, config, use_amp,
     scaler_mean, scaler_std, normalization_mode, recording_normalization, feature_spec,
@@ -100,12 +127,29 @@ def main():
     # diagnostics and later reproducibility checks.
     save_scores(validation_score_path, validation_scores)
     validation_scores = load_scores(validation_score_path)
-    selected, sweep, target_met = choose_threshold(
-        validation_scores, config["preprocessing"], config["evaluation"]
-    )
+    fixed_policy = _fixed_policy_from_environment()
+    if fixed_policy is None:
+        selected, sweep, target_met = choose_threshold(
+            validation_scores, config["preprocessing"], config["evaluation"]
+        )
+        selection_mode = "validation_optimized"
+    else:
+        selected = event_metrics(
+            validation_scores,
+            fixed_policy["threshold"],
+            config["preprocessing"]["sample_rate_hz"],
+            config["preprocessing"]["window_sec"],
+            config["evaluation"]["refractory_sec"],
+            positive_windows=fixed_policy["positive_windows"],
+            decision_window_windows=fixed_policy["decision_window_windows"],
+            policy_name=fixed_policy["policy_name"],
+        )
+        sweep = [selected]
+        target_met = selected["false_alarms_per_hour"] <= config["evaluation"]["target_false_alarms_per_hour"]
+        selection_mode = "fixed"
     write_threshold_sweep(os.path.join(outputs_dir, "validation_threshold_sweep.csv"), sweep)
     print(
-        f"Selected validation policy: {selected['policy_name']} "
+        f"Validation policy ({selection_mode}): {selected['policy_name']} "
         f"({selected['positive_windows']}/{selected['decision_window_windows']}) | "
         f"threshold: {selected['threshold']:.3f} | target FAR met: {target_met}"
     )
@@ -140,6 +184,7 @@ def main():
             "test": reused_test_scores,
         },
         "evaluated_splits": sorted(requested_splits),
+        "threshold_selection_mode": selection_mode,
         "threshold_selection": selected,
         "target_false_alarms_per_hour_met_on_validation": target_met,
         "test_event_metrics": test_result,
