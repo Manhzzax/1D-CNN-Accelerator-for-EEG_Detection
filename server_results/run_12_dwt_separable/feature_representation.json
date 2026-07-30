@@ -1,0 +1,11 @@
+{
+  "coefficient_order": "cA3,cD3,cD2,cD1",
+  "input_shape": [
+    17,
+    256
+  ],
+  "level": 3,
+  "mode": "periodization",
+  "name": "dwt_db4_l3",
+  "wavelet": "db4"
+}

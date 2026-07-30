@@ -1,0 +1,38 @@
+{
+  "artifact_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_12_dwt_separable",
+  "evaluated_splits": [
+    "val"
+  ],
+  "feature_representation": {
+    "coefficient_order": "cA3,cD3,cD2,cD1",
+    "input_shape": [
+      17,
+      256
+    ],
+    "level": 3,
+    "mode": "periodization",
+    "name": "dwt_db4_l3",
+    "wavelet": "db4"
+  },
+  "reused_source_continuous_scores": {
+    "test": null,
+    "validation": false
+  },
+  "source_model_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_12_dwt_separable",
+  "target_false_alarms_per_hour_met_on_validation": true,
+  "test_event_metrics": null,
+  "threshold_selection": {
+    "decision_window_windows": 20,
+    "detected_events": 14,
+    "event_sensitivity": 0.4827586206896552,
+    "false_alarms": 76,
+    "false_alarms_per_hour": 0.44931641827811303,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 33.5,
+    "median_detection_delay_sec": 23.0,
+    "policy_name": "10_of_20",
+    "positive_windows": 10,
+    "threshold": 0.9600000000000002,
+    "total_events": 29
+  }
+}
