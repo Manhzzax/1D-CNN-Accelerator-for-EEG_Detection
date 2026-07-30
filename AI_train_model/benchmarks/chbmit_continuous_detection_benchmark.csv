@@ -1,13 +1,13 @@
-﻿Method;Channels;Cases / seizures;Input / model;Event SEN (%);FAR/h;Delay (s);Accuracy (%);Evidence / comparability
-EpiSepNet-5K, 2026;17;29 seizures;"2 s raw EEG; separable 1D-CNN; EpiSepNet-5K";79,3103;0,4671;17 (median);90,0718;"Current; validation only"
-Shoeb and Guttag, 2010;Full;24 / 173;DWT plus SVM;96;0,083;4.6 (mean);NR;Direct: P12
-Y. Xu et al.;Full;NR;"Multiscale STFT; 3D-CNN";94,95;0,08;2.3;NR;Secondary: P02
-Y. Zhang et al.;Full;NR;"DWT time-series decomposition; Bi-GRU";95,49;0,31;NR;NR;Secondary: P02
-X. Wang et al.;Full;NR;"Multichannel time series; Stacked 1D-CNN";99,31;0,2;8.1;NR;Secondary: P02
-Y. Li et al.;Full;NR;"Multichannel time series; CNN-LSTM";95,29;0,66;NR;NR;Secondary: P02
-Vidyaratne et al.;Full;NR;"Fractal dimension plus harmonic wavelet packet; Relevance vector machine";96;0,1;1.9;NR;Secondary: P02
-F.-G. Tang et al.;5;NR;"DWT plus autoencoder frequency features; SVM";97,2;0,64;1.1;NR;Secondary: P02
-R. Asif et al.;10;NR;"Time-domain statistical features; RUSBoost";92;0,21;7.1;NR;Secondary: P02
-S. Khanmohammadi et al.;5;NR;"Time-domain statistics plus spectral power; Adaptive distance-based change-point detector";96;0,12;4.2;NR;Secondary: P02
-Chung et al., 2024;1;13 cases;"4 s EEG time series; Parallel stacked 2D-CNN";97,69 +/- 6,96;0,16 +/- 0,26;8 (mean);94,93;Direct: P02
-Chung et al., 2024;1;13 cases;"4 s EEG time series; Parallel stacked 2D-CNN";99,62 +/- 1,39;0,22 +/- 0,34;3.3 (mean);98,18;Direct: P02
+Method;Channels;Cases / seizures;Input / model;Event SEN (%);FAR/h;Delay (s);Accuracy (%);Evidence / comparability;Link
+EpiSepNet-5K, 2026;17;29 seizures;"2 s raw EEG; separable 1D-CNN; EpiSepNet-5K";79,3103;0,4671;17 (median);90,0718;"Current; validation only";N/A (this work)
+Shoeb and Guttag, 2010;Full;24 / 173;DWT plus SVM;96;0,083;4.6 (mean);NR;Direct: P12;https://physionet.org/physiobank/database/chbmit/shoeb-icml-2010.pdf
+Y. Xu et al.;Full;NR;"Multiscale STFT; 3D-CNN";94,95;0,08;2.3;NR;Secondary: P02;https://doi.org/10.1016/j.eswa.2023.121359
+Y. Zhang et al.;Full;NR;"DWT time-series decomposition; Bi-GRU";95,49;0,31;NR;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+X. Wang et al.;Full;NR;"Multichannel time series; Stacked 1D-CNN";99,31;0,2;8.1;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+Y. Li et al.;Full;NR;"Multichannel time series; CNN-LSTM";95,29;0,66;NR;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+Vidyaratne et al.;Full;NR;"Fractal dimension plus harmonic wavelet packet; Relevance vector machine";96;0,1;1.9;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+F.-G. Tang et al.;5;NR;"DWT plus autoencoder frequency features; SVM";97,2;0,64;1.1;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+R. Asif et al.;10;NR;"Time-domain statistical features; RUSBoost";92;0,21;7.1;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+S. Khanmohammadi et al.;5;NR;"Time-domain statistics plus spectral power; Adaptive distance-based change-point detector";96;0,12;4.2;NR;Secondary: P02;https://doi.org/10.3389/fneur.2024.1389731
+Chung et al., 2024;1;13 cases;"4 s EEG time series; Parallel stacked 2D-CNN";97,69 +/- 6,96;0,16 +/- 0,26;8 (mean);94,93;Direct: P02;https://doi.org/10.3389/fneur.2024.1389731
+Chung et al., 2024;1;13 cases;"4 s EEG time series; Parallel stacked 2D-CNN";99,62 +/- 1,39;0,22 +/- 0,34;3.3 (mean);98,18;Direct: P02;https://doi.org/10.3389/fneur.2024.1389731
