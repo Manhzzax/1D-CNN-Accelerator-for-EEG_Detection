@@ -9,6 +9,7 @@ import yaml
 from torch.utils.data import Dataset
 
 from .feature_representation import load_feature_spec, save_feature_spec
+from .runtime_config import apply_runtime_overrides
 from .utils import outputs_dir
 
 
@@ -19,7 +20,7 @@ config_path = os.path.join(project_dir, "config", "config.yaml")
 
 def load_config():
     with open(config_path, "r", encoding="utf-8") as config_file:
-        return yaml.safe_load(config_file)
+        return apply_runtime_overrides(yaml.safe_load(config_file))
 
 
 class EEGDataset(Dataset):

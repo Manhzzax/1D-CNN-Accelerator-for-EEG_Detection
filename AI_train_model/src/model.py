@@ -5,6 +5,8 @@ import yaml
 import torch
 import torch.nn as nn
 
+from .runtime_config import apply_runtime_overrides
+
 # Helper path logic
 src_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(src_dir)
@@ -12,7 +14,7 @@ config_path = os.path.join(project_dir, "config", "config.yaml")
 
 def load_config():
     with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
+        config = apply_runtime_overrides(yaml.safe_load(f))
     return config
 
 
