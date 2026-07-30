@@ -1,0 +1,2 @@
+policy_name,positive_windows,decision_window_windows,threshold,event_sensitivity,detected_events,total_events,false_alarms,false_alarms_per_hour,median_detection_delay_sec,mean_detection_delay_sec,interictal_hours
+7_of_14_locked,7,14,0.977,0.6551724137931034,19,29,18,0.10641704643428992,14.0,19.473684210526315,169.14583333333334
