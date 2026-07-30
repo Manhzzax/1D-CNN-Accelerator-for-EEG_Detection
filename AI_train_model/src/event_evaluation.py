@@ -61,8 +61,11 @@ def score_continuous_recordings(
             preprocessing["bandpass_high_hz"],
             preprocessing["notch_hz"],
         )
-        if normalization_mode == "train_channel_zscore" and feature_spec["name"] == "raw":
-            data = (data - scaler_mean[:, None]) / scaler_std[:, None]
+        if normalization_mode == "train_channel_zscore":
+            if feature_spec["name"] == "raw":
+                data = (data - scaler_mean[:, None]) / scaler_std[:, None]
+            # DWT coefficients are normalized after transforming each inference
+            # batch, using the train-fitted coefficient statistics.
         elif normalization_mode == "per_recording_zscore":
             if recording_normalization is None or row["recording_id"] not in recording_normalization:
                 raise ValueError(f"Missing saved normalization statistics for {row['recording_id']}")
