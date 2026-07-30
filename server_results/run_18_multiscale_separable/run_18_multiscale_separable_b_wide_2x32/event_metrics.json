@@ -1,0 +1,36 @@
+{
+  "artifact_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_18_multiscale_separable_b_wide_2x32",
+  "evaluated_splits": [
+    "val"
+  ],
+  "feature_representation": {
+    "input_shape": [
+      17,
+      256
+    ],
+    "name": "raw",
+    "source": "legacy_default"
+  },
+  "reused_source_continuous_scores": {
+    "test": null,
+    "validation": false
+  },
+  "source_model_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_18_multiscale_separable_b_wide_2x32",
+  "target_false_alarms_per_hour_met_on_validation": true,
+  "test_event_metrics": null,
+  "threshold_selection": {
+    "decision_window_windows": 20,
+    "detected_events": 20,
+    "event_sensitivity": 0.6896551724137931,
+    "false_alarms": 70,
+    "false_alarms_per_hour": 0.41384406946668306,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 21.0,
+    "median_detection_delay_sec": 16.5,
+    "policy_name": "10_of_20",
+    "positive_windows": 10,
+    "threshold": 0.9300000000000002,
+    "total_events": 29
+  },
+  "threshold_selection_mode": "validation_optimized"
+}

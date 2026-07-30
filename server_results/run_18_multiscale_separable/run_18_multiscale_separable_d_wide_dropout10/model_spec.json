@@ -1,0 +1,33 @@
+{
+  "architecture": "multiscale_separable_1dcnn",
+  "model_config": {
+    "architecture": "multiscale_separable_1dcnn",
+    "input_channels": 17,
+    "input_length": 256,
+    "multiscale_separable_1dcnn": {
+      "dropout": 0.1,
+      "long_kernel": 63,
+      "refinement_kernel": 15,
+      "short_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_branch": 2
+    },
+    "num_classes": 2,
+    "parallel_multikernel_1dcnn": {
+      "branch_filters": 16,
+      "dropout": 0.25,
+      "long_kernel": 31,
+      "refinement_filters": 32,
+      "refinement_kernel": 5,
+      "short_kernel": 15
+    },
+    "separable_1dcnn": {
+      "dropout": 0.25,
+      "refinement_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 2,
+      "temporal_kernel": 31
+    }
+  },
+  "parameter_count": 6662
+}
