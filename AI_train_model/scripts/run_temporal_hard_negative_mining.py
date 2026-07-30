@@ -17,6 +17,28 @@ from src.temporal_hard_negative_mining import mine_temporal_hard_negative_window
 from src.utils import get_outputs_dir
 
 
+def _env_float(name, default):
+    value = os.environ.get(name)
+    return float(value) if value is not None else float(default)
+
+
+def _env_int(name, default):
+    value = os.environ.get(name)
+    return int(value) if value is not None else int(default)
+
+
+def _env_bool(name, default):
+    value = os.environ.get(name)
+    if value is None:
+        return bool(default)
+    normalized = value.strip().lower()
+    if normalized in {"1", "true", "yes", "on"}:
+        return True
+    if normalized in {"0", "false", "no", "off"}:
+        return False
+    raise ValueError(f"{name} must be one of true/false/1/0")
+
+
 def main():
     config = load_config()
     mining = config["temporal_hard_negative_mining"]
@@ -41,6 +63,9 @@ def main():
             # A cache without its provenance summary is not safe to reuse.
             cache_path = ""
     output_name = os.environ.get("CHBMIT_TEMPORAL_HARDNEG_OUTPUT_DIR", mining["output_dir"])
+    source_prepared_name = os.environ.get(
+        "CHBMIT_TEMPORAL_HARDNEG_SOURCE_PREPARED_DIR", config["data"]["prepared_output_dir"]
+    )
 
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     use_amp = config["training"].get("use_amp", False) and device.type == "cuda"
@@ -50,11 +75,11 @@ def main():
     scaler_std = np.load(os.path.join(source_outputs_dir, "scaler_scale.npy"))
 
     print("=" * 60)
-    print("MINING PERSISTENT TRAIN-ONLY HARD NEGATIVES")
+    print("MINING POLICY-ALIGNED TRAIN-ONLY HARD NEGATIVES")
     print("=" * 60)
     summary = mine_temporal_hard_negative_windows(
         protocol_dir=os.path.join(project_dir, "data", config["data"]["protocol_output_dir"]),
-        source_prepared_dir=os.path.join(project_dir, "data", config["data"]["prepared_output_dir"]),
+        source_prepared_dir=os.path.join(project_dir, "data", source_prepared_name),
         output_dir=os.path.join(project_dir, "data", output_name),
         source_score_cache=cache_path,
         model=model,
@@ -64,13 +89,24 @@ def main():
         use_amp=use_amp,
         scaler_mean=scaler_mean,
         scaler_std=scaler_std,
-        hard_negative_to_seizure_ratio=float(mining["hard_negative_to_seizure_ratio"]),
-        threshold=float(mining["threshold"]),
-        decision_windows=int(mining["decision_window_windows"]),
-        min_hits=int(mining["min_hits_in_context"]),
-        min_separation_sec=float(mining["min_separation_sec"]),
-        allow_fewer_than_target=bool(mining["allow_fewer_than_target"]),
-        hard_negative_sampling_multiplier=float(mining["hard_negative_sampling_multiplier"]),
+        hard_negative_to_seizure_ratio=_env_float(
+            "CHBMIT_TEMPORAL_HARDNEG_RATIO", mining["hard_negative_to_seizure_ratio"]
+        ),
+        threshold=_env_float("CHBMIT_TEMPORAL_HARDNEG_THRESHOLD", mining["threshold"]),
+        decision_windows=_env_int(
+            "CHBMIT_TEMPORAL_HARDNEG_DECISION_WINDOWS", mining["decision_window_windows"]
+        ),
+        min_hits=_env_int("CHBMIT_TEMPORAL_HARDNEG_MIN_HITS", mining["min_hits_in_context"]),
+        min_separation_sec=_env_float(
+            "CHBMIT_TEMPORAL_HARDNEG_MIN_SEPARATION_SEC", mining["min_separation_sec"]
+        ),
+        allow_fewer_than_target=_env_bool(
+            "CHBMIT_TEMPORAL_HARDNEG_ALLOW_FEWER", mining["allow_fewer_than_target"]
+        ),
+        hard_negative_sampling_multiplier=_env_float(
+            "CHBMIT_TEMPORAL_HARDNEG_SAMPLING_MULTIPLIER",
+            mining["hard_negative_sampling_multiplier"],
+        ),
         seed=config["data"]["seed"],
         source_model_path=source_model_path,
     )

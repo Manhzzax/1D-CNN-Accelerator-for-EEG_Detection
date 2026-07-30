@@ -219,6 +219,11 @@ def mine_temporal_hard_negative_windows(
             normal_hits.append(hits)
         print(f"  Extracted temporal hard negatives: {len(normal_signals)}/{selected_count}")
 
+    if not normal_signals:
+        raise RuntimeError(
+            "No policy-aligned hard negatives were found. Lower the threshold/min_hits, "
+            "or use a shorter decision window."
+        )
     x = np.concatenate((source_x, np.stack(normal_signals, axis=0)), axis=0)
     y = np.concatenate((source_y, np.zeros(len(normal_signals), dtype=np.int64)))
     recording_ids = np.concatenate((source_records, np.asarray(normal_records)))
