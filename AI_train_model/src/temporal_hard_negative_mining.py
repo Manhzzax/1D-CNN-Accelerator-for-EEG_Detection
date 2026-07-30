@@ -85,6 +85,10 @@ def _select_recording_candidates(
         normal_mask
         & (normal_context_counts == decision_windows)
         & (hit_counts >= min_hits)
+        # The CNN is trained on one-second windows. A low-score trailing window
+        # from an alarm context is already easy for the CNN and is not a useful
+        # hard negative; the selected window must itself be a threshold hit.
+        & threshold_hits
         & ~source_mask
     )
     eligible_indices = np.flatnonzero(eligible)
@@ -259,6 +263,7 @@ def mine_temporal_hard_negative_windows(
         "threshold": threshold,
         "decision_window_windows": decision_windows,
         "min_hits_in_context": min_hits,
+        "require_current_window_threshold_hit": True,
         "min_separation_sec": min_separation_sec,
         "persistent_candidate_windows": eligible_count,
         "persistent_candidate_episodes": episode_count,

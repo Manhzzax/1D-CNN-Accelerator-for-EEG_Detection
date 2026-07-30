@@ -14,7 +14,9 @@ validation or test recording is used for mining, selection or normalization.
 
 - Source model: `run_13_separable_refine_f_temporal3`.
 - Policy context: at least `7` threshold hits in a fully interictal `14` window
-  context at score threshold `0.977`.
+  context at score threshold `0.977`. The selected one-second input must itself
+  also be a threshold hit; a low-score trailing window is not hard for a
+  one-second CNN.
 - Requested hard-negative ratio: `0.10` per ictal training window, rather than
   the earlier 1:1 or 2:1 ratios that harmed event sensitivity.
 - Minimum separation: 10 s, so one long artifact does not dominate the data.
