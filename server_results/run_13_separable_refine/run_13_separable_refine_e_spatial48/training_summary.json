@@ -1,0 +1,31 @@
+{
+  "best_epoch": 26,
+  "best_validation_loss": 0.31330102917157243,
+  "early_stopping": {
+    "enabled": true,
+    "min_delta": 0.001,
+    "min_epochs": 8,
+    "monitor": "val_loss",
+    "patience": 6
+  },
+  "epochs_completed": 30,
+  "epochs_requested": 30,
+  "hyperparameters": {
+    "batch_size": 128,
+    "class_balanced_batches": false,
+    "epochs": 30,
+    "learning_rate": 0.001,
+    "weight_decay": 0.0001
+  },
+  "stopped_early": false,
+  "window_validation_metrics": {
+    "accuracy": 0.8683013144590496,
+    "auroc": 0.9441696119396271,
+    "average_precision": 0.9488965982780935,
+    "balanced_accuracy": 0.8683013144590495,
+    "f1": 0.865687032740397,
+    "precision": 0.8832193582325092,
+    "sensitivity": 0.8488372093023255,
+    "threshold": 0.5
+  }
+}

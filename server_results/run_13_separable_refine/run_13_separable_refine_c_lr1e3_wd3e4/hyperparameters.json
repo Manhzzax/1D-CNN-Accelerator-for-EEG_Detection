@@ -1,0 +1,7 @@
+{
+  "batch_size": 128,
+  "class_balanced_batches": false,
+  "epochs": 30,
+  "learning_rate": 0.001,
+  "weight_decay": 0.0003
+}
