@@ -13,7 +13,8 @@ Excel from treating a decimal point as a thousands separator. Import them with
   accuracy, and evidence.
 - Table C contains seven columns for window classification and compactness:
   method, coverage/split, representation/model, accuracy, seizure sensitivity,
-  model size/efficiency, and evidence.
+  model size/efficiency, and source. It groups closely related configurations
+  from one study into a single range row where appropriate.
 
 - `chbmit_continuous_detection_benchmark.csv`: event-level seizure-detection
   comparison. Use this file for clinical benchmark figures.
