@@ -1,0 +1,36 @@
+{
+  "artifact_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_16_temporal3_balanced_control",
+  "evaluated_splits": [
+    "val"
+  ],
+  "feature_representation": {
+    "input_shape": [
+      17,
+      256
+    ],
+    "name": "raw",
+    "source": "legacy_default"
+  },
+  "reused_source_continuous_scores": {
+    "test": null,
+    "validation": false
+  },
+  "source_model_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_16_temporal3_balanced_control",
+  "target_false_alarms_per_hour_met_on_validation": false,
+  "test_event_metrics": null,
+  "threshold_selection": {
+    "decision_window_windows": 14,
+    "detected_events": 19,
+    "event_sensitivity": 0.6551724137931034,
+    "false_alarms": 107,
+    "false_alarms_per_hour": 0.6325902204705013,
+    "interictal_hours": 169.14583333333334,
+    "mean_detection_delay_sec": 17.526315789473685,
+    "median_detection_delay_sec": 11.0,
+    "policy_name": "7_of_14_locked",
+    "positive_windows": 7,
+    "threshold": 0.977,
+    "total_events": 29
+  },
+  "threshold_selection_mode": "fixed"
+}

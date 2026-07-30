@@ -1,0 +1,25 @@
+{
+  "architecture": "separable_1dcnn",
+  "model_config": {
+    "architecture": "separable_1dcnn",
+    "input_channels": 17,
+    "input_length": 256,
+    "num_classes": 2,
+    "parallel_multikernel_1dcnn": {
+      "branch_filters": 16,
+      "dropout": 0.25,
+      "long_kernel": 31,
+      "refinement_filters": 32,
+      "refinement_kernel": 5,
+      "short_kernel": 15
+    },
+    "separable_1dcnn": {
+      "dropout": 0.25,
+      "refinement_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31
+    }
+  },
+  "parameter_count": 5013
+}
