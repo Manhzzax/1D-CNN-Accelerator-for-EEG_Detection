@@ -127,3 +127,13 @@ clinical false-alarm rate.
 The higher-level interpretation and the current protocol contract remain in
 [`paper_benchmark_comparison.md`](paper_benchmark_comparison.md) and
 [`benchmark_definition_and_comparability.md`](benchmark_definition_and_comparability.md).
+
+## Visual Summary
+
+![Compact CHB-MIT seizure-detection benchmark](assets/chbmit_detection_benchmark.png)
+
+Regenerate this image after changing its source values with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File AI_train_model/scripts/render_chbmit_benchmark_table.ps1
+```
