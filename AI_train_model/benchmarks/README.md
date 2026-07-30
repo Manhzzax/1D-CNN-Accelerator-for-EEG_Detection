@@ -3,6 +3,10 @@
 These CSV files are the machine-readable exports of Tables B and C in
 `docs/chbmit_literature_benchmark_tables.md`.
 
+They use a semicolon (`;`) delimiter so Excel displays the fields as separate
+columns in the project's locale. Import them with `;` as the delimiter in other
+tools.
+
 - `chbmit_continuous_detection_benchmark.csv`: event-level seizure-detection
   comparison. Use this file for clinical benchmark figures.
 - `chbmit_window_hardware_benchmark.csv`: window-classification and deployment
