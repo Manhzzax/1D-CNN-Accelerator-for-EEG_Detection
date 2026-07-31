@@ -125,3 +125,6 @@ experiment matrix are in
 [`hardware_aware_research_verification.md`](hardware_aware_research_verification.md).
 The active IEEE TBioCAS manuscript draft is in
 [`../paper/tbiocas_kv260/`](../paper/tbiocas_kv260/).
+
+The frozen accelerator track and the independent 95%-accuracy research track
+are governed by [`two_track_research_plan.md`](two_track_research_plan.md).
