@@ -69,6 +69,9 @@ selection.
    eta `0.1` is rejected because its group weights collapsed toward one source
    group and validation detection fell to 7/39. The only follow-up is the
    pre-specified smaller batch-wise eta `0.01`.
+   Before interpreting that follow-up, repeat `run_34` with two additional
+   training seeds as defined in
+   [`patient_heldout_research_replan.md`](patient_heldout_research_replan.md).
 6. Select one candidate using the validation frontier: highest event
    sensitivity with `FAR/h <= 0.5`, then lower FAR/h, lower median delay, and
    higher validation AUROC as tie-breakers. If neither candidate improves the

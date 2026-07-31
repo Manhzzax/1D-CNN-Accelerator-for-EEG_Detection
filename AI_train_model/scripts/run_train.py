@@ -47,6 +47,17 @@ def _env_bool(name, default):
     raise ValueError(f"{name} must be one of true/false/1/0")
 
 
+def _training_seed(config):
+    value = os.environ.get('CHBMIT_TRAIN_SEED', config['data']['seed'])
+    try:
+        seed = int(value)
+    except (TypeError, ValueError) as error:
+        raise ValueError('CHBMIT_TRAIN_SEED must be a non-negative integer') from error
+    if seed < 0:
+        raise ValueError('CHBMIT_TRAIN_SEED must be a non-negative integer')
+    return seed
+
+
 def _window_metrics(targets, probabilities):
     predictions = (probabilities >= 0.5).astype(np.int64)
     return {
@@ -87,7 +98,9 @@ def main():
     print(f"PyTorch CPU threads restricted to: {torch.get_num_threads()}")
     
     # 2. Set seed
-    set_seed(config['data']['seed'])
+    training_seed = _training_seed(config)
+    set_seed(training_seed)
+    print(f"Set training seed to {training_seed} for reproducibility.")
     
     print("=" * 60)
     print("RUNNING MODEL TRAINING & EVALUATION")
@@ -423,6 +436,7 @@ def main():
     plot_training_history(train_losses, val_losses, train_accs, val_accs)
     
     hyperparameters = {
+        "training_seed": training_seed,
         "batch_size": batch_size,
         "class_balanced_batches": class_balanced_batches,
         "patient_group_balanced_batches": patient_group_balanced_batches,
