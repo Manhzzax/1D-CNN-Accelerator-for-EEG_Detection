@@ -173,5 +173,14 @@ The ordered search is:
 Every candidate remains validation-only and uses `chbmit_prepared_raw_2s_v2`.
 No historical test recording may be inspected for architecture selection.
 
+#### Capacity Screen Result
+
+On seed 42, R2 Lite `m3/f32` reaches 91.175% accuracy with 4,917 parameters.
+Increasing temporal filters to `m4/f32` gives 90.328% with 6,022 parameters;
+increasing spatial width to `m3/f48` gives 90.046% with 7,301 parameters.
+Neither reaches the 91.675% promotion threshold. Both have higher train than
+validation accuracy at their selected checkpoint, so the next controlled axis
+is temporal kernel length, not the combined `m4/f48` model.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
