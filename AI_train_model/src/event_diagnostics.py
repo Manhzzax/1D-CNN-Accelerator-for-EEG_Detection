@@ -7,11 +7,12 @@ from pathlib import Path
 
 import numpy as np
 
+from .chbmit_patient_split import patient_group_for_case
 from .event_evaluation import event_metrics, generate_alarms, load_scores
 
 
 PER_RECORDING_FIELDS = [
-    "case_id", "recording_id", "total_events", "detected_events", "event_sensitivity",
+    "patient_group", "case_id", "recording_id", "total_events", "detected_events", "event_sensitivity",
     "false_alarms", "interictal_hours", "false_alarms_per_hour",
     "median_detection_delay_sec", "mean_detection_delay_sec", "policy_name",
     "alarm_timestamp_mode", "positive_windows", "decision_window_windows", "threshold",
@@ -186,6 +187,7 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
         )
         result["recording_id"] = record["recording_id"]
         result["case_id"] = record["recording_id"].split("/", 1)[0]
+        result["patient_group"] = patient_group_for_case(result["case_id"])
         per_recording.append(result)
 
     alarm_path, event_path, alarm_rows, event_rows = _write_alarm_and_event_tables(
@@ -214,17 +216,39 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
         writer.writeheader()
         writer.writerows(per_case)
 
+    grouped_by_patient = defaultdict(list)
+    for row in per_recording:
+        grouped_by_patient[row["patient_group"]].append(row)
+    per_patient_group = []
+    for patient_group, rows in grouped_by_patient.items():
+        aggregate = _aggregate(rows)
+        aggregate["patient_group"] = patient_group
+        aggregate["cases"] = ";".join(sorted({row["case_id"] for row in rows}))
+        per_patient_group.append(aggregate)
+    per_patient_group.sort(key=lambda row: (-row["false_alarms_per_hour"], row["patient_group"]))
+    patient_group_path = output_dir / f"event_diagnostics_{split_name}_per_patient_group.csv"
+    patient_group_fields = [
+        "patient_group", "cases", "recordings", "total_events", "detected_events",
+        "event_sensitivity", "false_alarms", "interictal_hours", "false_alarms_per_hour",
+    ]
+    with patient_group_path.open("w", newline="", encoding="utf-8") as output_file:
+        writer = csv.DictWriter(output_file, fieldnames=patient_group_fields)
+        writer.writeheader()
+        writer.writerows(per_patient_group)
+
     summary = {
         "split": split_name,
         "analysis_use": "descriptive_only; do not use test diagnostics to tune the model",
         "selected_policy": selected,
         "aggregate": _aggregate(per_recording),
+        "patient_group_aggregate": per_patient_group,
         "recordings_with_false_alarms": sum(row["false_alarms"] > 0 for row in per_recording),
         "false_alarm_count": sum(row["is_false_alarm"] for row in alarm_rows),
         "missed_event_count": sum(not row["detected"] for row in event_rows),
         "top_false_alarm_recordings": per_recording[:10],
         "per_recording_csv": str(recording_path),
         "per_case_csv": str(case_path),
+        "per_patient_group_csv": str(patient_group_path),
         "alarms_csv": str(alarm_path),
         "events_csv": str(event_path),
     }
