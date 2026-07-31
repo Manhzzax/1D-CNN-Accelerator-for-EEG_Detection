@@ -119,3 +119,7 @@ implementation; it may not be replaced by a favorable accuracy headline.
 
 M2--M4 determine whether the work reaches hardware-aware Q1 quality. More
 CNN hyperparameter searching does not replace those milestones.
+
+The research verification, precise arithmetic gates, and controlled HLS
+experiment matrix are in
+[`hardware_aware_research_verification.md`](hardware_aware_research_verification.md).
