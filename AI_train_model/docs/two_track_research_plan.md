@@ -221,9 +221,33 @@ minimum validation loss and produced the following result:
 The residual path is rejected without a multi-seed confirmation: it is well
 below the seed-42 promotion threshold and degrades every primary discriminative
 metric. This is useful negative evidence that skip additions alone do not
-improve this compact raw-EEG hierarchy. The next controlled topology is the
-compact depthwise multiscale `15+31` model, which tests complementary temporal
-scales rather than a longer single kernel or a residual identity path.
+improve this compact raw-EEG hierarchy.
+
+#### Compact Multiscale Screen Result
+
+The compact depthwise multiscale `15+31` model was then screened on the same
+seed-42 raw `17x512` validation protocol. It has 3,636 parameters, so its two
+parallel temporal paths do not provide an accuracy gain merely by increasing
+model capacity. Checkpoint epoch 28 is the exact minimum validation-loss epoch.
+
+| Model | Parameters | Accuracy | AUROC | F1 | Sensitivity |
+|---|---:|---:|---:|---:|---:|
+| R2 Lite `31/7/3` | 4,917 | **91.175%** | **96.645%** | **91.102%** | **90.354%** |
+| Multiscale `15+31` | 3,636 | 87.891% | 95.003% | 87.916% | 88.096% |
+| Multiscale minus R2 Lite | -1,281 | -3.284 pp | -1.642 pp | -3.186 pp | -2.258 pp |
+
+This topology is rejected without additional seeds. Its late low-loss checkpoint
+does not rescue its accuracy, F1, or sensitivity. With both topology changes
+rejected, R2 Lite remains the architecture reference for the accuracy campaign.
+The next isolated screen is **AdamW with the same learning rate and weight
+decay** as R2 Lite. This tests decoupled regularisation without changing
+architecture, data, batch composition, schedule, or early-stopping rule.
+
+Increasing early-stopping patience is not the next experiment. In the R2 Lite
+seed-42 run, the scheduler reduced the learning rate only after epoch 26; its
+following validation losses (0.2540 and 0.2886) did not improve the selected
+0.2474 loss at epoch 23. Therefore a longer tail would not have recovered a
+better selected checkpoint in that run.
 
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
