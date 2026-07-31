@@ -1,0 +1,83 @@
+{
+  "bandpass_hz": [
+    0.5,
+    45.0
+  ],
+  "channels": [
+    "FP1-F7",
+    "F7-T7",
+    "T7-P7",
+    "P7-O1",
+    "FP1-F3",
+    "F3-C3",
+    "C3-P3",
+    "P3-O1",
+    "FP2-F4",
+    "F4-C4",
+    "C4-P4",
+    "P4-O2",
+    "FP2-F8",
+    "F8-T8",
+    "P8-O2",
+    "FZ-CZ",
+    "CZ-PZ"
+  ],
+  "continuous_test_manifest": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_prepared_patient_causal_2s_v1/test_continuous_recordings.csv",
+  "feature_representation": {
+    "input_shape": [
+      17,
+      256
+    ],
+    "name": "raw"
+  },
+  "filter_mode": "causal_iir",
+  "interictal_guard_sec": 30,
+  "normal_to_seizure_ratio": {
+    "test": 10.0,
+    "train": 1.0,
+    "val": 1.0
+  },
+  "notch_hz": 60.0,
+  "outputs": {
+    "test": {
+      "normal_candidates_seen": 889407,
+      "normal_windows": 21870,
+      "path": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_prepared_patient_causal_2s_v1/chbmit_test.npz",
+      "positive_windows": 2187
+    },
+    "train": {
+      "normal_candidates_seen": 2127934,
+      "normal_windows": 6863,
+      "path": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_prepared_patient_causal_2s_v1/chbmit_train.npz",
+      "positive_windows": 6863
+    },
+    "val": {
+      "normal_candidates_seen": 496491,
+      "normal_windows": 2763,
+      "path": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_prepared_patient_causal_2s_v1/chbmit_val.npz",
+      "positive_windows": 2763
+    }
+  },
+  "prepass_counts": {
+    "test": {
+      "normal_candidates": 889407,
+      "normal_target": 21870,
+      "positive": 2187
+    },
+    "train": {
+      "normal_candidates": 2127934,
+      "normal_target": 6863,
+      "positive": 6863
+    },
+    "val": {
+      "normal_candidates": 496491,
+      "normal_target": 2763,
+      "positive": 2763
+    }
+  },
+  "protocol_manifest": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_protocol_patient_holdout_v1/recording_split_manifest.csv",
+  "protocol_summary": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/data/chbmit_protocol_patient_holdout_v1/split_plan_summary.json",
+  "sample_rate_hz": 256,
+  "stride_sec": 1,
+  "window_sec": 2.0
+}

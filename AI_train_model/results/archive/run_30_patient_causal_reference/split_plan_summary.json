@@ -1,0 +1,242 @@
+{
+  "aggregate": {
+    "test": {
+      "cases": 4,
+      "patient_groups": 4,
+      "recordings": 135,
+      "seizures": 39
+    },
+    "train": {
+      "cases": 16,
+      "patient_groups": 16,
+      "recordings": 410,
+      "seizures": 120
+    },
+    "val": {
+      "cases": 4,
+      "patient_groups": 3,
+      "recordings": 141,
+      "seizures": 39
+    }
+  },
+  "groups": [
+    {
+      "cases": [
+        "chb01",
+        "chb21"
+      ],
+      "patient_group": "subject_01_21",
+      "recordings": 75,
+      "seizures": 11,
+      "split": "val"
+    },
+    {
+      "cases": [
+        "chb02"
+      ],
+      "patient_group": "subject_02",
+      "recordings": 36,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb03"
+      ],
+      "patient_group": "subject_03",
+      "recordings": 38,
+      "seizures": 7,
+      "split": "test"
+    },
+    {
+      "cases": [
+        "chb04"
+      ],
+      "patient_group": "subject_04",
+      "recordings": 42,
+      "seizures": 4,
+      "split": "test"
+    },
+    {
+      "cases": [
+        "chb05"
+      ],
+      "patient_group": "subject_05",
+      "recordings": 39,
+      "seizures": 5,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb06"
+      ],
+      "patient_group": "subject_06",
+      "recordings": 18,
+      "seizures": 10,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb07"
+      ],
+      "patient_group": "subject_07",
+      "recordings": 19,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb08"
+      ],
+      "patient_group": "subject_08",
+      "recordings": 20,
+      "seizures": 5,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb09"
+      ],
+      "patient_group": "subject_09",
+      "recordings": 19,
+      "seizures": 4,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb10"
+      ],
+      "patient_group": "subject_10",
+      "recordings": 25,
+      "seizures": 7,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb11"
+      ],
+      "patient_group": "subject_11",
+      "recordings": 35,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb12"
+      ],
+      "patient_group": "subject_12",
+      "recordings": 24,
+      "seizures": 40,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb13"
+      ],
+      "patient_group": "subject_13",
+      "recordings": 33,
+      "seizures": 12,
+      "split": "test"
+    },
+    {
+      "cases": [
+        "chb14"
+      ],
+      "patient_group": "subject_14",
+      "recordings": 26,
+      "seizures": 8,
+      "split": "val"
+    },
+    {
+      "cases": [
+        "chb15"
+      ],
+      "patient_group": "subject_15",
+      "recordings": 40,
+      "seizures": 20,
+      "split": "val"
+    },
+    {
+      "cases": [
+        "chb16"
+      ],
+      "patient_group": "subject_16",
+      "recordings": 19,
+      "seizures": 10,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb17"
+      ],
+      "patient_group": "subject_17",
+      "recordings": 21,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb18"
+      ],
+      "patient_group": "subject_18",
+      "recordings": 36,
+      "seizures": 6,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb19"
+      ],
+      "patient_group": "subject_19",
+      "recordings": 30,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb20"
+      ],
+      "patient_group": "subject_20",
+      "recordings": 29,
+      "seizures": 8,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb22"
+      ],
+      "patient_group": "subject_22",
+      "recordings": 31,
+      "seizures": 3,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb23"
+      ],
+      "patient_group": "subject_23",
+      "recordings": 9,
+      "seizures": 7,
+      "split": "train"
+    },
+    {
+      "cases": [
+        "chb24"
+      ],
+      "patient_group": "subject_24",
+      "recordings": 22,
+      "seizures": 16,
+      "split": "test"
+    }
+  ],
+  "patient_group_count": 23,
+  "patient_group_rule": "chb01 and chb21 are assigned to subject_01_21; every other case is one group",
+  "recording_count": 686,
+  "seed": 42,
+  "split_ratios": {
+    "test": 0.2,
+    "train": 0.6,
+    "val": 0.2
+  },
+  "strategy": "patient_group_disjoint_stratified_holdout"
+}
