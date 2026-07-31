@@ -108,12 +108,27 @@ R2 has now completed seeds 7, 42, and 123 on `chbmit_prepared_raw_2s_v2`:
 | 123 | 89.610% | 96.146% | 89.734% | 90.816% | 15 |
 | Mean +/- sample SD | 90.200% +/- 0.850% | 96.334% +/- 0.272% | 90.207% +/- 0.775% | 90.234% +/- 0.650% | - |
 
-This confirms R2 is trainable but does **not** yet establish a three-seed gain
-over R0. The historical R0 reference was produced before the repaired
-`raw_2s_v2` prepared artifact; its seed-42 score is not a sufficient matched
-three-seed comparator. Re-run R0 `31/15` with seeds 7, 42, and 123 on the same
-`raw_2s_v2` artifact before model selection, event comparison, or any
-hyperparameter tuning claim.
+### Matched R0/R2 Decision
+
+R0 was subsequently run on the same `raw_2s_v2` artifact with the same seeds.
+All six selected checkpoints were verified against their recorded history to
+be the absolute minimum validation-loss epoch.
+
+| Metric | R0 `31/15`, mean +/- sample SD | R2 Lite, mean +/- sample SD | Paired R2 - R0 |
+|---|---:|---:|---:|
+| Accuracy | 89.944% +/- 0.588% | **90.200% +/- 0.850%** | +0.256 +/- 0.413 points |
+| AUROC | 96.116% +/- 0.315% | **96.334% +/- 0.271%** | +0.218 +/- 0.045 points |
+| F1 | 89.797% +/- 0.590% | **90.207% +/- 0.775%** | +0.410 +/- 0.285 points |
+| Sensitivity | 88.507% +/- 0.583% | **90.234% +/- 0.650%** | +1.727 +/- 0.861 points |
+
+The paired accuracy differences are +0.385, +0.590, and -0.205 points for
+seeds 7, 42, and 123, respectively. With only three seeds, this is evidence of
+a small, reproducible multi-metric improvement, not a statistical-significance
+claim. R2 Lite is selected as the **Track B candidate** because it improves
+AUROC, F1, and sensitivity on every paired seed while using 96 fewer
+parameters. It does not meet the 95% objective and has not yet demonstrated an
+acceptable event-level FAR; it must not replace the frozen Track A deployment
+reference.
 
 ## Ordered experimental plan
 
