@@ -51,3 +51,8 @@ The active Q1-oriented protocol is
 [docs/patient_heldout_causal_protocol.md](docs/patient_heldout_causal_protocol.md):
 patient-group-disjoint split, causal filtering, validation-only model/policy
 selection, and one final test-patient evaluation.
+
+The active paper direction is a hardware-aware KV260 accelerator. The frozen
+deployment reference and the on-board evidence required before making FPGA
+claims are defined in
+[docs/hardware_aware_q1_accelerator_plan.md](docs/hardware_aware_q1_accelerator_plan.md).

@@ -1,0 +1,1 @@
+implementation_id,git_commit,board,toolchain,clock_target_mhz,clock_achieved_mhz,precision,input_shape,measurement_boundary,batch_size,iterations,latency_median_ms,latency_p95_ms,throughput_windows_per_s,power_w,energy_mj_per_window,lut,lut_percent,ff,ff_percent,bram,bram_percent,uram,uram_percent,dsp,dsp_percent,fpga_logit_agreement_percent,validation_accuracy_percent,notes

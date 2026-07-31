@@ -75,3 +75,7 @@ The initial SoC boundary is *after* EEG filtering and z-score normalization.
 Before a final deployment claim, implement causal filtering, verify the exact
 fixed-point data path in HLS/RTL, and measure KV260 resource use, latency,
 throughput, power, and continuous event metrics.
+
+The active KV260 evidence contract and empty measurement template are in
+[kv260/README.md](kv260/README.md). Only actual on-board measurements belong
+in that directory.

@@ -34,6 +34,16 @@ are different metrics. The 90.07% figure is a balanced validation-window
 accuracy, not a clinical event-detection claim. The event operating point is
 causal: alarms are timestamped at the end of the 2-second input window.
 
+## Active Paper Direction
+
+The active submission direction is **hardware-aware biomedical AI / KV260
+accelerator**. EpiSepNet-5K is therefore frozen as the deployment reference:
+the near-term contribution is its reproducible fixed-point implementation and
+measured on-board efficiency, not further architecture searching for a
+non-comparable accuracy headline. The required evidence, claim boundaries, and
+milestones are in
+[`AI_train_model/docs/hardware_aware_q1_accelerator_plan.md`](AI_train_model/docs/hardware_aware_q1_accelerator_plan.md).
+
 ## Benchmark Context
 
 Published CHB-MIT papers report accuracy values around 94.93% to 98.43% under
@@ -80,11 +90,11 @@ cd AI_train_model && CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dc
 ```
 
 Do not select architecture, threshold, or temporal policy from test data. The
-next research objective is a patient-held-out, end-to-end causal replication
-before further accuracy optimization. The historical reference uses a
-within-case split and zero-phase offline filtering, so it cannot establish
-unseen-patient or real-time performance. The active protocol and ordered
-capacity ablation are in
+historical reference uses a within-case split and zero-phase offline filtering,
+so it cannot establish unseen-patient or real-time performance. Patient-held-
+out causal work remains a separate validity track, but it does not block the
+KV260 implementation milestones. The active protocol and ordered capacity
+ablation are in
 [`AI_train_model/docs/patient_heldout_causal_protocol.md`](AI_train_model/docs/patient_heldout_causal_protocol.md).
 
 ## FPGA Export
