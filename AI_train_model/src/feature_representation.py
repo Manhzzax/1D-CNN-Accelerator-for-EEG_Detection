@@ -12,11 +12,16 @@ FEATURE_SPEC_FILENAME = "feature_representation.json"
 
 def get_feature_spec(preprocessing):
     """Resolve a representation without changing the raw-data baseline by default."""
+    input_length = int(round(
+        float(preprocessing["sample_rate_hz"]) * float(preprocessing["window_sec"])
+    ))
+    if input_length < 1:
+        raise ValueError("Feature representation requires a positive input length")
     name = os.environ.get(
         "CHBMIT_FEATURE_REPRESENTATION", preprocessing.get("feature_representation", "raw")
     )
     if name == "raw":
-        return {"name": "raw", "input_shape": [17, 256]}
+        return {"name": "raw", "input_shape": [17, input_length]}
     if name == "dwt_db4_l3":
         options = preprocessing.get("dwt", {})
         return {
@@ -24,7 +29,7 @@ def get_feature_spec(preprocessing):
             "wavelet": str(options.get("wavelet", "db4")),
             "level": int(options.get("level", 3)),
             "mode": str(options.get("mode", "periodization")),
-            "input_shape": [17, 256],
+            "input_shape": [17, input_length],
             "coefficient_order": "cA3,cD3,cD2,cD1",
         }
     raise ValueError(f"Unsupported CHBMIT_FEATURE_REPRESENTATION: {name}")
@@ -52,8 +57,8 @@ def save_feature_spec(directory, spec):
 def transform_windows(windows, spec, batch_size=512):
     """Transform `(N, channels, samples)` windows while preserving its shape.
 
-    `periodization` and a level-3 decomposition of a 256-sample input produce
-    coefficient arrays whose concatenation remains 256 samples long.
+    `periodization` preserves the input length when the DWT coefficients are
+    concatenated, including the two-second (512-sample) protocol.
     """
     data = np.asarray(windows, dtype=np.float32)
     single_window = data.ndim == 2

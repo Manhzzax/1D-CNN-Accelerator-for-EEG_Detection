@@ -138,6 +138,13 @@ def get_train_val_test_datasets():
     feature_spec = load_feature_spec(prepared_dir)
     expected_channels = model_config["input_channels"]
     expected_length = model_config["input_length"]
+    expected_feature_shape = [expected_channels, expected_length]
+    if feature_spec.get("input_shape") != expected_feature_shape:
+        raise ValueError(
+            "Prepared feature representation does not match the configured input shape: "
+            f"{feature_spec.get('input_shape')} vs {expected_feature_shape}. "
+            "Re-run preprocessing with the same CHBMIT_WINDOW_SEC used for training."
+        )
 
     train_x, train_y, train_records, channels, train_weights, _ = _load_prepared_split(
         prepared_dir, "train", expected_channels, expected_length
