@@ -1,0 +1,22 @@
+\section{Discussion}
+
+The principal scientific question is whether a compact raw-EEG model can retain
+its fixed-point decisions while providing measurable efficiency on an FPGA.
+The present software result is deliberately not interpreted as clinical
+superiority: its accuracy arises from balanced within-case windows, whereas
+patient-independent and continuous-event protocols measure different forms of
+generalization \cite{ali2024,gu2026}.
+
+The design also separates neural storage from whole-system cost. A 10,030-B
+tensor package does not include preprocessing, DMA buffers, processor control,
+or acquisition hardware. Reporting these components and two timing boundaries
+prevents an unfair comparison with a CPU, GPU, or another FPGA design.
+
+\tbd{After measurement, discuss the observed bottleneck: temporal depthwise
+compute, pointwise DSP demand, BRAM bandwidth, or DMA overhead. Relate only to
+the H0--H3 variants measured on the same KV260 board.}
+
+Limitations include the offline preprocessing used to create the historical
+reference, the within-case validation split, and the absence of an on-board
+causal filtering frontend. These are explicit scope boundaries rather than
+unreported assumptions.

@@ -1,0 +1,33 @@
+\section{Experimental Protocol}
+
+\subsection{Software and Biomedical Reference}
+
+The CHB-MIT corpus was audited before preprocessing: 686 EDF recordings were
+matched with the dataset manifest, and 198 seizure intervals were recovered
+from the primary annotations. Seventeen canonical bipolar channels are
+reconstructed consistently across recordings. The frozen model reference uses
+the checkpoint and normalization constants identified by their SHA-256 manifest.
+
+Window metrics include accuracy, sensitivity, precision, F1 score, AUROC, and
+average precision. For context only, the causal alarm policy detects 23 of 29
+validation events with a false-alarm rate of 0.4671/h and a median delay of
+17 s. These event values are not used to select any FPGA design.
+
+\subsection{Implementation Metrics}
+
+Functional correctness is established by exact expected-logit matching, then
+by prediction agreement and accuracy on the frozen validation data. Hardware
+metrics are achieved frequency, post-route resources, model and buffer storage,
+kernel-only latency, host-plus-DMA latency, throughput, average power, and
+energy per window. CPU and GPU baselines use the same batch-one input contract.
+
+\subsection{Literature Context}
+
+Table~\ref{tab:ai-context} is intentionally a context table rather than a
+global ranking. Recent compact neural networks span 18k to 350k reported
+parameters, while accuracy values arise from different cohorts and split rules
+\cite{lmpseiznet2024,kashefi2025,gu2026}. The present work is evaluated by
+fixed-model fidelity and measured KV260 efficiency, not by a cross-paper
+accuracy ranking.
+
+\input{tables/table_ai_context}

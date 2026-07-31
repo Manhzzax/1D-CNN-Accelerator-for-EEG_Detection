@@ -1,0 +1,32 @@
+\section{KV260 Accelerator Methodology}
+
+\subsection{Verification-First Design Flow}
+
+The hardware flow follows four levels. First, a host C++ reference reproduces
+the exported integer logits for the supplied INT16 input. Second, each real
+requantization ratio is approximated by an integer multiplier and shift and is
+validated against the C++ reference on the declared validation set. Third, the
+HLS top function and self-checking testbench are verified by C/RTL
+co-simulation. Finally, the packaged design is integrated with AXI DMA on
+KV260 and measured on board. C/RTL co-simulation validates generated RTL
+against the C reference but does not replace board measurements
+\cite{amd_hls_cosim}.
+
+\subsection{Accelerator Variants}
+
+The first design, H0, is a scalar functional baseline. H1 pipelines the
+temporal convolution loops and stores static weights in on-chip memories. H2
+introduces a controlled unroll factor for pointwise convolutions. H3 optionally
+uses layer-level dataflow with explicit intermediate buffers. All variants use
+the same checkpoint, quantization constants, test vector, clock target, and
+measurement protocol. Therefore, changes in latency or resources can be
+attributed to dataflow and parallelization rather than a changed model.
+
+\subsection{Measurement Boundaries}
+
+Two timing boundaries are reported: kernel-only and host-plus-DMA. Batch size
+is one window because the intended streaming use case emits a new two-second
+window every second. At least 1,000 inferences are used to report median and
+95th-percentile latency. Power methodology, sampling interval, and idle-power
+subtraction are documented. Post-route LUT, FF, BRAM, URAM, DSP, and achieved
+clock frequency are taken from the implementation reports.

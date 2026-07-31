@@ -123,3 +123,5 @@ CNN hyperparameter searching does not replace those milestones.
 The research verification, precise arithmetic gates, and controlled HLS
 experiment matrix are in
 [`hardware_aware_research_verification.md`](hardware_aware_research_verification.md).
+The active IEEE TBioCAS manuscript draft is in
+[`../paper/tbiocas_kv260/`](../paper/tbiocas_kv260/).

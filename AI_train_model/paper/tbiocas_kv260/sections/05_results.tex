@@ -1,0 +1,23 @@
+\section{Results}
+
+\subsection{Frozen Software Reference}
+
+The folded FP32 reference reaches 90.0718\% balanced validation-window
+accuracy. The signed INT16 emulator reaches 90.0462\%, preserves ictal-window
+sensitivity at 90.7645\%, and agrees with the folded FP32 predictions on
+99.9743\% of 3,898 validation windows. The exported tensor package occupies
+10,030 B. These results establish the software deployment reference only.
+
+\subsection{KV260 Implementation Results}
+
+\tbd{Populate this subsection only after G1--G6 in the hardware verification
+plan are complete. Include the exact tool version, part, clock constraint, git
+commit, and power method.}
+
+\input{tables/table_kv260_results}
+
+\subsection{Failure Analysis and Reproducibility}
+
+\tbd{Report any mismatch introduced by integer multiplier/shift
+requantization, HLS co-simulation, DMA framing, or board execution. Archive the
+corresponding tensor-manifest hash and implementation reports.}

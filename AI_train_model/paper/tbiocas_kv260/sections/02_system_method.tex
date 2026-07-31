@@ -1,0 +1,36 @@
+\section{EEG Model and Fixed-Point Contract}
+
+\subsection{Input Boundary and Validation Scope}
+
+The frozen reference consumes one normalized tensor of shape $17 \times 512$:
+17 canonical bipolar channels sampled at 256 Hz over a two-second decision
+window. The deployment boundary is after EEG filtering and train-only
+channel-wise z-score normalization. Consequently, the first accelerator does
+not claim end-to-end acquisition, filtering, or clinical deployment.
+
+The current quality values use a locked within-case chronological validation
+protocol with balanced ictal and non-seizure windows. This protocol is retained
+to verify functional equivalence of the deployed model; it is not presented as
+an unseen-patient result. A separate patient-held-out study is reported only as
+a supplementary validity track.
+
+\subsection{\episepset{} Architecture}
+
+The network applies a temporal depthwise Conv1D layer with 31 taps, a pointwise
+spatial mixing layer, average pooling, a 15-tap depthwise refinement layer, a
+second pointwise layer, average pooling, global average pooling, and a
+two-output linear classifier. ReLU follows the temporal, spatial, and refinement
+pointwise stages. The static topology contains 5,013 trainable parameters.
+
+\subsection{Quantized Inference Contract}
+
+Batch-normalization layers are folded into convolution weights and biases.
+Weights and activations are signed INT16, biases are signed INT32, and the
+reference uses a signed 64-bit accumulator. Pooling is rounded to nearest for
+nonnegative values. The folded software model and the INT16 emulator are
+evaluated on identical validation windows. Integer-only inference follows the
+requantization principles used for integer arithmetic implementations
+\cite{jacob2018}, but each layer scale conversion must be represented by a
+documented integer multiplier and shift before RTL synthesis.
+
+\input{tables/table_reference_model}

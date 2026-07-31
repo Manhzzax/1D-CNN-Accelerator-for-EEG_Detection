@@ -1,0 +1,39 @@
+\section{Introduction}
+
+Long-duration scalp electroencephalography (EEG) monitoring can support the
+identification of epileptic seizures, but practical systems must control memory,
+latency, and energy in addition to classification performance. Reported
+CHB-MIT results are not a single leaderboard: they differ in task definition,
+channel selection, labels, sampling, and patient split. In particular,
+window-level accuracy cannot substitute for continuous event sensitivity,
+false-alarm rate, and detection delay \cite{ali2024,shoeb2010}.
+
+Hardware-oriented work has demonstrated that compact seizure networks can be
+implemented on embedded processors and custom accelerators. Bahr \emph{et al.}
+deployed a 10,162-parameter CNN on a GAP8 RISC-V processor, while Li \emph{et
+al.} co-designed a compact parallel CNN and a memristive accelerator
+\cite{bahr2021,li2022}. These studies motivate a hardware contribution that
+preserves a fixed model contract and reports measured implementation evidence,
+rather than treating parameter count as a proxy for deployment cost.
+
+This work targets an AMD Kria KV260 FPGA platform and starts from a frozen
+software reference, \episepset{}. The reference uses raw, normalized EEG input
+and depthwise-separable temporal and pointwise spatial convolutions. Its small
+static graph permits a controlled investigation of integer arithmetic,
+buffering, and Conv1D parallelization on programmable logic.
+
+The contributions are as follows:
+\begin{enumerate}
+    \item a frozen 17-channel, two-second EEG inference contract with a
+    5,013-parameter FP32 reference and an INT16 tensor package;
+    \item an integer-only verification methodology that separates software
+    emulation, C reference execution, RTL co-simulation, and board execution;
+    \item a KV260 implementation study reporting post-route resources,
+    frequency, batch-one latency, throughput, power, energy, and model-output
+    agreement; and
+    \item a transparent separation between deployment evidence and biomedical
+    validation evidence, preventing unsupported clinical claims.
+\end{enumerate}
+
+Items 1 and the software portion of item 2 are complete. The hardware evidence
+in items 2--3 is reported only after the planned KV260 experiments.

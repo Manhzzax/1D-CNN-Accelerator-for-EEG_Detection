@@ -224,3 +224,13 @@ AI_train_model/agent_notes/
 AI_train_model/data/*.csv
 AI_train_model/data/*.npz
 AI_train_model/outputs/
+
+# Generated LaTeX files for the TBioCAS manuscript; source remains versioned.
+AI_train_model/paper/tbiocas_kv260/*.aux
+AI_train_model/paper/tbiocas_kv260/*.bbl
+AI_train_model/paper/tbiocas_kv260/*.blg
+AI_train_model/paper/tbiocas_kv260/*.fdb_latexmk
+AI_train_model/paper/tbiocas_kv260/*.fls
+AI_train_model/paper/tbiocas_kv260/*.log
+AI_train_model/paper/tbiocas_kv260/*.out
+AI_train_model/paper/tbiocas_kv260/*.pdf

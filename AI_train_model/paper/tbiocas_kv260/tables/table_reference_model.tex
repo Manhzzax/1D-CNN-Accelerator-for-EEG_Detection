@@ -1,0 +1,21 @@
+\begin{table}[t]
+\caption{Frozen software reference. Values are validation-window results, not
+patient-independent or FPGA results.}
+\label{tab:reference-model}
+\centering
+\footnotesize
+\begin{tabular}{ll}
+\toprule
+Item & Value \\
+\midrule
+Input & 17 channels $\times$ 512 samples (2 s at 256 Hz) \\
+Architecture & Separable 1-D CNN \\
+Trainable parameters & 5,013 \\
+FP32 validation accuracy & 90.0718\% \\
+FP32 ictal-window sensitivity & 90.7645\% \\
+INT16 validation accuracy & 90.0462\% \\
+FP32--INT16 agreement & 99.9743\% \\
+INT16 exported tensors & 10,030 B \\
+\bottomrule
+\end{tabular}
+\end{table}

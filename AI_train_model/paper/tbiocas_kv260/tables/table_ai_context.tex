@@ -1,0 +1,20 @@
+\begin{table*}[t]
+\caption{AI scale context. Values are not globally rankable because tasks and
+protocols differ. Only rows with a reported parameter count are included.}
+\label{tab:ai-context}
+\centering
+\footnotesize
+\begin{tabular}{llllrr}
+\toprule
+Method & Task & Protocol & Input/model & Accuracy (\%) & Parameters \\
+\midrule
+\episepset{} (this work) & Detection & Within-case validation & 17 ch, raw 2-s separable CNN & 90.07 & 5,013 \\
+Bahr \emph{et al.} \cite{bahr2021} & Detection & Patient-specific holdout & Multichannel CNN & NR & 10,162 \\
+Li \emph{et al.} \cite{li2022} & Prediction & 5-fold CV & 3-ch parallel CNN & 99.01 & 10,778 \\
+LMPSeizNet \cite{lmpseiznet2024} & Detection & 10-fold CV & 3-ch multiscale CNN & 97.42 & 18,024 \\
+SlimSeiz \cite{slimseiz2025} & Prediction & 10-fold CV & 8-ch CNN--Mamba & 94.80 & 21,200 \\
+PSD-LW-DCN \cite{gu2026} & Detection & Leave-one-subject-out & 18-ch PSD-CNN & 85.84 & 61,218 \\
+Kashefi Amiri \emph{et al.} \cite{kashefi2025} & Detection & Stratified 10-fold CV & DWT CNN--LSTM & 96.94 & 350,000 \\
+\bottomrule
+\end{tabular}
+\end{table*}

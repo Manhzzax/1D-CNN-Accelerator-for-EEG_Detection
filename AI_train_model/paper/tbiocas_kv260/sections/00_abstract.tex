@@ -1,0 +1,14 @@
+Continuous EEG seizure detection requires both reliable inference and an
+implementable computational footprint. This work develops a hardware-aware
+deployment path for \episepset{}, a 5,013-parameter separable one-dimensional
+convolutional neural network operating on 17 canonical bipolar EEG channels in
+two-second windows. On a locked, balanced within-case validation protocol, the
+FP32 reference attains 90.07\% window accuracy and 90.76\% ictal-window
+sensitivity. Batch-normalization folding and signed INT16 tensor quantization
+retain 90.05\% accuracy with 99.974\% prediction agreement relative to the
+folded FP32 reference, reducing exported model tensors to 10,030 B. We define
+a reproducible accelerator contract covering bit-accurate arithmetic,
+integer-only requantization, HLS co-simulation, and on-board measurement of
+latency, throughput, resources, power, and energy on AMD Kria KV260.
+\tbd{Replace this final sentence with measured KV260 results after hardware
+experiments; do not submit the manuscript while this placeholder remains.}

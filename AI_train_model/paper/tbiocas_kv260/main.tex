@@ -1,0 +1,51 @@
+\documentclass[journal]{IEEEtran}
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{url}
+
+\newcommand{\tbd}[1]{\textbf{[TBD: #1]}}
+\newcommand{\episepset}{EpiSepNet-5K}
+
+\title{A Hardware-Aware Fixed-Point 1-D CNN Accelerator for EEG Seizure Detection on Kria KV260}
+
+\author{First~Author, Second~Author, and Third~Author%
+\thanks{Manuscript prepared for IEEE Transactions on Biomedical Circuits and Systems. Author names, affiliations, funding, and correspondence details are placeholders and must be completed before submission.}%
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+\input{sections/00_abstract}
+\end{abstract}
+
+\begin{IEEEkeywords}
+EEG seizure detection, field-programmable gate array, fixed-point inference,
+hardware-aware machine learning, Kria KV260, one-dimensional convolutional
+neural network.
+\end{IEEEkeywords}
+
+\input{sections/01_introduction}
+\input{sections/02_system_method}
+\input{sections/03_accelerator_methodology}
+\input{sections/04_experimental_protocol}
+\input{sections/05_results}
+\input{sections/06_discussion}
+\input{sections/07_conclusion}
+
+\section*{Acknowledgment}
+\tbd{State funding, institutional support, and non-author contributions.}
+
+\section*{Data Availability}
+The CHB-MIT Scalp EEG Database is publicly available through PhysioNet. The
+source code, frozen checkpoint checksum, fixed-point tensor manifest, and
+hardware scripts will be released from the project repository at publication.
+\tbd{Insert archival repository DOI and commit hash at submission.}
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+
+\end{document}
