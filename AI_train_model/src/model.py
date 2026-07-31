@@ -4,6 +4,7 @@ from copy import deepcopy
 import yaml
 import torch
 import torch.nn as nn
+from torch.autograd import Function
 
 from .runtime_config import apply_runtime_overrides
 
@@ -196,13 +197,49 @@ class SeparableEEG1DCNN(nn.Module):
         self.global_pool = nn.AdaptiveAvgPool1d(1)
         self.classifier = nn.Linear(spatial_filters, num_classes)
 
-    def forward(self, x):
+    def forward_features(self, x):
         x = self.activation(self.temporal_bn(self.temporal_depthwise(x)))
         x = self.pool(self.activation(self.spatial_bn(self.spatial_pointwise(x))))
         x = self.activation(self.refine_bn(self.refine_pointwise(self.refine_depthwise(x))))
         x = self.pool(x)
-        x = self.dropout(self.global_pool(x).squeeze(-1))
-        return self.classifier(x)
+        return self.dropout(self.global_pool(x).squeeze(-1))
+
+    def forward(self, x):
+        return self.classifier(self.forward_features(x))
+
+
+class _GradientReversal(Function):
+    """Identity forward pass with a scaled reversed gradient for source-domain invariance."""
+
+    @staticmethod
+    def forward(context, inputs, coefficient):
+        context.coefficient = float(coefficient)
+        return inputs.view_as(inputs)
+
+    @staticmethod
+    def backward(context, gradients):
+        return -context.coefficient * gradients, None
+
+
+def gradient_reverse(inputs, coefficient):
+    return _GradientReversal.apply(inputs, coefficient)
+
+
+class SubjectDiscriminator(nn.Module):
+    """Training-only patient-domain head; it is never exported for inference."""
+
+    def __init__(self, input_features, hidden_features, domain_count):
+        super().__init__()
+        if hidden_features < 1 or domain_count < 2:
+            raise ValueError("Subject discriminator requires positive hidden width and at least two domains")
+        self.network = nn.Sequential(
+            nn.Linear(input_features, hidden_features),
+            nn.ReLU(),
+            nn.Linear(hidden_features, domain_count),
+        )
+
+    def forward(self, inputs):
+        return self.network(inputs)
 
 
 class MultiScaleSeparableEEG1DCNN(nn.Module):

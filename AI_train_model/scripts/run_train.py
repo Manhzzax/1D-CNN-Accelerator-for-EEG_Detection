@@ -23,7 +23,13 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, get_train_val_test_datasets
-from src.model import build_model, build_model_from_run, save_model_spec
+from src.model import (
+    SubjectDiscriminator,
+    build_model,
+    build_model_from_run,
+    gradient_reverse,
+    save_model_spec,
+)
 from src.utils import set_seed, plot_training_history, plot_confusion_matrix, outputs_dir
 
 
@@ -140,13 +146,49 @@ def main():
         f"Model: {model.architecture_name} | parameters: "
         f"{sum(parameter.numel() for parameter in model.parameters()):,}"
     )
+
+    domain_config = config['training'].get('subject_adversarial', {})
+    subject_adversarial = _env_bool(
+        'CHBMIT_SUBJECT_ADVERSARIAL', domain_config.get('enabled', False)
+    )
+    domain_loss_coefficient = float(os.environ.get(
+        'CHBMIT_SUBJECT_ADVERSARIAL_COEFFICIENT', domain_config.get('coefficient', 0.05)
+    ))
+    domain_hidden_features = int(os.environ.get(
+        'CHBMIT_SUBJECT_ADVERSARIAL_HIDDEN_FEATURES', domain_config.get('hidden_features', 16)
+    ))
+    domain_discriminator = None
+    train_domain_count = 0
+    if subject_adversarial:
+        if not hasattr(model, 'forward_features') or not hasattr(model, 'classifier'):
+            raise ValueError(
+                'Subject-adversarial training currently requires a model with forward_features and classifier'
+            )
+        if train_dataset.domain_labels is None:
+            raise ValueError('Subject-adversarial training requires train patient-group labels')
+        if not 0.0 < domain_loss_coefficient <= 1.0:
+            raise ValueError('CHBMIT_SUBJECT_ADVERSARIAL_COEFFICIENT must be in (0, 1]')
+        train_domain_count = int(train_dataset.domain_labels.max().item()) + 1
+        domain_discriminator = SubjectDiscriminator(
+            model.classifier.in_features,
+            domain_hidden_features,
+            train_domain_count,
+        ).to(device)
+        print(
+            'Source-only subject-adversarial training enabled: '
+            f'{train_domain_count} train patient groups | GRL coefficient {domain_loss_coefficient:g} | '
+            f'training-only head {domain_hidden_features} hidden features'
+        )
     
     # 5. Set loss, optimizer, and AMP Scaler
     learning_rate = float(os.environ.get('CHBMIT_TRAIN_LEARNING_RATE', config['training']['learning_rate']))
     weight_decay = float(os.environ.get('CHBMIT_TRAIN_WEIGHT_DECAY', config['training']['weight_decay']))
     criterion = nn.CrossEntropyLoss()
+    optimizer_parameters = list(model.parameters())
+    if domain_discriminator is not None:
+        optimizer_parameters.extend(domain_discriminator.parameters())
     optimizer = optim.Adam(
-        model.parameters(), 
+        optimizer_parameters,
         lr=learning_rate,
         weight_decay=weight_decay,
     )
@@ -187,36 +229,68 @@ def main():
     
     train_losses, val_losses = [], []
     train_accs, val_accs = [], []
+    domain_losses = []
     
     print(f"\nTraining for {epochs} epochs...")
     for epoch in range(epochs):
         # Train epoch
         model.train()
+        if domain_discriminator is not None:
+            domain_discriminator.train()
         running_loss = 0.0
+        running_domain_loss = 0.0
         correct_train = 0
         total_train = 0
         
-        for inputs, targets in train_loader:
+        for batch in train_loader:
+            inputs, targets = batch[0], batch[1]
+            domain_targets = batch[2] if subject_adversarial else None
             inputs, targets = inputs.to(device), targets.to(device)
+            if domain_targets is not None:
+                domain_targets = domain_targets.to(device)
             optimizer.zero_grad()
             
             if use_amp:
                 # Forward with mixed precision
                 with torch.amp.autocast(device_type="cuda"):
-                    outputs = model(inputs)
-                    loss = criterion(outputs, targets)
+                    if domain_discriminator is None:
+                        outputs = model(inputs)
+                        classification_loss = criterion(outputs, targets)
+                        domain_loss = None
+                    else:
+                        features = model.forward_features(inputs)
+                        outputs = model.classifier(features)
+                        classification_loss = criterion(outputs, targets)
+                        domain_logits = domain_discriminator(
+                            gradient_reverse(features, domain_loss_coefficient)
+                        )
+                        domain_loss = criterion(domain_logits, domain_targets)
+                    loss = classification_loss if domain_loss is None else classification_loss + domain_loss
                 # Backward and step with scaler
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 # Standard FP32 forward & backward
-                outputs = model(inputs)
-                loss = criterion(outputs, targets)
+                if domain_discriminator is None:
+                    outputs = model(inputs)
+                    classification_loss = criterion(outputs, targets)
+                    domain_loss = None
+                else:
+                    features = model.forward_features(inputs)
+                    outputs = model.classifier(features)
+                    classification_loss = criterion(outputs, targets)
+                    domain_logits = domain_discriminator(
+                        gradient_reverse(features, domain_loss_coefficient)
+                    )
+                    domain_loss = criterion(domain_logits, domain_targets)
+                loss = classification_loss if domain_loss is None else classification_loss + domain_loss
                 loss.backward()
                 optimizer.step()
             
-            running_loss += loss.item() * inputs.size(0)
+            running_loss += classification_loss.item() * inputs.size(0)
+            if domain_loss is not None:
+                running_domain_loss += domain_loss.item() * inputs.size(0)
             _, predicted = outputs.max(1)
             total_train += targets.size(0)
             correct_train += predicted.eq(targets).sum().item()
@@ -256,8 +330,15 @@ def main():
         val_losses.append(epoch_val_loss)
         train_accs.append(epoch_train_acc)
         val_accs.append(epoch_val_acc)
+        domain_losses.append(
+            running_domain_loss / total_train if domain_discriminator is not None else None
+        )
         
-        print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%")
+        domain_loss_message = (
+            f" | Domain Loss: {running_domain_loss / total_train:.4f}"
+            if domain_discriminator is not None else ""
+        )
+        print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%{domain_loss_message}")
         
         # Save best model
         if epoch_val_loss < best_val_loss - min_delta:
@@ -293,6 +374,13 @@ def main():
         "epochs": epochs,
         "learning_rate": learning_rate,
         "weight_decay": weight_decay,
+        "subject_adversarial": {
+            "enabled": subject_adversarial,
+            "gradient_reversal_coefficient": domain_loss_coefficient if subject_adversarial else None,
+            "hidden_features": domain_hidden_features if subject_adversarial else None,
+            "train_patient_groups": train_domain_count if subject_adversarial else None,
+            "training_only_head": subject_adversarial,
+        },
     }
     with open(os.path.join(outputs_dir, "hyperparameters.json"), "w") as output_file:
         json.dump(hyperparameters, output_file, indent=2, sort_keys=True)
@@ -327,6 +415,7 @@ def main():
             "min_delta": min_delta,
         },
         "hyperparameters": hyperparameters,
+        "subject_adversarial_domain_loss_per_epoch": domain_losses,
         "window_validation_metrics": validation_window_metrics,
     }
 

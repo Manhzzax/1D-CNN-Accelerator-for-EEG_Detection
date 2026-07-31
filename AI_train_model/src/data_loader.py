@@ -9,6 +9,7 @@ import torch
 import yaml
 from torch.utils.data import Dataset
 
+from .chbmit_patient_split import patient_group_for_case
 from .feature_representation import load_feature_spec, save_feature_spec
 from .runtime_config import apply_runtime_overrides
 from .utils import outputs_dir
@@ -39,7 +40,7 @@ def get_protocol_output_dir_name(config):
 class EEGDataset(Dataset):
     """Tensor dataset with canonical `(samples, channels, time)` EEG inputs."""
 
-    def __init__(self, x, y, sampling_weights=None):
+    def __init__(self, x, y, sampling_weights=None, domain_labels=None):
         self.x = torch.from_numpy(np.ascontiguousarray(x, dtype=np.float32))
         self.y = torch.from_numpy(np.ascontiguousarray(y, dtype=np.int64))
         if sampling_weights is None:
@@ -47,11 +48,20 @@ class EEGDataset(Dataset):
         self.sampling_weights = torch.from_numpy(
             np.ascontiguousarray(sampling_weights, dtype=np.float32)
         )
+        self.domain_labels = None
+        if domain_labels is not None:
+            if len(domain_labels) != len(y):
+                raise ValueError("Domain-label count must match the dataset sample count")
+            self.domain_labels = torch.from_numpy(
+                np.ascontiguousarray(domain_labels, dtype=np.int64)
+            )
 
     def __len__(self):
         return len(self.y)
 
     def __getitem__(self, index):
+        if self.domain_labels is not None:
+            return self.x[index], self.y[index], self.domain_labels[index]
         return self.x[index], self.y[index]
 
 
@@ -116,6 +126,13 @@ def get_normalization_mode(config):
     if mode not in {"train_channel_zscore", "per_recording_zscore"}:
         raise ValueError(f"Unsupported CHB-MIT normalization mode: {mode}")
     return mode
+
+
+def patient_group_labels(recording_ids):
+    """Encode training recording IDs as subject groups for source-only DG training."""
+    groups = [patient_group_for_case(str(recording_id).split("/", maxsplit=1)[0]) for recording_id in recording_ids]
+    group_to_index = {group_id: index for index, group_id in enumerate(sorted(set(groups)))}
+    return np.asarray([group_to_index[group_id] for group_id in groups], dtype=np.int64), group_to_index
 
 
 def load_normalization_spec(output_dir):
@@ -217,8 +234,17 @@ def get_train_val_test_datasets():
             f"{split['recordings']} recordings"
         )
 
+    train_domain_labels, train_domain_mapping = patient_group_labels(train_records)
+    split_summary["train_patient_groups"] = {
+        "count": len(train_domain_mapping),
+        "mapping": train_domain_mapping,
+    }
+    with open(os.path.join(outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
+        json.dump(split_summary, output_file, indent=2, sort_keys=True)
+        output_file.write("\n")
+
     return (
-        EEGDataset(train_x, train_y, train_weights),
+        EEGDataset(train_x, train_y, train_weights, domain_labels=train_domain_labels),
         EEGDataset(val_x, val_y, val_weights),
         EEGDataset(test_x, test_y, test_weights),
     )
