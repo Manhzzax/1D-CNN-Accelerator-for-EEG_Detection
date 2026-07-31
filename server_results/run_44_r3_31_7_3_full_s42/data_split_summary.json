@@ -1,0 +1,73 @@
+{
+  "channels": [
+    "FP1-F7",
+    "F7-T7",
+    "T7-P7",
+    "P7-O1",
+    "FP1-F3",
+    "F3-C3",
+    "C3-P3",
+    "P3-O1",
+    "FP2-F4",
+    "F4-C4",
+    "C4-P4",
+    "P4-O2",
+    "FP2-F8",
+    "F8-T8",
+    "P8-O2",
+    "FZ-CZ",
+    "CZ-PZ"
+  ],
+  "feature_representation": {
+    "input_shape": [
+      17,
+      512
+    ],
+    "name": "raw"
+  },
+  "normalization_mode": "train_channel_zscore",
+  "prepared_output_dir": "chbmit_prepared_raw_2s_v2",
+  "test": {
+    "ictal": 4520,
+    "recordings": 192,
+    "samples": 49720
+  },
+  "train": {
+    "ictal": 5344,
+    "recordings": 399,
+    "samples": 10688
+  },
+  "train_patient_groups": {
+    "count": 23,
+    "mapping": {
+      "subject_01_21": 0,
+      "subject_02": 1,
+      "subject_03": 2,
+      "subject_04": 3,
+      "subject_05": 4,
+      "subject_06": 5,
+      "subject_07": 6,
+      "subject_08": 7,
+      "subject_09": 8,
+      "subject_10": 9,
+      "subject_11": 10,
+      "subject_12": 11,
+      "subject_13": 12,
+      "subject_14": 13,
+      "subject_15": 14,
+      "subject_16": 15,
+      "subject_17": 16,
+      "subject_18": 17,
+      "subject_19": 18,
+      "subject_20": 19,
+      "subject_22": 20,
+      "subject_23": 21,
+      "subject_24": 22
+    }
+  },
+  "val": {
+    "ictal": 1949,
+    "recordings": 95,
+    "samples": 3898
+  }
+}
