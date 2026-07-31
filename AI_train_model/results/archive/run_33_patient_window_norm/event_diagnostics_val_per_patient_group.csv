@@ -1,0 +1,4 @@
+patient_group,cases,recordings,total_events,detected_events,event_sensitivity,false_alarms,interictal_hours,false_alarms_per_hour
+subject_15,chb15,40,20,4,0.2,47,39.45666666666666,1.1911801976852243
+subject_14,chb14,26,8,0,0.0,1,25.953055555555554,0.03853110851858591
+subject_01_21,chb01;chb21,75,11,2,0.18181818181818182,2,73.20444444444445,0.027320745552789752
