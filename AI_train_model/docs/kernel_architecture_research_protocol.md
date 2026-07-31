@@ -97,6 +97,24 @@ its best coarse validation point is `10_of_20`, threshold `0.99`, sensitivity
 68.97%, FAR `0.526/h`. R2 advances only to validation seed confirmation, not
 to deployment or test evaluation.
 
+### R2 Seed Confirmation Status
+
+R2 has now completed seeds 7, 42, and 123 on `chbmit_prepared_raw_2s_v2`:
+
+| Seed | Accuracy | AUROC | F1 | Sensitivity | Best epoch |
+|---:|---:|---:|---:|---:|---:|
+| 7 | 89.815% | 96.211% | 89.786% | 89.533% | 14 |
+| 42 | 91.175% | 96.645% | 91.102% | 90.354% | 23 |
+| 123 | 89.610% | 96.146% | 89.734% | 90.816% | 15 |
+| Mean +/- sample SD | 90.200% +/- 0.850% | 96.334% +/- 0.272% | 90.207% +/- 0.775% | 90.234% +/- 0.650% | - |
+
+This confirms R2 is trainable but does **not** yet establish a three-seed gain
+over R0. The historical R0 reference was produced before the repaired
+`raw_2s_v2` prepared artifact; its seed-42 score is not a sufficient matched
+three-seed comparator. Re-run R0 `31/15` with seeds 7, 42, and 123 on the same
+`raw_2s_v2` artifact before model selection, event comparison, or any
+hyperparameter tuning claim.
+
 ## Ordered experimental plan
 
 ### Phase 0: establish variance
@@ -125,12 +143,12 @@ off. Do not run or inspect the historical test split.
 
 ### Phase 2a: Optimization Sensitivity
 
-Run this only after R2 seed confirmation. Early stopping selects the best
-stored checkpoint; increasing its patience cannot improve that checkpoint. It
-can only help if a later, lower validation-loss basin is reached after a
-learning-rate reduction. The Phase-1 evidence does not justify tuning R1 or
-R3: R1 reached epoch 30 without early stopping and still underperformed, while
-R3 overfit after epoch 14.
+Run this only after the matched R0/R2 three-seed comparison. Early stopping
+selects the best stored checkpoint; increasing its patience cannot improve
+that checkpoint. It can only help if a later, lower validation-loss basin is
+reached after a learning-rate reduction. The Phase-1 evidence does not justify
+tuning R1 or R3: R1 reached epoch 30 without early stopping and still
+underperformed, while R3 overfit after epoch 14.
 
 If R2's three-seed mean remains above R0, run these validation-only R2
 ablations with seed 42, one factor at a time:
