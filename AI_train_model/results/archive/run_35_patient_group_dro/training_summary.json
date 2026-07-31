@@ -1,0 +1,398 @@
+{
+  "best_epoch": 2,
+  "best_validation_loss": 0.6738361271446786,
+  "early_stopping": {
+    "enabled": true,
+    "min_delta": 0.001,
+    "min_epochs": 8,
+    "monitor": "val_loss",
+    "patience": 6
+  },
+  "epochs_completed": 8,
+  "epochs_requested": 30,
+  "group_dro_weights_per_epoch": [
+    [
+      0.008960319682955742,
+      0.02145940624177456,
+      0.2456958293914795,
+      0.006374158430844545,
+      0.04347577691078186,
+      0.028440795838832855,
+      0.014438318088650703,
+      0.010994458571076393,
+      0.26502084732055664,
+      0.08891293406486511,
+      0.05036887899041176,
+      0.0923604741692543,
+      0.007726137526333332,
+      0.07722115516662598,
+      0.011752438731491566,
+      0.026798076927661896
+    ],
+    [
+      0.0019545655231922865,
+      0.0326194167137146,
+      0.10811037570238113,
+      0.0018464821623638272,
+      0.0767454132437706,
+      0.08506301045417786,
+      0.0030318554490804672,
+      0.003860137425363064,
+      0.2522684335708618,
+      0.05995272472500801,
+      0.02702733501791954,
+      0.14570645987987518,
+      0.002575505757704377,
+      0.13817982375621796,
+      0.010192692279815674,
+      0.050865739583969116
+    ],
+    [
+      0.00042146779014728963,
+      0.09052133560180664,
+      0.08104133605957031,
+      0.0003660082584246993,
+      0.0717557966709137,
+      0.03342588618397713,
+      0.0006956387660466135,
+      0.0019136802293360233,
+      0.21336768567562103,
+      0.05172266438603401,
+      0.03892076760530472,
+      0.1054554209113121,
+      0.003715494414791465,
+      0.18539342284202576,
+      0.012401605024933815,
+      0.10888177156448364
+    ],
+    [
+      0.0001595199719304219,
+      0.08261039108037949,
+      0.06196698173880577,
+      6.49409121251665e-05,
+      0.06498406082391739,
+      0.046022266149520874,
+      0.00020972722268197685,
+      0.0007552236784249544,
+      0.1899077594280243,
+      0.054775431752204895,
+      0.05773261934518814,
+      0.13948777318000793,
+      0.003176097758114338,
+      0.18618209660053253,
+      0.009212782606482506,
+      0.10275235772132874
+    ],
+    [
+      9.533161937724799e-05,
+      0.08065523952245712,
+      0.05158188194036484,
+      1.3256269994599279e-05,
+      0.06956315785646439,
+      0.055447522550821304,
+      9.171301644528285e-05,
+      0.0008517332025803626,
+      0.19552041590213776,
+      0.05354559049010277,
+      0.10303299129009247,
+      0.13513173162937164,
+      0.003986104391515255,
+      0.15641580522060394,
+      0.015874162316322327,
+      0.07819335907697678
+    ],
+    [
+      5.7380704674869776e-05,
+      0.08149401843547821,
+      0.03884691745042801,
+      3.3696703667374095e-06,
+      0.08968785405158997,
+      0.03638447821140289,
+      4.280975917936303e-05,
+      0.002434885362163186,
+      0.2179201990365982,
+      0.04274684935808182,
+      0.12581486999988556,
+      0.10947640240192413,
+      0.004766157828271389,
+      0.14362220466136932,
+      0.0364326573908329,
+      0.07026888430118561
+    ],
+    [
+      3.664307587314397e-05,
+      0.06894323974847794,
+      0.0438552163541317,
+      1.3113782415530295e-06,
+      0.10937467962503433,
+      0.06900754570960999,
+      2.5577233827789314e-05,
+      0.00617024302482605,
+      0.21611420810222626,
+      0.03132693096995354,
+      0.12616749107837677,
+      0.0963316410779953,
+      0.011275803670287132,
+      0.14349550008773804,
+      0.030525842681527138,
+      0.04734817519783974
+    ],
+    [
+      3.2120937248691916e-05,
+      0.044066693633794785,
+      0.058253251016139984,
+      3.5170822343388863e-07,
+      0.08394879847764969,
+      0.0684272050857544,
+      2.4474848032696173e-05,
+      0.01565026305615902,
+      0.20591700077056885,
+      0.028556212782859802,
+      0.14764007925987244,
+      0.08696141093969345,
+      0.03887290507555008,
+      0.15671087801456451,
+      0.025037700310349464,
+      0.03990064188838005
+    ]
+  ],
+  "hyperparameters": {
+    "batch_size": 128,
+    "class_balanced_batches": false,
+    "epochs": 30,
+    "group_dro": {
+      "enabled": true,
+      "eta": 0.1,
+      "train_patient_groups": 16,
+      "training_only_objective": true
+    },
+    "learning_rate": 0.001,
+    "patient_group_balanced_batches": true,
+    "patient_group_sampling": {
+      "strata": [
+        {
+          "class_index": 0,
+          "importance_sum": 398.0,
+          "patient_group_index": 0,
+          "samples": 398
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 472.0,
+          "patient_group_index": 1,
+          "samples": 472
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 753.0,
+          "patient_group_index": 2,
+          "samples": 753
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 755.0,
+          "patient_group_index": 3,
+          "samples": 755
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 240.0,
+          "patient_group_index": 4,
+          "samples": 240
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 735.0,
+          "patient_group_index": 5,
+          "samples": 735
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 606.0,
+          "patient_group_index": 6,
+          "samples": 606
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 381.0,
+          "patient_group_index": 7,
+          "samples": 381
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 264.0,
+          "patient_group_index": 8,
+          "samples": 264
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 241.0,
+          "patient_group_index": 9,
+          "samples": 241
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 261.0,
+          "patient_group_index": 10,
+          "samples": 261
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 434.0,
+          "patient_group_index": 11,
+          "samples": 434
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 336.0,
+          "patient_group_index": 12,
+          "samples": 336
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 340.0,
+          "patient_group_index": 13,
+          "samples": 340
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 327.0,
+          "patient_group_index": 14,
+          "samples": 327
+        },
+        {
+          "class_index": 0,
+          "importance_sum": 320.0,
+          "patient_group_index": 15,
+          "samples": 320
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 169.0,
+          "patient_group_index": 0,
+          "samples": 169
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 553.0,
+          "patient_group_index": 1,
+          "samples": 553
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 143.0,
+          "patient_group_index": 2,
+          "samples": 143
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 322.0,
+          "patient_group_index": 3,
+          "samples": 322
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 914.0,
+          "patient_group_index": 4,
+          "samples": 914
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 272.0,
+          "patient_group_index": 5,
+          "samples": 272
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 440.0,
+          "patient_group_index": 6,
+          "samples": 440
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 803.0,
+          "patient_group_index": 7,
+          "samples": 803
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 1435.0,
+          "patient_group_index": 8,
+          "samples": 1435
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 74.0,
+          "patient_group_index": 9,
+          "samples": 74
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 290.0,
+          "patient_group_index": 10,
+          "samples": 290
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 311.0,
+          "patient_group_index": 11,
+          "samples": 311
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 233.0,
+          "patient_group_index": 12,
+          "samples": 233
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 286.0,
+          "patient_group_index": 13,
+          "samples": 286
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 201.0,
+          "patient_group_index": 14,
+          "samples": 201
+        },
+        {
+          "class_index": 1,
+          "importance_sum": 417.0,
+          "patient_group_index": 15,
+          "samples": 417
+        }
+      ],
+      "strategy": "equal_observed_class_patient_group_strata"
+    },
+    "subject_adversarial": {
+      "enabled": false,
+      "gradient_reversal_coefficient": null,
+      "hidden_features": null,
+      "train_patient_groups": null,
+      "training_only_head": false
+    },
+    "weight_decay": 0.0001
+  },
+  "stopped_early": true,
+  "subject_adversarial_domain_loss_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "window_validation_metrics": {
+    "accuracy": 0.5892146217879117,
+    "auroc": 0.6884743447518649,
+    "average_precision": 0.6871708513750365,
+    "balanced_accuracy": 0.5892146217879117,
+    "f1": 0.5004401408450704,
+    "precision": 0.6384053902302077,
+    "sensitivity": 0.41150922909880566,
+    "threshold": 0.5
+  }
+}
