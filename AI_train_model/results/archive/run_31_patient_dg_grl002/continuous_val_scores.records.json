@@ -1,0 +1,895 @@
+[
+  {
+    "recording_id": "chb01/chb01_01.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_02.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_03.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        766976,
+        777216
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_04.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        375552,
+        382464
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_05.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_06.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_07.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_08.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_09.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_10.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_11.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_12.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_13.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_14.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_15.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        443392,
+        453632
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_16.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        259840,
+        272896
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_17.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_18.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        440320,
+        463360
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_19.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_20.edf",
+    "sample_count": 681728,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_21.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        83712,
+        107520
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_22.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_23.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_24.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_25.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_26.edf",
+    "sample_count": 595200,
+    "seizure_intervals": [
+      [
+        476672,
+        502528
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb01/chb01_27.edf",
+    "sample_count": 153600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_29.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_30.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_31.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_32.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_33.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_34.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_36.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_37.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_38.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_39.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_40.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_41.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_42.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_43.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb01/chb01_46.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_01.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_02.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_03.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_04.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_05.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_06.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_07.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_08.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_09.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_10.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_11.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_12.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_13.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_14.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_15.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_16.edf",
+    "sample_count": 921344,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_17.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_18.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_19.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        329728,
+        344064
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb21/chb21_20.edf",
+    "sample_count": 765440,
+    "seizure_intervals": [
+      [
+        672512,
+        685312
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb21/chb21_21.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        512768,
+        533504
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb21/chb21_22.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        653568,
+        656640
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb21/chb21_23.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_24.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_25.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_26.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_27.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_28.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_29.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_30.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_31.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_32.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb21/chb21_33.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_01.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_02.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_03.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        508416,
+        512000
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_04.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        351232,
+        356352
+      ],
+      [
+        721152,
+        726784
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_06.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        489216,
+        492800
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_07.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_11.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        470528,
+        481024
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_12.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_13.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_14.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_16.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_17.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        829184,
+        834304
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_18.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        265984,
+        271616
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_19.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_20.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_22.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_24.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_25.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_26.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_27.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        725248,
+        729344
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb14/chb14_29.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_30.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_32.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_37.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_39.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb14/chb14_42.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_01.edf",
+    "sample_count": 922112,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_02.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_03.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_04.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_05.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_06.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        69632,
+        101632
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_07.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_08.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_09.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_10.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        276992,
+        284928
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_11.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_12.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_13.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_14.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_15.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        407296,
+        447488
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_16.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_17.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        492800,
+        501760
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_19.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_20.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        155392,
+        169472
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_22.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        194560,
+        247040
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_26.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_28.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        224256,
+        272896
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_29.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_30.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_31.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        448256,
+        478976
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_32.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_33.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_35.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_37.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_40.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        213504,
+        228864
+      ],
+      [
+        608768,
+        639232
+      ],
+      [
+        860672,
+        876800
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_45.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_46.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        850432,
+        877824
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_49.edf",
+    "sample_count": 928000,
+    "seizure_intervals": [
+      [
+        283648,
+        319488
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_50.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_51.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_52.edf",
+    "sample_count": 923904,
+    "seizure_intervals": [
+      [
+        199168,
+        217344
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_54.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        67328,
+        81408
+      ],
+      [
+        215808,
+        261120
+      ],
+      [
+        390144,
+        408320
+      ],
+      [
+        557824,
+        576000
+      ],
+      [
+        877568,
+        885760
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_61.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  },
+  {
+    "recording_id": "chb15/chb15_62.edf",
+    "sample_count": 921600,
+    "seizure_intervals": [
+      [
+        192256,
+        219904
+      ]
+    ]
+  },
+  {
+    "recording_id": "chb15/chb15_63.edf",
+    "sample_count": 921600,
+    "seizure_intervals": []
+  }
+]
