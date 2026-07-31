@@ -190,7 +190,9 @@ training:
   # source patient groups with the largest current classification loss.
   group_dro:
     enabled: false
-    eta: 0.1
+    # The update is applied every training batch; 0.01 avoids a single source
+    # group dominating the q distribution over an epoch.
+    eta: 0.01
   early_stopping:
     enabled: true
     monitor: "val_loss"

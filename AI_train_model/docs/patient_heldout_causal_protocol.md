@@ -65,7 +65,10 @@ selection.
    upweight source patient groups with higher classification loss. This is
    training-only robust optimization; it does not use held-out patient data or
    increase deployment parameters. It is run separately from GRL and without
-   window normalization to keep attribution clear.
+   window normalization to keep attribution clear. `run_35` at batch-wise
+   eta `0.1` is rejected because its group weights collapsed toward one source
+   group and validation detection fell to 7/39. The only follow-up is the
+   pre-specified smaller batch-wise eta `0.01`.
 6. Select one candidate using the validation frontier: highest event
    sensitivity with `FAR/h <= 0.5`, then lower FAR/h, lower median delay, and
    higher validation AUROC as tie-breakers. If neither candidate improves the
@@ -129,7 +132,7 @@ cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED
 Run GroupDRO on the same patient-group-balanced source batches:
 
 ```bash
-cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_PATIENT_GROUP_BALANCED_BATCHES=true CHBMIT_SUBJECT_ADVERSARIAL=false CHBMIT_GROUP_DRO=true CHBMIT_GROUP_DRO_ETA=0.1 CHBMIT_RUN_ID=run_35_patient_group_dro CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_PATIENT_GROUP_BALANCED_BATCHES=true CHBMIT_SUBJECT_ADVERSARIAL=false CHBMIT_GROUP_DRO=true CHBMIT_GROUP_DRO_ETA=0.01 CHBMIT_RUN_ID=run_36_patient_group_dro_eta001 CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
 ```
 
 Before training any additional ablation, copy its validation artifacts into the
