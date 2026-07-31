@@ -182,5 +182,25 @@ Neither reaches the 91.675% promotion threshold. Both have higher train than
 validation accuracy at their selected checkpoint, so the next controlled axis
 is temporal kernel length, not the combined `m4/f48` model.
 
+#### Temporal-Kernel Screen Result
+
+With the R2 Lite `7/3`, `m3/f32` topology fixed, the first temporal kernel
+shows a non-monotonic accuracy response on seed 42:
+
+| First kernel | Local receptive field | Parameters | Accuracy | AUROC | F1 | Sensitivity |
+|---:|---:|---:|---:|---:|---:|---:|
+| 15 | 336 ms | 4,101 | 89.277% | 95.774% | 89.012% | 86.865% |
+| 31 | 398 ms | 4,917 | **91.175%** | **96.645%** | **91.102%** | **90.354%** |
+| 47 | 461 ms | 5,733 | 90.457% | 96.385% | 90.287% | 88.712% |
+| 63 | 523 ms | 6,549 | 89.302% | 95.509% | 89.104% | 87.481% |
+
+Kernel 47 has a slightly lower cross-entropy validation loss than kernel 31,
+but lower fixed-threshold accuracy, F1, and sensitivity. Since this campaign
+optimizes accuracy, kernel 31 remains the hierarchy reference. The result
+rejects a monotonic "longer temporal context is better" hypothesis. The next
+architecture hypothesis should add complementary short/medium paths through a
+compact multiscale or residual topology, rather than increasing one kernel or
+flat channel capacity.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
