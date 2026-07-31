@@ -62,3 +62,49 @@ not, however, a predeclared clinical replacement under the selection rule
 above: its FAR is slightly higher than `0.4552/h` and its median delay is
 higher than 14 s. Therefore EpiSepNet-5K is locked as the window-level accuracy
 reference and a promising low-FAR event candidate, not a final clinical claim.
+
+## Planned 5-Second Context Ablation
+
+The 5-second experiment is a **separate protocol**, not an upgrade of the
+2-second accuracy result. It is motivated by Ali et al., who used
+non-overlapping 5-second windows for continuous cross-subject event detection,
+and by Chung et al., who used 4-second CNN inputs. Their cohorts, labels,
+channels, representations, and aggregation policies differ from this project,
+so their numerical results cannot select the window duration for us.
+
+| Item | Locked 2 s protocol | Planned 5 s ablation |
+|---|---:|---:|
+| Samples per channel at 256 Hz | 512 | 1,280 |
+| Raw input values | 8,704 | 21,760 |
+| INT16 input buffer | 17.0 KiB | 42.5 KiB |
+| Decision stride | 1 s | 1 s, retained for a causal comparison |
+| Relative Conv1D activation/MAC work | 1.0x | approximately 2.5x |
+| Timestamp | end of the input window | end of the input window |
+
+The current `31/7/3` hierarchy has a local convolutional receptive field of
+102 samples (about 398 ms); global average pooling consumes the full segment.
+Moving to 5 s therefore gives the classifier more aggregate context, but does
+not by itself give its local filters a five-second receptive field. A 5 s run
+also excludes all seizures shorter than a full labelled 5 s window under the
+current full-ictal label rule, changes the number and composition of positive
+windows, increases onset latency, and creates 4 s overlap at the retained 1 s
+stride. Its accuracy is consequently an ablation result, not a directly
+comparable replacement for the 2 s result.
+
+### Decision and promotion rule
+
+1. Keep 2 s as the primary accuracy and FPGA reference. It has 17x512 inputs,
+   lower buffer and activation cost, and preserves more short ictal events.
+2. First finish topology screening at 2 s: parameter-matched residual
+   `31/7/3`, then compact multiscale `15+31`.
+3. Only the best 2 s topology gets a 5 s reconstruction from the same locked
+   recordings, train-only normalisation, and seed-42 screen. Use a new prepared
+   directory and never mix 2 s and 5 s windows.
+4. Record the eligible-event count, positive-window count, accuracy, AUROC,
+   F1, sensitivity, parameters, exact MAC estimate, input-buffer requirement,
+   and causal event sensitivity/FAR/h/delay. Promote 5 s only if its gain is
+   larger than seed variability and remains hardware-feasible; otherwise retain
+   it as a negative context ablation.
+
+This design lets the paper state whether longer context helps this compact raw
+CNN, without hiding its latency, short-event coverage, or KV260 memory cost.

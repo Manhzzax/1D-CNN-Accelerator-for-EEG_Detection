@@ -163,9 +163,11 @@ The ordered search is:
 2. Combine the two only if an individual axis passes the seed-42 screen.
 3. On the best capacity, sweep the first temporal kernel `15`, `31`, `47`,
    and `63` with the `7/3` refinement fixed.
-4. Test one separate multiscale `15+31` architecture after the hierarchy
+4. Test the parameter-matched residual `31/7/3` hierarchy. It adds only
+   identity additions, so it isolates information preservation from capacity.
+5. Test one separate multiscale `15+31` architecture after the hierarchy
    family; it is not mixed into a kernel result because it changes topology.
-5. Tune optimizer/regularization only for the best topology: AdamW versus
+6. Tune optimizer/regularization only for the best topology: AdamW versus
    Adam, weight decay, dropout, then learning-rate/schedule. Patience is not a
    primary accuracy factor unless a learning-rate-reduced run reaches a later
    lower validation-loss basin.

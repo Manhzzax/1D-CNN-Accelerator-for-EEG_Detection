@@ -59,6 +59,15 @@ model:
     third_kernel: 3
     third_pointwise: false
     dropout: 0.25
+  residual_hierarchical_separable_1dcnn:
+    # Same 31/7/3 convolution budget as the Lite hierarchy, but identity skips
+    # retain stage input information before each downsampling operation.
+    temporal_filters_per_channel: 3
+    spatial_filters: 32
+    temporal_kernel: 31
+    second_kernel: 7
+    third_kernel: 3
+    dropout: 0.25
   multiscale_separable_1dcnn:
     # Parallel depthwise 59 ms and 246 ms temporal receptive fields before
     # pointwise cross-channel mixing. Kept compact for the FPGA path.
