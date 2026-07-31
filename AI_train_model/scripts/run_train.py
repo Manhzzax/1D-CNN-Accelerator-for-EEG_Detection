@@ -23,6 +23,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, get_train_val_test_datasets
+from src.group_dro import GroupDROObjective
 from src.model import (
     SubjectDiscriminator,
     build_model,
@@ -184,7 +185,10 @@ def main():
         'CHBMIT_SUBJECT_ADVERSARIAL_HIDDEN_FEATURES', domain_config.get('hidden_features', 16)
     ))
     domain_discriminator = None
-    train_domain_count = 0
+    train_domain_count = (
+        int(train_dataset.domain_labels.max().item()) + 1
+        if train_dataset.domain_labels is not None else 0
+    )
     if subject_adversarial:
         if not hasattr(model, 'forward_features') or not hasattr(model, 'classifier'):
             raise ValueError(
@@ -194,7 +198,6 @@ def main():
             raise ValueError('Subject-adversarial training requires train patient-group labels')
         if not 0.0 < domain_loss_coefficient <= 1.0:
             raise ValueError('CHBMIT_SUBJECT_ADVERSARIAL_COEFFICIENT must be in (0, 1]')
-        train_domain_count = int(train_dataset.domain_labels.max().item()) + 1
         domain_discriminator = SubjectDiscriminator(
             model.classifier.in_features,
             domain_hidden_features,
@@ -205,11 +208,31 @@ def main():
             f'{train_domain_count} train patient groups | GRL coefficient {domain_loss_coefficient:g} | '
             f'training-only head {domain_hidden_features} hidden features'
         )
+
+    group_dro_config = config['training'].get('group_dro', {})
+    group_dro_enabled = _env_bool(
+        'CHBMIT_GROUP_DRO', group_dro_config.get('enabled', False)
+    )
+    group_dro_eta = float(os.environ.get(
+        'CHBMIT_GROUP_DRO_ETA', group_dro_config.get('eta', 0.1)
+    ))
+    group_dro_objective = None
+    if group_dro_enabled:
+        if subject_adversarial:
+            raise ValueError('GroupDRO and subject-adversarial training are separate controlled ablations')
+        if train_dataset.domain_labels is None:
+            raise ValueError('GroupDRO requires train patient-group labels')
+        group_dro_objective = GroupDROObjective(train_domain_count, group_dro_eta)
+        print(
+            'Source-only GroupDRO enabled: '
+            f'{train_domain_count} train patient groups | eta {group_dro_eta:g}'
+        )
     
     # 5. Set loss, optimizer, and AMP Scaler
     learning_rate = float(os.environ.get('CHBMIT_TRAIN_LEARNING_RATE', config['training']['learning_rate']))
     weight_decay = float(os.environ.get('CHBMIT_TRAIN_WEIGHT_DECAY', config['training']['weight_decay']))
     criterion = nn.CrossEntropyLoss()
+    per_sample_criterion = nn.CrossEntropyLoss(reduction='none')
     optimizer_parameters = list(model.parameters())
     if domain_discriminator is not None:
         optimizer_parameters.extend(domain_discriminator.parameters())
@@ -233,6 +256,25 @@ def main():
         print("Automatic Mixed Precision (AMP) training enabled (FP16).")
     else:
         print("Standard single-precision (FP32) training enabled.")
+
+    def compute_training_losses(inputs, targets, domain_targets):
+        if domain_discriminator is None:
+            outputs = model(inputs)
+            per_sample_classification_losses = per_sample_criterion(outputs, targets)
+            classification_loss = per_sample_classification_losses.mean()
+            optimization_classification_loss = (
+                group_dro_objective(per_sample_classification_losses, domain_targets)
+                if group_dro_objective is not None else classification_loss
+            )
+            return outputs, classification_loss, optimization_classification_loss, None
+        features = model.forward_features(inputs)
+        outputs = model.classifier(features)
+        classification_loss = criterion(outputs, targets)
+        domain_logits = domain_discriminator(
+            gradient_reverse(features, domain_loss_coefficient)
+        )
+        domain_loss = criterion(domain_logits, domain_targets)
+        return outputs, classification_loss, classification_loss, domain_loss
         
     # 6. Training loop
     epochs = int(os.environ.get('CHBMIT_TRAIN_EPOCHS', config['training']['epochs']))
@@ -256,6 +298,7 @@ def main():
     train_losses, val_losses = [], []
     train_accs, val_accs = [], []
     domain_losses = []
+    group_dro_weights = []
     
     print(f"\nTraining for {epochs} epochs...")
     for epoch in range(epochs):
@@ -270,7 +313,7 @@ def main():
         
         for batch in train_loader:
             inputs, targets = batch[0], batch[1]
-            domain_targets = batch[2] if subject_adversarial else None
+            domain_targets = batch[2] if (subject_adversarial or group_dro_enabled) else None
             inputs, targets = inputs.to(device), targets.to(device)
             if domain_targets is not None:
                 domain_targets = domain_targets.to(device)
@@ -279,38 +322,20 @@ def main():
             if use_amp:
                 # Forward with mixed precision
                 with torch.amp.autocast(device_type="cuda"):
-                    if domain_discriminator is None:
-                        outputs = model(inputs)
-                        classification_loss = criterion(outputs, targets)
-                        domain_loss = None
-                    else:
-                        features = model.forward_features(inputs)
-                        outputs = model.classifier(features)
-                        classification_loss = criterion(outputs, targets)
-                        domain_logits = domain_discriminator(
-                            gradient_reverse(features, domain_loss_coefficient)
-                        )
-                        domain_loss = criterion(domain_logits, domain_targets)
-                    loss = classification_loss if domain_loss is None else classification_loss + domain_loss
+                    outputs, classification_loss, optimization_classification_loss, domain_loss = compute_training_losses(
+                        inputs, targets, domain_targets
+                    )
+                    loss = optimization_classification_loss if domain_loss is None else optimization_classification_loss + domain_loss
                 # Backward and step with scaler
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 # Standard FP32 forward & backward
-                if domain_discriminator is None:
-                    outputs = model(inputs)
-                    classification_loss = criterion(outputs, targets)
-                    domain_loss = None
-                else:
-                    features = model.forward_features(inputs)
-                    outputs = model.classifier(features)
-                    classification_loss = criterion(outputs, targets)
-                    domain_logits = domain_discriminator(
-                        gradient_reverse(features, domain_loss_coefficient)
-                    )
-                    domain_loss = criterion(domain_logits, domain_targets)
-                loss = classification_loss if domain_loss is None else classification_loss + domain_loss
+                outputs, classification_loss, optimization_classification_loss, domain_loss = compute_training_losses(
+                    inputs, targets, domain_targets
+                )
+                loss = optimization_classification_loss if domain_loss is None else optimization_classification_loss + domain_loss
                 loss.backward()
                 optimizer.step()
             
@@ -358,6 +383,9 @@ def main():
         val_accs.append(epoch_val_acc)
         domain_losses.append(
             running_domain_loss / total_train if domain_discriminator is not None else None
+        )
+        group_dro_weights.append(
+            group_dro_objective.weights().cpu().tolist() if group_dro_objective is not None else None
         )
         
         domain_loss_message = (
@@ -412,6 +440,12 @@ def main():
             "train_patient_groups": train_domain_count if subject_adversarial else None,
             "training_only_head": subject_adversarial,
         },
+        "group_dro": {
+            "enabled": group_dro_enabled,
+            "eta": group_dro_eta if group_dro_enabled else None,
+            "train_patient_groups": train_domain_count if group_dro_enabled else None,
+            "training_only_objective": group_dro_enabled,
+        },
     }
     with open(os.path.join(outputs_dir, "hyperparameters.json"), "w") as output_file:
         json.dump(hyperparameters, output_file, indent=2, sort_keys=True)
@@ -447,6 +481,7 @@ def main():
         },
         "hyperparameters": hyperparameters,
         "subject_adversarial_domain_loss_per_epoch": domain_losses,
+        "group_dro_weights_per_epoch": group_dro_weights,
         "window_validation_metrics": validation_window_metrics,
     }
 

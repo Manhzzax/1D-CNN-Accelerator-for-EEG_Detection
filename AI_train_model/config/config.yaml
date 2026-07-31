@@ -186,6 +186,11 @@ training:
     enabled: false
     coefficient: 0.05
     hidden_features: 16
+  # Controlled source-only robust-learning ablation. It dynamically upweights
+  # source patient groups with the largest current classification loss.
+  group_dro:
+    enabled: false
+    eta: 0.1
   early_stopping:
     enabled: true
     monitor: "val_loss"
