@@ -1,0 +1,5 @@
+recordings,total_events,detected_events,event_sensitivity,false_alarms,interictal_hours,false_alarms_per_hour,case_id
+26,8,0,0.0,16,25.953055555555554,0.6164977362973746,chb14
+42,7,7,1.0,19,40.42944444444444,0.4699545160980034,chb01
+40,20,0,0.0,3,39.456666666666656,0.07603277857565263,chb15
+33,4,0,0.0,0,32.775,0.0,chb21
