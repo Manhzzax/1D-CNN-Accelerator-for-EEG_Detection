@@ -28,6 +28,11 @@ Machine-readable exports of Tables B and C are in
 [`../benchmarks/chbmit_continuous_detection_benchmark.csv`](../benchmarks/chbmit_continuous_detection_benchmark.csv)
 and
 [`../benchmarks/chbmit_window_hardware_benchmark.csv`](../benchmarks/chbmit_window_hardware_benchmark.csv).
+The expanded accuracy/efficiency literature context, with protocol and evidence
+tier fields retained for every row, is in
+[`../benchmarks/chbmit_detection_accuracy_efficiency_context.csv`](../benchmarks/chbmit_detection_accuracy_efficiency_context.csv).
+Its academic limitations and the required publication benchmark plan are in
+[`academic_validity_audit_and_benchmark_plan.md`](academic_validity_audit_and_benchmark_plan.md).
 The publication-ready LaTeX source for Table C is
 [`tables/table_c_window_hardware_benchmark.tex`](tables/table_c_window_hardware_benchmark.tex).
 It ranks only the strictly comparable FP32/INT16 EpiSepNet variants; it does

@@ -45,5 +45,9 @@ Use a named `CHBMIT_RUN_ID` for every experiment. Generated output remains in
 `results/reference/` or `results/archive/`. Do not commit raw EDF files,
 prepared NPZ datasets, or continuous score arrays.
 
-The current controlled 2-second experiment is specified in
+The historical controlled 2-second experiment is specified in
 [docs/window_duration_ablation_protocol.md](docs/window_duration_ablation_protocol.md).
+The active Q1-oriented protocol is
+[docs/patient_heldout_causal_protocol.md](docs/patient_heldout_causal_protocol.md):
+patient-group-disjoint split, causal filtering, validation-only model/policy
+selection, and one final test-patient evaluation.

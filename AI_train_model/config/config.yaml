@@ -14,6 +14,14 @@ data:
   # Directory under AI_train_model/data/ for the split manifest locked before preprocessing
   protocol_output_dir: "chbmit_protocol"
 
+  # Separate protocol directory for patient-group-disjoint evaluation. chb01 and
+  # chb21 are one participant and are kept in the same group.
+  patient_heldout_protocol_output_dir: "chbmit_protocol_patient_holdout_v1"
+  patient_heldout_split_ratios:
+    train: 0.60
+    val: 0.20
+    test: 0.20
+
   # Directory under AI_train_model/data/ for prepared train/validation/test windows
   prepared_output_dir: "chbmit_prepared_v1"
 
@@ -69,6 +77,9 @@ preprocessing:
     mode: "periodization"
   feature_transform_batch_size: 512
   sample_rate_hz: 256
+  # zero_phase is legacy offline preprocessing; causal_iir is required for the
+  # patient-held-out streaming protocol and may be set with CHBMIT_FILTER_MODE.
+  filter_mode: "zero_phase"
   window_sec: 1
   stride_sec: 1
   interictal_guard_sec: 30

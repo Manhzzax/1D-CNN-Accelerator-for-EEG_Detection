@@ -45,6 +45,7 @@ def _recording_data(row, preprocessing):
         preprocessing["bandpass_low_hz"],
         preprocessing["bandpass_high_hz"],
         preprocessing["notch_hz"],
+        preprocessing.get("filter_mode", "zero_phase"),
     )
 
 

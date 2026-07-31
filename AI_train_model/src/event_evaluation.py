@@ -60,6 +60,7 @@ def score_continuous_recordings(
             preprocessing["bandpass_low_hz"],
             preprocessing["bandpass_high_hz"],
             preprocessing["notch_hz"],
+            preprocessing.get("filter_mode", "zero_phase"),
         )
         if normalization_mode == "train_channel_zscore":
             if feature_spec["name"] == "raw":

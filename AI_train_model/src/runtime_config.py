@@ -5,7 +5,12 @@ import os
 
 
 def apply_runtime_overrides(config):
-    """Apply the optional window-duration ablation to a loaded YAML config."""
+    """Apply explicit controlled-experiment overrides to a loaded YAML config."""
+    filter_mode = os.environ.get("CHBMIT_FILTER_MODE")
+    if filter_mode is not None:
+        if filter_mode not in {"zero_phase", "causal_iir"}:
+            raise ValueError("CHBMIT_FILTER_MODE must be zero_phase or causal_iir")
+        config["preprocessing"]["filter_mode"] = filter_mode
     value = os.environ.get("CHBMIT_WINDOW_SEC")
     if value is None:
         return config

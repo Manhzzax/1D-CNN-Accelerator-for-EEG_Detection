@@ -6,7 +6,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 import numpy as np
-from scipy.signal import butter, iirnotch, sosfiltfilt, filtfilt
+from scipy.signal import butter, filtfilt, iirnotch, lfilter, sosfilt, sosfiltfilt
 
 from .feature_representation import save_feature_spec, transform_windows
 from .chbmit_montage import CANONICAL_BIPOLAR_17, resolve_canonical_bipolar_17
@@ -68,8 +68,13 @@ def extract_canonical_bipolar_data(raw):
     return np.asarray(channels, dtype=np.float32)
 
 
-def filter_eeg(data, sample_rate, low_cut_hz, high_cut_hz, notch_hz):
-    """Band-pass and notch filter a complete recording before it is windowed."""
+def filter_eeg(data, sample_rate, low_cut_hz, high_cut_hz, notch_hz, filter_mode="zero_phase"):
+    """Filter a complete recording before windowing.
+
+    ``zero_phase`` is retained only for historical offline ablations. ``causal_iir``
+    uses each sample and its past only, so it is the required mode for the new
+    streaming/patient-held-out protocol.
+    """
     bandpass = butter(
         4,
         [low_cut_hz, high_cut_hz],
@@ -77,10 +82,18 @@ def filter_eeg(data, sample_rate, low_cut_hz, high_cut_hz, notch_hz):
         fs=sample_rate,
         output="sos",
     )
-    filtered = sosfiltfilt(bandpass, data, axis=1)
-    if notch_hz:
-        notch_b, notch_a = iirnotch(notch_hz, 30.0, fs=sample_rate)
-        filtered = filtfilt(notch_b, notch_a, filtered, axis=1)
+    if filter_mode == "zero_phase":
+        filtered = sosfiltfilt(bandpass, data, axis=1)
+        if notch_hz:
+            notch_b, notch_a = iirnotch(notch_hz, 30.0, fs=sample_rate)
+            filtered = filtfilt(notch_b, notch_a, filtered, axis=1)
+    elif filter_mode == "causal_iir":
+        filtered = sosfilt(bandpass, data, axis=1)
+        if notch_hz:
+            notch_b, notch_a = iirnotch(notch_hz, 30.0, fs=sample_rate)
+            filtered = lfilter(notch_b, notch_a, filtered, axis=1)
+    else:
+        raise ValueError(f"Unsupported filter mode: {filter_mode}")
     return np.asarray(filtered * 1_000_000.0, dtype=np.float32)
 
 
@@ -179,7 +192,8 @@ def calculate_normal_targets(rows, preprocessing):
 
 def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed, feature_spec=None):
     """Prepare sampled windows without changing the locked recording split."""
-    rows = load_locked_split_manifest(protocol_dir)
+    protocol_path = Path(protocol_dir)
+    rows = load_locked_split_manifest(protocol_path)
     sample_rate = preprocessing["sample_rate_hz"]
     window_samples = int(preprocessing["window_sec"] * sample_rate)
     stride_samples = int(preprocessing["stride_sec"] * sample_rate)
@@ -223,6 +237,7 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed, featur
             preprocessing["bandpass_low_hz"],
             preprocessing["bandpass_high_hz"],
             preprocessing["notch_hz"],
+            preprocessing.get("filter_mode", "zero_phase"),
         )
         intervals = intervals_to_samples(json.loads(row["seizure_intervals_json"]), sample_rate)
         positive_starts, normal_starts = create_window_index(
@@ -258,6 +273,8 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed, featur
         writer.writerows(test_rows)
 
     summary = {
+        "protocol_manifest": str(protocol_path / "recording_split_manifest.csv"),
+        "protocol_summary": str(protocol_path / "split_plan_summary.json"),
         "channels": list(CANONICAL_BIPOLAR_17),
         "sample_rate_hz": sample_rate,
         "window_sec": preprocessing["window_sec"],
@@ -265,6 +282,7 @@ def prepare_chbmit_windows(protocol_dir, output_dir, preprocessing, seed, featur
         "interictal_guard_sec": preprocessing["interictal_guard_sec"],
         "bandpass_hz": [preprocessing["bandpass_low_hz"], preprocessing["bandpass_high_hz"]],
         "notch_hz": preprocessing["notch_hz"],
+        "filter_mode": preprocessing.get("filter_mode", "zero_phase"),
         "normal_to_seizure_ratio": preprocessing["normal_to_seizure_ratio"],
         "feature_representation": feature_spec,
         "prepass_counts": counts,

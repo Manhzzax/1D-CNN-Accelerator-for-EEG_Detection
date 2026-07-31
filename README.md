@@ -80,8 +80,12 @@ cd AI_train_model && CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dc
 ```
 
 Do not select architecture, threshold, or temporal policy from test data. The
-next research objective is to improve causal event sensitivity while preserving
-the validation false-alarm constraint of 0.5/h.
+next research objective is a patient-held-out, end-to-end causal replication
+before further accuracy optimization. The historical reference uses a
+within-case split and zero-phase offline filtering, so it cannot establish
+unseen-patient or real-time performance. The active protocol and ordered
+capacity ablation are in
+[`AI_train_model/docs/patient_heldout_causal_protocol.md`](AI_train_model/docs/patient_heldout_causal_protocol.md).
 
 ## FPGA Export
 

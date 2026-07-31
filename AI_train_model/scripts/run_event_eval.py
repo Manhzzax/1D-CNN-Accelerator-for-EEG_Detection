@@ -9,7 +9,7 @@ script_dir = os.path.dirname(os.path.abspath(__file__))
 project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
-from src.data_loader import load_config, load_normalization_spec
+from src.data_loader import get_protocol_output_dir_name, load_config, load_normalization_spec
 from src.feature_representation import load_feature_spec
 from src.event_evaluation import (
     choose_threshold,
@@ -81,7 +81,7 @@ def _load_or_score(
 
 def main():
     config = load_config()
-    protocol_dir = os.path.join(project_dir, "data", config["data"]["protocol_output_dir"])
+    protocol_dir = os.path.join(project_dir, "data", get_protocol_output_dir_name(config))
     source_run_id = os.environ.get(
         "CHBMIT_MODEL_RUN_ID", config["evaluation"].get("source_model_run_id", "")
     )

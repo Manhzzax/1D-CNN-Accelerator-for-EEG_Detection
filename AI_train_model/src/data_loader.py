@@ -2,6 +2,7 @@
 
 import json
 import os
+import re
 
 import numpy as np
 import torch
@@ -21,6 +22,18 @@ config_path = os.path.join(project_dir, "config", "config.yaml")
 def load_config():
     with open(config_path, "r", encoding="utf-8") as config_file:
         return apply_runtime_overrides(yaml.safe_load(config_file))
+
+
+def get_protocol_output_dir_name(config):
+    """Return a validated protocol directory name, optionally overridden at runtime."""
+    output_name = os.environ.get(
+        "CHBMIT_PROTOCOL_OUTPUT_DIR", config["data"]["protocol_output_dir"]
+    )
+    if not re.fullmatch(r"[A-Za-z0-9_-]+", output_name):
+        raise ValueError(
+            "CHBMIT_PROTOCOL_OUTPUT_DIR must contain only letters, digits, underscores, or hyphens"
+        )
+    return output_name
 
 
 class EEGDataset(Dataset):
