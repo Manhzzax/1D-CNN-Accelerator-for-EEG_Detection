@@ -24,14 +24,12 @@ and it is not a prediction result.
 
 The count and provenance of all available result rows are recorded in
 [`chbmit_benchmark_evidence_inventory.md`](chbmit_benchmark_evidence_inventory.md).
-Machine-readable exports of Tables B and C are in
-[`../benchmarks/chbmit_continuous_detection_benchmark.csv`](../benchmarks/chbmit_continuous_detection_benchmark.csv)
-and
-[`../benchmarks/chbmit_window_hardware_benchmark.csv`](../benchmarks/chbmit_window_hardware_benchmark.csv).
-The expanded accuracy/efficiency literature context, with protocol and evidence
-tier fields retained for every row, is in
-[`../benchmarks/chbmit_detection_accuracy_efficiency_context.csv`](../benchmarks/chbmit_detection_accuracy_efficiency_context.csv).
-Its academic limitations and the required publication benchmark plan are in
+The single machine-readable AI and hardware landscape is
+[`../benchmarks/chbmit_ai_hardware_benchmark.csv`](../benchmarks/chbmit_ai_hardware_benchmark.csv).
+It retains task, protocol, parameter count, deployment evidence, public link,
+and evidence tier, so a figure can be filtered without mixing prediction with
+ictal detection. Its academic limitations and the required publication
+benchmark plan are in
 [`academic_validity_audit_and_benchmark_plan.md`](academic_validity_audit_and_benchmark_plan.md).
 The publication-ready LaTeX source for Table C is
 [`tables/table_c_window_hardware_benchmark.tex`](tables/table_c_window_hardware_benchmark.tex).

@@ -1,54 +1,40 @@
-# CHB-MIT Benchmark Data
+# CHB-MIT AI and Hardware Benchmark
 
-These compact publication-facing CSV files are the exports of Tables B and C
-in `docs/chbmit_literature_benchmark_tables.md`.
+`chbmit_ai_hardware_benchmark.csv` is the single machine-readable literature
+benchmark for this repository. It is semicolon-delimited so it opens as columns
+in the local Excel configuration. Metric cells use an Excel text prefix and a
+decimal point to preserve the reported value without locale conversion.
 
-They use a semicolon (`;`) delimiter so Excel displays the fields as separate
-columns in the project's locale. Metric display cells use an Excel text prefix
-and a decimal point, preventing locale-dependent conversion of `90.0718` into
-`900.718` when the file is opened directly. Remove the prefix only after
-importing into a tool with an explicitly configured decimal locale.
+The table contains 23 rows:
 
-- Table B contains ten columns for continuous event detection: method,
-  channels, coverage, input/model, event sensitivity, FAR/h, delay, window
-  accuracy, evidence/comparability, and a public link.
-- Table C contains eleven columns for window classification and compactness:
-  method, coverage/split, representation/model, accuracy, seizure sensitivity,
-  model size/efficiency, a public link, and four ranking fields. It groups
-  closely related configurations from one study into a single range row where
-  appropriate.
+- 2 rows for the frozen EpiSepNet-5K FP32 and INT16 references;
+- 16 directly sourced external papers or preprints;
+- 5 rows discovered through a published comparison table, explicitly marked
+  `Secondary - verify original before citation`.
 
-- `chbmit_continuous_detection_benchmark.csv`: event-level seizure-detection
-  comparison. Use this file for clinical benchmark figures.
-- `chbmit_window_hardware_benchmark.csv`: window-classification and deployment
-  context. Do not use it as a substitute for the event-level file.
+Filter before making a figure or a claim:
 
-The `Link` column contains a public DOI, publisher, PhysioNet, or arXiv page.
-`N/A (this work)` denotes the current project, which has no published paper.
-In Table B, a `Secondary: P02` evidence label means the reported metric was
-transcribed from Chung et al.'s comparison table; verify the original study
-before using it in a journal claim.
+1. Select `Task = Ictal detection` for the classifier/accelerator landscape.
+2. Keep `Direct primary` rows for a manuscript table. `Direct preprint` is
+   context until peer review. Never cite a `Secondary` row without opening its
+   original paper.
+3. Compare accuracy only within a stated protocol. Patient-specific,
+   within-case, epoch-level CV, and patient-exclusive evaluations are not one
+   leaderboard.
+4. Use `Parameters / deployed values` only for architecture scale. Use the
+   separate KV260 measurement contract for board PPA, power, and latency.
 
-Table C ranking fields are intentionally populated only for `This work
-quantization`: FP32 and INT16 use the same validation windows. Higher accuracy
-and sensitivity are better; smaller stored package size is better. External
-rows remain `NR` because their protocols are not directly comparable.
+This design deliberately places detection and prediction in one filterable
+file rather than pretending that their accuracy values are interchangeable.
+The detailed event-level and task-specific narrative remains in
+[`../docs/chbmit_literature_benchmark_tables.md`](../docs/chbmit_literature_benchmark_tables.md).
 
-`NR` means not reported. The evidence run for `EpiSepNet-5K` remains
-`run_21_raw_2s_temporal3`.
-# Accuracy-Efficiency Context
+For the hardware-aware paper, the publication figure should have two panels:
 
-`chbmit_detection_accuracy_efficiency_context.csv` is the expanded literature
-landscape for ictal seizure detection. It uses semicolon delimiters. Accuracy
-and sensitivity cells deliberately use an Excel text prefix (`'`) and a decimal
-point: this prevents a locale-dependent double-click import from converting
-`90.0718` into `900.718`. It must **not** be globally sorted or ranked by
-accuracy: each row carries task, split, channel, window, evidence tier and
-comparability metadata.
+- **AI scale context:** direct ictal-detection rows with reported parameter
+  count, plotted as accuracy versus log10(parameters), with marker shape for
+  evaluation family.
+- **KV260 evidence:** EpiSepNet-5K FP32/INT16/FPGA measured points only, using
+  accuracy agreement versus actual bytes, latency, energy, and FPGA resources.
 
-Use it to support the narrow statement that the 90.07% EpiSepNet-5K validation
-accuracy lies inside a literature range that includes lower/near-90% results and
-that its 5,013 parameters are smaller than several reported compact deep
-comparators. It cannot establish cross-paper superiority or a causal
-accuracy-versus-size trade-off. The full caveats and final three-table plan are
-in [`../docs/academic_validity_audit_and_benchmark_plan.md`](../docs/academic_validity_audit_and_benchmark_plan.md).
+Do not globally rank rows from this CSV.

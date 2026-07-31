@@ -187,13 +187,13 @@ paper should contain three non-overlapping benchmark artifacts.
 | **Table 2: continuous clinical operating point** | Does the system detect events with an acceptable false-alarm/delay trade-off? | event definition, patients/events, event SEN with CI, FAR/h with CI, delay median/IQR, refractory, threshold/policy selected only on development data | Pareto frontier only; do not rank by accuracy |
 | **Table 3: deployment benchmark** | What does the accuracy-cost trade-off cost on KV260? | precision, parameter bytes, activation bytes, MACs, FPGA clock, latency/window, throughput, LUT, FF, DSP, BRAM, power/energy, bit-exact agreement | Same board, clock and implementation flow only |
 
-The existing CSV `chbmit_detection_accuracy_efficiency_context.csv` is a
-**landscape/context table**, not Table 1. It contains transparent protocol tags
-and external values with a known parameter count where possible. Its purpose is
-to show that 90% lies in the reported CHB-MIT window-classification range while
-EpiSepNet-5K uses far fewer parameters than several published compact/deep
-models. It does not prove a causal accuracy-versus-size frontier because the
-papers use different populations and splits.
+The CSV `chbmit_ai_hardware_benchmark.csv` is a **landscape/context table**,
+not Table 1. It contains transparent task, protocol, evidence-tier, and
+parameter fields. Its purpose is to show that 90% lies in the reported CHB-MIT
+window-classification range while EpiSepNet-5K uses far fewer parameters than
+several published compact/deep models. It does not prove a causal
+accuracy-versus-size frontier because the papers use different populations and
+splits.
 
 ### How to make the 90% point academically meaningful
 
