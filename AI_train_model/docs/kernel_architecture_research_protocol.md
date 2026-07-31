@@ -161,6 +161,11 @@ Every future `training_summary.json` records per-epoch training loss,
 validation loss, both accuracies, and actual learning rate. This makes the
 scheduler and early-stopping interaction auditable.
 
+Checkpoint selection is stricter than patience: the artifact always stores the
+absolute minimum validation-loss epoch, while `min_delta` only determines
+whether the early-stopping counter is reset. This prevents a genuine but small
+loss improvement from being excluded from the reported validation checkpoint.
+
 ### Phase 3: capacity only after hierarchy result
 
 If `R2` or `R3` has a repeatable gain but remains below 95%, increase one axis

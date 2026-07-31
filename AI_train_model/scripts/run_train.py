@@ -321,6 +321,7 @@ def main():
     if min_epochs < 1 or early_stopping_patience < 1 or min_delta < 0:
         raise ValueError("Invalid early_stopping configuration")
     best_val_loss = float('inf')
+    best_patience_loss = float('inf')
     best_epoch = 0
     no_improvement_epochs = 0
     stopped_early = False
@@ -426,14 +427,18 @@ def main():
         )
         print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%{domain_loss_message}")
         
-        # Save best model
-        if epoch_val_loss < best_val_loss - min_delta:
+        # Always preserve the absolute validation-loss minimum. `min_delta`
+        # controls only whether patience is reset, not which checkpoint is evaluated.
+        if epoch_val_loss < best_val_loss:
             best_val_loss = epoch_val_loss
             best_epoch = epoch + 1
-            no_improvement_epochs = 0
             model_save_path = os.path.join(outputs_dir, "best_model.pth")
             torch.save(model.state_dict(), model_save_path)
             print(f"  --> Saved new best model to {model_save_path}")
+
+        if epoch_val_loss < best_patience_loss - min_delta:
+            best_patience_loss = epoch_val_loss
+            no_improvement_epochs = 0
         else:
             no_improvement_epochs += 1
 
@@ -510,6 +515,7 @@ def main():
         "epochs_completed": len(train_losses),
         "best_epoch": best_epoch,
         "best_validation_loss": best_val_loss,
+        "best_patience_validation_loss": best_patience_loss,
         "stopped_early": stopped_early,
         "early_stopping": {
             "enabled": early_stopping_enabled,
