@@ -249,5 +249,26 @@ following validation losses (0.2540 and 0.2886) did not improve the selected
 0.2474 loss at epoch 23. Therefore a longer tail would not have recovered a
 better selected checkpoint in that run.
 
+#### AdamW Optimizer Screen Result
+
+R2 Lite was re-trained with AdamW at the identical learning rate (`1e-3`) and
+weight decay (`1e-4`); data, seed, architecture, batch sampling, scheduler, and
+checkpoint rule were unchanged. The AdamW checkpoint at epoch 28 is the exact
+minimum validation-loss epoch.
+
+| Optimizer | Accuracy | AUROC | F1 | Sensitivity | Precision |
+|---|---:|---:|---:|---:|---:|
+| Adam (R2 Lite) | **91.175%** | **96.645%** | **91.102%** | **90.354%** | 91.862% |
+| AdamW, same decay | 90.713% | 96.482% | 90.474% | 88.199% | **92.869%** |
+| AdamW minus Adam | -0.462 pp | -0.163 pp | -0.628 pp | -2.155 pp | +1.006 pp |
+
+AdamW is rejected for the accuracy objective: its modest precision gain comes
+with lower accuracy and substantially lower sensitivity. Its selected
+train-to-validation accuracy gap (4.038 pp) is also larger than Adam's
+3.604 pp. The next experiment is the predeclared **5-second context ablation**
+of the unchanged Adam R2 Lite model. It requires a new prepared dataset and is
+reported separately because its full-ictal eligibility and window population
+differ from the 2-second protocol.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
