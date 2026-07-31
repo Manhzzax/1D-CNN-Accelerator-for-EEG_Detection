@@ -143,5 +143,35 @@ These are complementary. Track A supplies the publishable hardware evidence;
 Track B can strengthen the model-quality contribution, but must not delay
 hardware verification.
 
+### Accuracy-Only Campaign
+
+Until an accuracy candidate is selected, Track B uses **balanced validation
+window accuracy** as its primary screen metric. Event FAR, causal preprocessing,
+INT16 export, and test evaluation are intentionally deferred. They are not
+discarded; they are promotion gates after the accuracy search.
+
+The target is a three-seed mean validation accuracy of at least 95%, not an
+isolated high seed. A single seed-42 run is used only to screen a controlled
+change. A candidate advances only when its best validation accuracy is at
+least 0.5 points above the R2 seed-42 reference (91.175%), then it must be
+confirmed with seeds 7 and 123.
+
+The ordered search is:
+
+1. R2 capacity axes independently: temporal filters per channel `3 -> 4`,
+   then spatial width `32 -> 48`.
+2. Combine the two only if an individual axis passes the seed-42 screen.
+3. On the best capacity, sweep the first temporal kernel `15`, `31`, `47`,
+   and `63` with the `7/3` refinement fixed.
+4. Test one separate multiscale `15+31` architecture after the hierarchy
+   family; it is not mixed into a kernel result because it changes topology.
+5. Tune optimizer/regularization only for the best topology: AdamW versus
+   Adam, weight decay, dropout, then learning-rate/schedule. Patience is not a
+   primary accuracy factor unless a learning-rate-reduced run reaches a later
+   lower validation-loss basin.
+
+Every candidate remains validation-only and uses `chbmit_prepared_raw_2s_v2`.
+No historical test recording may be inspected for architecture selection.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
