@@ -249,16 +249,31 @@ def main():
     optimizer_parameters = list(model.parameters())
     if domain_discriminator is not None:
         optimizer_parameters.extend(domain_discriminator.parameters())
-    optimizer = optim.Adam(
+    optimizer_name = os.environ.get('CHBMIT_TRAIN_OPTIMIZER', 'adam').strip().lower()
+    optimizer_class = {
+        'adam': optim.Adam,
+        'adamw': optim.AdamW,
+    }.get(optimizer_name)
+    if optimizer_class is None:
+        raise ValueError("CHBMIT_TRAIN_OPTIMIZER must be 'adam' or 'adamw'")
+    optimizer = optimizer_class(
         optimizer_parameters,
         lr=learning_rate,
         weight_decay=weight_decay,
     )
+    scheduler_factor = float(os.environ.get(
+        'CHBMIT_LR_SCHEDULER_FACTOR', config['training']['lr_factor']
+    ))
+    scheduler_patience = int(os.environ.get(
+        'CHBMIT_LR_SCHEDULER_PATIENCE', config['training']['lr_patience']
+    ))
+    if not 0.0 < scheduler_factor < 1.0 or scheduler_patience < 0:
+        raise ValueError('Invalid ReduceLROnPlateau factor or patience')
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(
         optimizer, 
         mode='min', 
-        factor=config['training']['lr_factor'], 
-        patience=config['training']['lr_patience']
+        factor=scheduler_factor,
+        patience=scheduler_patience,
     )
     
     # Check if GPU training and AMP is active
@@ -298,7 +313,9 @@ def main():
     early_stopping_patience = int(os.environ.get(
         'CHBMIT_EARLY_STOPPING_PATIENCE', early_stopping.get('patience', epochs)
     ))
-    min_delta = float(early_stopping.get('min_delta', 0.0))
+    min_delta = float(os.environ.get(
+        'CHBMIT_EARLY_STOPPING_MIN_DELTA', early_stopping.get('min_delta', 0.0)
+    ))
     if early_stopping_monitor != 'val_loss':
         raise ValueError("Only val_loss early stopping is supported")
     if min_epochs < 1 or early_stopping_patience < 1 or min_delta < 0:
@@ -312,6 +329,7 @@ def main():
     train_accs, val_accs = [], []
     domain_losses = []
     group_dro_weights = []
+    learning_rates = []
     
     print(f"\nTraining for {epochs} epochs...")
     for epoch in range(epochs):
@@ -394,6 +412,7 @@ def main():
         val_losses.append(epoch_val_loss)
         train_accs.append(epoch_train_acc)
         val_accs.append(epoch_val_acc)
+        learning_rates.append(float(optimizer.param_groups[0]['lr']))
         domain_losses.append(
             running_domain_loss / total_train if domain_discriminator is not None else None
         )
@@ -438,6 +457,7 @@ def main():
     hyperparameters = {
         "training_seed": training_seed,
         "batch_size": batch_size,
+        "optimizer": optimizer_name,
         "class_balanced_batches": class_balanced_batches,
         "patient_group_balanced_batches": patient_group_balanced_batches,
         "patient_group_sampling": {
@@ -447,6 +467,11 @@ def main():
         "epochs": epochs,
         "learning_rate": learning_rate,
         "weight_decay": weight_decay,
+        "lr_scheduler": {
+            "name": "ReduceLROnPlateau",
+            "factor": scheduler_factor,
+            "patience": scheduler_patience,
+        },
         "subject_adversarial": {
             "enabled": subject_adversarial,
             "gradient_reversal_coefficient": domain_loss_coefficient if subject_adversarial else None,
@@ -496,6 +521,13 @@ def main():
         "hyperparameters": hyperparameters,
         "subject_adversarial_domain_loss_per_epoch": domain_losses,
         "group_dro_weights_per_epoch": group_dro_weights,
+        "history": {
+            "train_loss": train_losses,
+            "validation_loss": val_losses,
+            "train_accuracy": train_accs,
+            "validation_accuracy": val_accs,
+            "learning_rate": learning_rates,
+        },
         "window_validation_metrics": validation_window_metrics,
     }
 

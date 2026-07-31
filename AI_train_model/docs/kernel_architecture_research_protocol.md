@@ -77,6 +77,26 @@ the reference because the third pointwise layer runs after both pooling stages.
 None of these sources establishes 31, 7, and 3 as a universal optimum. That is
 why `R0`--`R3` use the same data, width, loss, and validation split.
 
+## Phase-1 Result: Seed 42
+
+The direct topology screen is complete. These are validation-only, balanced
+window metrics, not test or clinical event claims.
+
+| Candidate | Parameters | Accuracy | AUROC | F1 | Sensitivity | Outcome |
+|---|---:|---:|---:|---:|---:|---|
+| R0 frozen `31/15` | 5,013 | 90.072% | 96.580% | 90.140% | 90.765% | Reference |
+| R1 `31/7` | 4,757 | 89.507% | 96.243% | 89.194% | 86.609% | Reject |
+| R2 `31/7/3` Lite | 4,917 | **91.175%** | **96.645%** | **91.102%** | 90.354% | Advance |
+| R3 `31/7/3` Full | 5,941 | 88.892% | 95.723% | 88.906% | 89.020% | Reject |
+
+R2 improves the frozen seed-42 accuracy by 1.103 percentage points while
+using 96 fewer parameters. R3's final pointwise mixing does not help; it
+increases the train-validation gap and was early-stopped after its best epoch
+14. The selected R2 event sweep does **not** yet meet the locked FAR target:
+its best coarse validation point is `10_of_20`, threshold `0.99`, sensitivity
+68.97%, FAR `0.526/h`. R2 advances only to validation seed confirmation, not
+to deployment or test evaluation.
+
 ## Ordered experimental plan
 
 ### Phase 0: establish variance
@@ -102,6 +122,26 @@ For every Phase-1 winner, run seeds `7` and `123`, then perform validation-only
 continuous event evaluation for all three seeds. Rank candidates by mean
 balanced-window accuracy first, then report the sensitivity/FAR/h/delay trade-
 off. Do not run or inspect the historical test split.
+
+### Phase 2a: Optimization Sensitivity
+
+Run this only after R2 seed confirmation. Early stopping selects the best
+stored checkpoint; increasing its patience cannot improve that checkpoint. It
+can only help if a later, lower validation-loss basin is reached after a
+learning-rate reduction. The Phase-1 evidence does not justify tuning R1 or
+R3: R1 reached epoch 30 without early stopping and still underperformed, while
+R3 overfit after epoch 14.
+
+If R2's three-seed mean remains above R0, run these validation-only R2
+ablations with seed 42, one factor at a time:
+
+1. schedule: 45 epochs and early-stopping patience `12`;
+2. checkpoint criterion: 45 epochs, `min_delta=0`, patience `6`;
+3. regularisation: AdamW at weight decay `3e-4`; separately dropout `0.35`.
+
+Every future `training_summary.json` records per-epoch training loss,
+validation loss, both accuracies, and actual learning rate. This makes the
+scheduler and early-stopping interaction auditable.
 
 ### Phase 3: capacity only after hierarchy result
 
