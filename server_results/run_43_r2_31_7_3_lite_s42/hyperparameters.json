@@ -1,0 +1,26 @@
+{
+  "batch_size": 128,
+  "class_balanced_batches": true,
+  "epochs": 30,
+  "group_dro": {
+    "enabled": false,
+    "eta": null,
+    "train_patient_groups": null,
+    "training_only_objective": false
+  },
+  "learning_rate": 0.001,
+  "patient_group_balanced_batches": false,
+  "patient_group_sampling": {
+    "strata": null,
+    "strategy": null
+  },
+  "subject_adversarial": {
+    "enabled": false,
+    "gradient_reversal_coefficient": null,
+    "hidden_features": null,
+    "train_patient_groups": null,
+    "training_only_head": false
+  },
+  "training_seed": 42,
+  "weight_decay": 0.0001
+}
