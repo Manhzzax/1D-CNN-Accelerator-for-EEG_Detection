@@ -21,7 +21,7 @@
   "feature_representation": {
     "input_shape": [
       17,
-      256
+      512
     ],
     "name": "raw"
   },

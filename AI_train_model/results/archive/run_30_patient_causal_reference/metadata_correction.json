@@ -1,0 +1,12 @@
+{
+  "affected_fields": [
+    "feature_representation.input_shape"
+  ],
+  "correction": {
+    "from": [17, 256],
+    "to": [17, 512]
+  },
+  "reason": "The original feature-spec generator stored a fixed one-second raw shape. preparation_summary.window_sec=2.0 and model_spec.model_config.input_length=512 are the authoritative execution metadata.",
+  "training_effect": "None. The prepared tensors and trained model were already 512 samples; this corrects only persisted metadata.",
+  "status": "corrected in repository artifact; server prepared/output metadata must be repaired before further runs reuse the prepared directory."
+}
