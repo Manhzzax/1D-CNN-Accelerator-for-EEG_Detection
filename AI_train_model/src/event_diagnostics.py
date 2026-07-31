@@ -10,6 +10,14 @@ import numpy as np
 from .event_evaluation import event_metrics, generate_alarms, load_scores
 
 
+PER_RECORDING_FIELDS = [
+    "case_id", "recording_id", "total_events", "detected_events", "event_sensitivity",
+    "false_alarms", "interictal_hours", "false_alarms_per_hour",
+    "median_detection_delay_sec", "mean_detection_delay_sec", "policy_name",
+    "alarm_timestamp_mode", "positive_windows", "decision_window_windows", "threshold",
+]
+
+
 def _record_subset(scores, record_index):
     start = int(scores["record_offsets"][record_index])
     end = int(scores["record_offsets"][record_index + 1])
@@ -186,14 +194,8 @@ def analyze_event_run(run_output_dir, split_name, preprocessing, evaluation):
 
     per_recording.sort(key=lambda row: (-row["false_alarms_per_hour"], row["recording_id"]))
     recording_path = output_dir / f"event_diagnostics_{split_name}_per_recording.csv"
-    fields = [
-        "case_id", "recording_id", "total_events", "detected_events", "event_sensitivity",
-        "false_alarms", "interictal_hours", "false_alarms_per_hour",
-        "median_detection_delay_sec", "mean_detection_delay_sec", "policy_name",
-        "positive_windows", "decision_window_windows", "threshold",
-    ]
     with recording_path.open("w", newline="", encoding="utf-8") as output_file:
-        writer = csv.DictWriter(output_file, fieldnames=fields)
+        writer = csv.DictWriter(output_file, fieldnames=PER_RECORDING_FIELDS)
         writer.writeheader()
         writer.writerows(per_recording)
 
