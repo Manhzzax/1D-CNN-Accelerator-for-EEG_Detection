@@ -204,5 +204,26 @@ architecture hypothesis should add complementary short/medium paths through a
 compact multiscale or residual topology, rather than increasing one kernel or
 flat channel capacity.
 
+#### Parameter-Matched Residual Screen Result
+
+The residual `31/7/3` topology preserves the R2 Lite convolution graph and
+adds identity residual additions before the second and third pooling operations.
+It has the same 4,917 trainable parameters, so this is a topology test rather
+than a capacity increase. On seed 42 it was selected at epoch 15 by the exact
+minimum validation loss and produced the following result:
+
+| Model | Parameters | Accuracy | AUROC | F1 | Sensitivity |
+|---|---:|---:|---:|---:|---:|
+| R2 Lite `31/7/3` | 4,917 | **91.175%** | **96.645%** | **91.102%** | **90.354%** |
+| Residual `31/7/3` | 4,917 | 89.302% | 95.937% | 88.989% | 86.455% |
+| Residual minus R2 Lite | 0 | -1.873 pp | -0.708 pp | -2.113 pp | -3.899 pp |
+
+The residual path is rejected without a multi-seed confirmation: it is well
+below the seed-42 promotion threshold and degrades every primary discriminative
+metric. This is useful negative evidence that skip additions alone do not
+improve this compact raw-EEG hierarchy. The next controlled topology is the
+compact depthwise multiscale `15+31` model, which tests complementary temporal
+scales rather than a longer single kernel or a residual identity path.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
