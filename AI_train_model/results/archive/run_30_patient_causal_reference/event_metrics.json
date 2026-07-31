@@ -1,0 +1,36 @@
+{
+  "artifact_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_30_patient_causal_reference",
+  "evaluated_splits": [
+    "val"
+  ],
+  "feature_representation": {
+    "input_shape": [
+      17,
+      512
+    ],
+    "name": "raw"
+  },
+  "reused_source_continuous_scores": {
+    "test": null,
+    "validation": false
+  },
+  "source_model_outputs_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/outputs/run_30_patient_causal_reference",
+  "target_false_alarms_per_hour_met_on_validation": true,
+  "test_event_metrics": null,
+  "threshold_selection": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "decision_window_windows": 20,
+    "detected_events": 5,
+    "event_sensitivity": 0.1282051282051282,
+    "false_alarms": 40,
+    "false_alarms_per_hour": 0.28857079302861055,
+    "interictal_hours": 138.61416666666668,
+    "mean_detection_delay_sec": 32.6,
+    "median_detection_delay_sec": 35.0,
+    "policy_name": "10_of_20",
+    "positive_windows": 10,
+    "threshold": 0.9200000000000003,
+    "total_events": 39
+  },
+  "threshold_selection_mode": "validation_optimized"
+}
