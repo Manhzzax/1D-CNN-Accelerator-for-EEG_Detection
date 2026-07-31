@@ -30,6 +30,7 @@ from src.model import (
     gradient_reverse,
     save_model_spec,
 )
+from src.training_sampling import patient_group_balanced_weights
 from src.utils import set_seed, plot_training_history, plot_confusion_matrix, outputs_dir
 
 
@@ -100,8 +101,33 @@ def main():
     class_balanced_batches = _env_bool(
         'CHBMIT_CLASS_BALANCED_BATCHES', config['training'].get('class_balanced_batches', False)
     )
+    patient_group_balanced_batches = _env_bool(
+        'CHBMIT_PATIENT_GROUP_BALANCED_BATCHES',
+        config['training'].get('patient_group_balanced_batches', False),
+    )
     train_sampler = None
-    if class_balanced_batches:
+    sampling_strata = None
+    if patient_group_balanced_batches:
+        if train_dataset.domain_labels is None:
+            raise ValueError('Patient-group-balanced batches require train patient-group labels')
+        importance = train_dataset.sampling_weights.to(torch.float64)
+        weights, sampling_strata = patient_group_balanced_weights(
+            train_dataset.y.numpy(),
+            train_dataset.domain_labels.numpy(),
+            importance.numpy(),
+        )
+        sample_weights = torch.from_numpy(weights)
+        train_sampler = WeightedRandomSampler(
+            sample_weights,
+            num_samples=len(sample_weights),
+            replacement=True,
+        )
+        print(
+            'Patient-group-balanced training batches enabled: equal probability across '
+            f'{len(sampling_strata)} observed class/patient-group strata | '
+            f'{int(train_dataset.domain_labels.max().item()) + 1} train patient groups'
+        )
+    elif class_balanced_batches:
         class_counts = torch.bincount(train_dataset.y, minlength=2).to(torch.float64)
         if torch.any(class_counts == 0):
             raise ValueError("Class-balanced batches require both training classes")
@@ -371,6 +397,11 @@ def main():
     hyperparameters = {
         "batch_size": batch_size,
         "class_balanced_batches": class_balanced_batches,
+        "patient_group_balanced_batches": patient_group_balanced_batches,
+        "patient_group_sampling": {
+            "strategy": "equal_observed_class_patient_group_strata" if patient_group_balanced_batches else None,
+            "strata": sampling_strata,
+        },
         "epochs": epochs,
         "learning_rate": learning_rate,
         "weight_decay": weight_decay,

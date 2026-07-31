@@ -52,14 +52,20 @@ selection.
    on held-out patients, labels, or future samples. Run this without the
    adversarial head first, then combine only if it improves the validation
    frontier.
-4. Select one candidate using the validation frontier: highest event
+4. Patient-group-balanced sampling ablation: use an equal-probability
+   `class x source-patient-group` sampler during training, while retaining the
+   frozen raw input, architecture, causal filter, and train-only z-score.
+   This responds to diagnostics showing that aggregate validation performance
+   can be concentrated in a single held-out patient group. It is training-only
+   and does not change inference size or use held-out patient labels.
+5. Select one candidate using the validation frontier: highest event
    sensitivity with `FAR/h <= 0.5`, then lower FAR/h, lower median delay, and
    higher validation AUROC as tie-breakers. If neither candidate improves the
    frontier materially, investigate causal calibration/normalization before
    increasing backbone capacity.
-5. Temporal-policy sweep: fit the threshold and `m-of-n` policy on validation
+6. Temporal-policy sweep: fit the threshold and `m-of-n` policy on validation
    scores of the selected model. The policy must be persisted before test.
-6. Final test: run continuous inference once on the test patients. Export the
+7. Final test: run continuous inference once on the test patients. Export the
    selected model's INT16 tensor package; do not claim KV260 latency, power, or
    resource usage until synthesis and board measurement are available.
 
@@ -104,6 +110,12 @@ Run causal within-window normalization without domain-adversarial training:
 
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_NORMALIZATION_MODE=window_channel_zscore CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_SUBJECT_ADVERSARIAL=false CHBMIT_RUN_ID=run_33_patient_window_norm CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
+```
+
+Run patient-group-balanced sampling without adversarial or window-normalization changes:
+
+```bash
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_PATIENT_GROUP_BALANCED_BATCHES=true CHBMIT_SUBJECT_ADVERSARIAL=false CHBMIT_RUN_ID=run_34_patient_group_balanced CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
 ```
 
 Before training any additional ablation, copy its validation artifacts into the

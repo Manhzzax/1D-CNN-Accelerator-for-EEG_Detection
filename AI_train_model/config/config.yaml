@@ -177,6 +177,9 @@ training:
   use_amp: true          # RTX 8000 CUDA training uses Automatic Mixed Precision (FP16)
   num_threads: 4         # Limit PyTorch CPU threads to avoid server core thrashing
   class_balanced_batches: true
+  # Controlled patient-held-out ablation. Equalizes observed
+  # (ictal/non-ictal, source-patient-group) strata only during training.
+  patient_group_balanced_batches: false
   # Source-only domain-generalization ablation. It predicts the train patient
   # group through a gradient-reversal head, then discards that head at inference.
   subject_adversarial:
