@@ -11,6 +11,7 @@ from torch.utils.data import Dataset
 
 from .chbmit_patient_split import patient_group_for_case
 from .feature_representation import load_feature_spec, save_feature_spec
+from .normalization import window_channel_zscore
 from .runtime_config import apply_runtime_overrides
 from .utils import outputs_dir
 
@@ -123,7 +124,7 @@ def get_normalization_mode(config):
     mode = os.environ.get(
         "CHBMIT_NORMALIZATION_MODE", config["preprocessing"].get("normalization_mode", "train_channel_zscore")
     )
-    if mode not in {"train_channel_zscore", "per_recording_zscore"}:
+    if mode not in {"train_channel_zscore", "per_recording_zscore", "window_channel_zscore"}:
         raise ValueError(f"Unsupported CHB-MIT normalization mode: {mode}")
     return mode
 
@@ -189,12 +190,18 @@ def get_train_val_test_datasets():
         train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
         val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
         test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
-    else:
+    elif normalization_mode == "per_recording_zscore":
         # Each split is transformed per recording, independently and without labels.
         train_x, train_recording_stats = _scale_per_recording(train_x, train_records)
         val_x, val_recording_stats = _scale_per_recording(val_x, val_records)
         test_x, test_recording_stats = _scale_per_recording(test_x, test_records)
         recording_stats = {**train_recording_stats, **val_recording_stats, **test_recording_stats}
+        mean = np.zeros(expected_channels, dtype=np.float32)
+        std = np.ones(expected_channels, dtype=np.float32)
+    else:
+        train_x = window_channel_zscore(train_x)
+        val_x = window_channel_zscore(val_x)
+        test_x = window_channel_zscore(test_x)
         mean = np.zeros(expected_channels, dtype=np.float32)
         std = np.ones(expected_channels, dtype=np.float32)
 
@@ -205,7 +212,11 @@ def get_train_val_test_datasets():
     with open(os.path.join(outputs_dir, "normalization_spec.json"), "w", encoding="utf-8") as output_file:
         json.dump({
             "mode": normalization_mode,
-            "scope": "per_recording_unlabeled" if normalization_mode == "per_recording_zscore" else "train_only",
+            "scope": {
+                "train_channel_zscore": "train_only",
+                "per_recording_zscore": "per_recording_unlabeled",
+                "window_channel_zscore": "within_current_input_window",
+            }[normalization_mode],
         }, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
     if normalization_mode == "per_recording_zscore":

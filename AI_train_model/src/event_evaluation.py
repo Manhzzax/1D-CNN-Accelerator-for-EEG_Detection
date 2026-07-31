@@ -13,6 +13,7 @@ from .chbmit_preparation import (
     intervals_to_samples,
 )
 from .feature_representation import transform_windows
+from .normalization import window_channel_zscore
 
 
 def load_split_recordings(protocol_dir, split_name):
@@ -74,6 +75,10 @@ def score_continuous_recordings(
             recording_mean = np.asarray(stats["mean"], dtype=np.float32)[:, None]
             recording_std = np.asarray(stats["std"], dtype=np.float32)[:, None]
             data = (data - recording_mean) / recording_std
+        elif normalization_mode == "window_channel_zscore":
+            # Applied after slicing below so every decision uses only its own
+            # already-observed fixed input window.
+            pass
         else:
             raise ValueError(f"Unsupported continuous normalization mode: {normalization_mode}")
         starts = np.arange(0, data.shape[1] - window_samples + 1, stride_samples, dtype=np.int64)
@@ -84,6 +89,8 @@ def score_continuous_recordings(
                 batch = np.stack(
                     [data[:, start:start + window_samples] for start in batch_starts], axis=0
                 )
+                if normalization_mode == "window_channel_zscore":
+                    batch = window_channel_zscore(batch)
                 if feature_spec["name"] != "raw":
                     batch = transform_windows(batch, feature_spec, batch_size=len(batch))
                     batch = (batch - scaler_mean[None, :, None]) / scaler_std[None, :, None]

@@ -43,14 +43,23 @@ selection.
    in this phase. Cross-subject seizure studies motivate explicit feature
    alignment, including shallow/deep alignment and adversarial learning
    ([Wang et al., 2024](https://doi.org/10.1142/S0129065724500552)).
-3. Select one source-only candidate using the validation frontier: highest event
+   `run_31` (coefficient .02) reaches 7/39 events at .2741 FAR/h; `run_32`
+   (coefficient .05) also reaches 7/39 but at .3174 FAR/h. Thus `run_31` is
+   the provisional source-only DG candidate under the pre-specified hierarchy.
+3. Causal within-window normalization ablation: standardize every channel from
+   the samples in the complete two-second input window. This removes
+   patient-specific gain/offset at decision time without fitting any statistic
+   on held-out patients, labels, or future samples. Run this without the
+   adversarial head first, then combine only if it improves the validation
+   frontier.
+4. Select one candidate using the validation frontier: highest event
    sensitivity with `FAR/h <= 0.5`, then lower FAR/h, lower median delay, and
    higher validation AUROC as tie-breakers. If neither candidate improves the
    frontier materially, investigate causal calibration/normalization before
    increasing backbone capacity.
-4. Temporal-policy sweep: fit the threshold and `m-of-n` policy on validation
+5. Temporal-policy sweep: fit the threshold and `m-of-n` policy on validation
    scores of the selected model. The policy must be persisted before test.
-5. Final test: run continuous inference once on the test patients. Export the
+6. Final test: run continuous inference once on the test patients. Export the
    selected model's INT16 tensor package; do not claim KV260 latency, power, or
    resource usage until synthesis and board measurement are available.
 
@@ -89,6 +98,12 @@ Run the first source-only domain-generalization ablation without test evaluation
 
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_SUBJECT_ADVERSARIAL=true CHBMIT_SUBJECT_ADVERSARIAL_COEFFICIENT=0.02 CHBMIT_RUN_ID=run_31_patient_dg_grl002 CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
+```
+
+Run causal within-window normalization without domain-adversarial training:
+
+```bash
+cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_patient_causal_2s_v1 CHBMIT_WINDOW_SEC=2 CHBMIT_NORMALIZATION_MODE=window_channel_zscore CHBMIT_MODEL_ARCHITECTURE=separable_1dcnn CHBMIT_SEPARABLE_TEMPORAL_FILTERS_PER_CHANNEL=3 CHBMIT_CLASS_BALANCED_BATCHES=false CHBMIT_SUBJECT_ADVERSARIAL=false CHBMIT_RUN_ID=run_33_patient_window_norm CHBMIT_SKIP_TEST_EVALUATION=true python main.py --mode train
 ```
 
 Before training any additional ablation, copy its validation artifacts into the

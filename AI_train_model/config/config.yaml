@@ -67,7 +67,8 @@ model:
     dropout: 0.25
 
 preprocessing:
-  # Override per run with CHBMIT_NORMALIZATION_MODE; primary protocol remains train-only z-score.
+  # Override per run with CHBMIT_NORMALIZATION_MODE. `window_channel_zscore`
+  # is a causal domain-shift ablation, using only each complete input window.
   normalization_mode: "train_channel_zscore"
   # Override with CHBMIT_FEATURE_REPRESENTATION. Raw remains the primary baseline.
   feature_representation: "raw"
