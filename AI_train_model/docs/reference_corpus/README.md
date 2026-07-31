@@ -13,7 +13,7 @@ streams:
    must be reported.
 
 The master index is [reference_inventory.csv](reference_inventory.csv). It has
-`44` unique entries after removing duplicate rows found in the original
+`46` unique entries after removing duplicate rows found in the original
 `benchmark.tex`. It is an index of evidence, not a leaderboard.
 
 [tbiocas_core_references.bib](tbiocas_core_references.bib) is a curated

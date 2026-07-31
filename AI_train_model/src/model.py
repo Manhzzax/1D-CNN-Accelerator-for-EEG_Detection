@@ -70,13 +70,48 @@ def _apply_multiscale_separable_environment_overrides(model_config):
     return model_config
 
 
+def _apply_hierarchical_separable_environment_overrides(model_config):
+    """Apply explicit 31/7/3-style trial settings before model construction."""
+    overrides = {
+        "CHBMIT_HIERARCHICAL_TEMPORAL_FILTERS_PER_CHANNEL": (
+            "temporal_filters_per_channel", int,
+        ),
+        "CHBMIT_HIERARCHICAL_SPATIAL_FILTERS": ("spatial_filters", int),
+        "CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL": ("temporal_kernel", int),
+        "CHBMIT_HIERARCHICAL_SECOND_KERNEL": ("second_kernel", int),
+        "CHBMIT_HIERARCHICAL_THIRD_KERNEL": ("third_kernel", int),
+        "CHBMIT_HIERARCHICAL_DROPOUT": ("dropout", float),
+    }
+    options = model_config["hierarchical_separable_1dcnn"]
+    for environment_name, (option_name, parser) in overrides.items():
+        value = os.environ.get(environment_name)
+        if value is not None:
+            options[option_name] = parser(value)
+    pointwise_value = os.environ.get("CHBMIT_HIERARCHICAL_THIRD_POINTWISE")
+    if pointwise_value is not None:
+        normalized = pointwise_value.strip().lower()
+        if normalized not in {"true", "false", "1", "0"}:
+            raise ValueError("CHBMIT_HIERARCHICAL_THIRD_POINTWISE must be true/false/1/0")
+        options["third_pointwise"] = normalized in {"true", "1"}
+    if options["temporal_filters_per_channel"] < 1 or options["spatial_filters"] < 1:
+        raise ValueError("Hierarchical separable filter counts must be positive")
+    if any(options[name] < 1 or options[name] % 2 == 0 for name in (
+        "temporal_kernel", "second_kernel", "third_kernel",
+    )):
+        raise ValueError("Hierarchical separable kernels must be positive odd integers")
+    if not 0.0 <= options["dropout"] < 1.0:
+        raise ValueError("CHBMIT_HIERARCHICAL_DROPOUT must be in [0, 1)")
+    return model_config
+
+
 def effective_model_config(model_config=None):
     """Return the exact model contract for a newly created model or saved run."""
     if model_config is not None:
         return deepcopy(model_config)
     config = deepcopy(load_config()["model"])
     config = _apply_separable_environment_overrides(config)
-    return _apply_multiscale_separable_environment_overrides(config)
+    config = _apply_multiscale_separable_environment_overrides(config)
+    return _apply_hierarchical_separable_environment_overrides(config)
 
 class EEG1DCNN(nn.Module):
     def __init__(self, in_channels=None, input_length=None, num_classes=None):
@@ -202,6 +237,78 @@ class SeparableEEG1DCNN(nn.Module):
         x = self.pool(self.activation(self.spatial_bn(self.spatial_pointwise(x))))
         x = self.activation(self.refine_bn(self.refine_pointwise(self.refine_depthwise(x))))
         x = self.pool(x)
+        return self.dropout(self.global_pool(x).squeeze(-1))
+
+    def forward(self, x):
+        return self.classifier(self.forward_features(x))
+
+
+class HierarchicalSeparableEEG1DCNN(nn.Module):
+    """Three-stage separable EEG CNN with progressively shorter temporal kernels."""
+
+    def __init__(
+        self,
+        in_channels,
+        num_classes,
+        temporal_filters_per_channel=3,
+        spatial_filters=32,
+        temporal_kernel=31,
+        second_kernel=7,
+        third_kernel=3,
+        third_pointwise=False,
+        dropout=0.25,
+    ):
+        super().__init__()
+        if any(kernel % 2 == 0 for kernel in (temporal_kernel, second_kernel, third_kernel)):
+            raise ValueError("Hierarchical separable temporal kernels must be odd")
+        self.architecture_name = "hierarchical_separable_1dcnn"
+        temporal_channels = in_channels * temporal_filters_per_channel
+        self.temporal_depthwise = nn.Conv1d(
+            in_channels,
+            temporal_channels,
+            kernel_size=temporal_kernel,
+            padding=temporal_kernel // 2,
+            groups=in_channels,
+            bias=False,
+        )
+        self.temporal_bn = nn.BatchNorm1d(temporal_channels)
+        self.spatial_pointwise = nn.Conv1d(temporal_channels, spatial_filters, kernel_size=1, bias=False)
+        self.spatial_bn = nn.BatchNorm1d(spatial_filters)
+        self.second_depthwise = nn.Conv1d(
+            spatial_filters,
+            spatial_filters,
+            kernel_size=second_kernel,
+            padding=second_kernel // 2,
+            groups=spatial_filters,
+            bias=False,
+        )
+        self.second_pointwise = nn.Conv1d(spatial_filters, spatial_filters, kernel_size=1, bias=False)
+        self.second_bn = nn.BatchNorm1d(spatial_filters)
+        self.third_depthwise = nn.Conv1d(
+            spatial_filters,
+            spatial_filters,
+            kernel_size=third_kernel,
+            padding=third_kernel // 2,
+            groups=spatial_filters,
+            bias=False,
+        )
+        self.third_pointwise = (
+            nn.Conv1d(spatial_filters, spatial_filters, kernel_size=1, bias=False)
+            if third_pointwise else nn.Identity()
+        )
+        self.third_bn = nn.BatchNorm1d(spatial_filters)
+        self.activation = nn.ReLU()
+        self.pool = nn.AvgPool1d(kernel_size=4, stride=4)
+        self.dropout = nn.Dropout(dropout)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(spatial_filters, num_classes)
+
+    def forward_features(self, x):
+        x = self.activation(self.temporal_bn(self.temporal_depthwise(x)))
+        x = self.pool(self.activation(self.spatial_bn(self.spatial_pointwise(x))))
+        x = self.activation(self.second_bn(self.second_pointwise(self.second_depthwise(x))))
+        x = self.pool(x)
+        x = self.activation(self.third_bn(self.third_pointwise(self.third_depthwise(x))))
         return self.dropout(self.global_pool(x).squeeze(-1))
 
     def forward(self, x):
@@ -382,6 +489,19 @@ def build_model(architecture=None, model_config=None):
             spatial_filters=int(options["spatial_filters"]),
             temporal_kernel=int(options["temporal_kernel"]),
             refinement_kernel=int(options["refinement_kernel"]),
+            dropout=float(options["dropout"]),
+        )
+    if architecture == "hierarchical_separable_1dcnn":
+        options = model_config["hierarchical_separable_1dcnn"]
+        return HierarchicalSeparableEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            temporal_filters_per_channel=int(options["temporal_filters_per_channel"]),
+            spatial_filters=int(options["spatial_filters"]),
+            temporal_kernel=int(options["temporal_kernel"]),
+            second_kernel=int(options["second_kernel"]),
+            third_kernel=int(options["third_kernel"]),
+            third_pointwise=bool(options["third_pointwise"]),
             dropout=float(options["dropout"]),
         )
     if architecture == "multiscale_separable_1dcnn":

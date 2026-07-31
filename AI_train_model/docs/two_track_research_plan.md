@@ -82,9 +82,9 @@ continuous behavior is not a clinical improvement.
 | Stage | Change from frozen model | Purpose | Advance only when |
 |---|---|---|---|
 | B0 | Re-run frozen architecture for seeds 7 and 123 | Establish seed variance of the reference. | Metrics and data hashes reproduce. |
-| B1 | Temporal receptive-field ablation: single kernels 15, 31, 47, 63 | Test whether longer morphology improves window discrimination. | Improvement repeats on 3 seeds. |
-| B2 | Small multiscale depthwise block: 15 and 31 branches then pointwise fusion | Capture short spikes and longer rhythmic activity while keeping Conv1D only. | Mean accuracy and event Pareto improve. |
-| B3 | Width/depth sweep: temporal filters 3, 4, 5 per channel and spatial filters 32, 48 | Locate capacity frontier under 25K parameters. | Gain is material after variance and complexity are reported. |
+| B1 | Professor hierarchy: `31/7`, then `31/7/3` Lite and Full | Isolate depth and short-scale refinement while retaining the reference receptive field. | Improvement repeats on 3 seeds. |
+| B2 | Width/depth sweep on the B1 winner: temporal filters 3, 4 and spatial filters 32, 48 | Locate capacity frontier under 25K parameters. | Gain is material after variance and complexity are reported. |
+| B3 | Compact multiscale 15/31 depthwise branch | Test a topology change only if hierarchical refinement does not win. | Mean accuracy and event Pareto improve. |
 | B4 | Causal IIR filter and train-only normalisation ablation | Measure deployable-preprocessing cost explicitly. | Accuracy loss is quantified and acceptable. |
 | B5 | INT16 export and three-seed confirmation of selected candidate | Validate hardware feasibility before HLS work. | No unacceptable FP32/INT16 agreement loss. |
 
@@ -142,3 +142,6 @@ result without sacrificing reproducibility or a credible FPGA path?**
 These are complementary. Track A supplies the publishable hardware evidence;
 Track B can strengthen the model-quality contribution, but must not delay
 hardware verification.
+
+The exact 31/7/3 rationale, cost calculation, and server commands are in
+[`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).
