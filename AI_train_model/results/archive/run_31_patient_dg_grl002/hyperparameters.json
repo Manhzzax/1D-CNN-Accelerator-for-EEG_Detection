@@ -1,0 +1,14 @@
+{
+  "batch_size": 128,
+  "class_balanced_batches": false,
+  "epochs": 30,
+  "learning_rate": 0.001,
+  "subject_adversarial": {
+    "enabled": true,
+    "gradient_reversal_coefficient": 0.02,
+    "hidden_features": 16,
+    "train_patient_groups": 16,
+    "training_only_head": true
+  },
+  "weight_decay": 0.0001
+}
