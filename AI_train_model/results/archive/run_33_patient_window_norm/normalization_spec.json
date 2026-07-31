@@ -1,0 +1,4 @@
+{
+  "mode": "window_channel_zscore",
+  "scope": "within_current_input_window"
+}

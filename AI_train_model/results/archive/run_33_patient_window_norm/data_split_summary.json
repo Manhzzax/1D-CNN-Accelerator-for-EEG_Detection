@@ -1,0 +1,66 @@
+{
+  "channels": [
+    "FP1-F7",
+    "F7-T7",
+    "T7-P7",
+    "P7-O1",
+    "FP1-F3",
+    "F3-C3",
+    "C3-P3",
+    "P3-O1",
+    "FP2-F4",
+    "F4-C4",
+    "C4-P4",
+    "P4-O2",
+    "FP2-F8",
+    "F8-T8",
+    "P8-O2",
+    "FZ-CZ",
+    "CZ-PZ"
+  ],
+  "feature_representation": {
+    "input_shape": [
+      17,
+      512
+    ],
+    "name": "raw"
+  },
+  "normalization_mode": "window_channel_zscore",
+  "prepared_output_dir": "chbmit_prepared_patient_causal_2s_v1",
+  "test": {
+    "ictal": 2187,
+    "recordings": 135,
+    "samples": 24057
+  },
+  "train": {
+    "ictal": 6863,
+    "recordings": 410,
+    "samples": 13726
+  },
+  "train_patient_groups": {
+    "count": 16,
+    "mapping": {
+      "subject_02": 0,
+      "subject_05": 1,
+      "subject_06": 2,
+      "subject_07": 3,
+      "subject_08": 4,
+      "subject_09": 5,
+      "subject_10": 6,
+      "subject_11": 7,
+      "subject_12": 8,
+      "subject_16": 9,
+      "subject_17": 10,
+      "subject_18": 11,
+      "subject_19": 12,
+      "subject_20": 13,
+      "subject_22": 14,
+      "subject_23": 15
+    }
+  },
+  "val": {
+    "ictal": 2763,
+    "recordings": 141,
+    "samples": 5526
+  }
+}

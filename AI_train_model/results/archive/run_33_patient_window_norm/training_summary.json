@@ -1,0 +1,49 @@
+{
+  "best_epoch": 3,
+  "best_validation_loss": 0.6252674968441975,
+  "early_stopping": {
+    "enabled": true,
+    "min_delta": 0.001,
+    "min_epochs": 8,
+    "monitor": "val_loss",
+    "patience": 6
+  },
+  "epochs_completed": 9,
+  "epochs_requested": 30,
+  "hyperparameters": {
+    "batch_size": 128,
+    "class_balanced_batches": false,
+    "epochs": 30,
+    "learning_rate": 0.001,
+    "subject_adversarial": {
+      "enabled": false,
+      "gradient_reversal_coefficient": null,
+      "hidden_features": null,
+      "train_patient_groups": null,
+      "training_only_head": false
+    },
+    "weight_decay": 0.0001
+  },
+  "stopped_early": true,
+  "subject_adversarial_domain_loss_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "window_validation_metrics": {
+    "accuracy": 0.7287368802026782,
+    "auroc": 0.7992694424239233,
+    "average_precision": 0.7901878143425253,
+    "balanced_accuracy": 0.7287368802026782,
+    "f1": 0.7127802260969535,
+    "precision": 0.757328990228013,
+    "sensitivity": 0.6731813246471227,
+    "threshold": 0.5
+  }
+}
