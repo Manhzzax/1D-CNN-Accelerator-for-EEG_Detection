@@ -132,11 +132,18 @@ checkpoint is epoch 22, the exact minimum validation-loss epoch.
 | Sensitivity | 90.354% | **92.320%** | +1.966 pp |
 | Precision | 91.862% | **93.272%** | +1.410 pp |
 
-This passes the predeclared seed-42 screening margin of 0.5 percentage points.
-It is promising evidence that longer raw context helps the unchanged compact
-backbone. It is not a 95% result, a clinical result, or a direct replacement
-for the 2-second benchmark because the fully ictal window set changed. The next
-action is a **locked replication** on seeds 7 and 123 with no architecture,
-optimizer, data, threshold, or early-stopping changes. No event evaluation,
-test evaluation, INT16 export, or 5-second dilated-head development is allowed
-until the three-seed result is available.
+The locked replications are complete: seed 7 reaches 92.132% and seed 123
+reaches 94.280%. Across seeds 42/7/123, the 5-second R2 result is **93.081% +/-
+1.096%** accuracy, 98.154% +/- 0.425% AUROC, 93.055% +/- 1.101% F1, and
+92.714% +/- 1.127% sensitivity. The paired accuracy change against matched
+2-second R2 runs is +2.881% +/- 1.585%; paired sensitivity increases by
++2.480% +/- 0.621%.
+
+This establishes the unchanged 5-second R2 as the current **accuracy candidate**.
+It is not a 95% result, a clinical result, or a direct replacement for the
+2-second benchmark because the fully ictal window set changed. The next single
+controlled test is an end-to-end dilated depthwise context head after the second
+pooling operation. It adds 320 parameters (5,237 total) and uses only Conv1D,
+BatchNorm, residual add, ReLU, pooling, and linear operations. No event/test
+evaluation or INT16 export is allowed until this screen and any required
+three-seed confirmation are complete.

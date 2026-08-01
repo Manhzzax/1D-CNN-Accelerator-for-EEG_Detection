@@ -270,5 +270,24 @@ of the unchanged Adam R2 Lite model. It requires a new prepared dataset and is
 reported separately because its full-ictal eligibility and window population
 differ from the 2-second protocol.
 
+#### Five-Second Context Result
+
+The unchanged Adam R2 Lite `31/7/3` was trained on a separate raw `17x1280`
+dataset with seeds 42/7/123. It retains 4,917 parameters and obtains balanced
+validation accuracy 92.830%, 92.132%, and 94.280%, respectively: **93.081% +/-
+1.096%**. The matched 2-second R2 mean is 90.200% +/- 0.850%; the paired
+accuracy direction is +2.881% +/- 1.585%. The 5-second population contains
+fewer fully-ictal windows, so this is evidence that context helps, not a direct
+replacement of the 2-second benchmark. It is the current accuracy candidate and
+still falls below the internal 95% mean target.
+
+The next controlled candidate retains this exact 5-second protocol and adds two
+residual depthwise `k=3` temporal convolutions at dilations 4 and 8 after the
+second pooling operation. This `dilated_hierarchical_separable_1dcnn` increases
+the local receptive field from about 398 ms to about 1.9 s, adds only 320
+parameters (5,237 total), and keeps a Conv1D-only FPGA path. It is not the
+previous rejected residual topology: the new blocks specifically add dilated
+temporal context after downsampling.
+
 The exact 31/7/3 rationale, cost calculation, and server commands are in
 [`kernel_architecture_research_protocol.md`](kernel_architecture_research_protocol.md).

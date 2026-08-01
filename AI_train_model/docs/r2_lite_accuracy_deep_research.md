@@ -149,14 +149,17 @@ it is motivation only until independently reproduced. [Pedram et al., 2026 prepr
 
 ## P0 outcome: 5-second seed-42 screen
 
-The P0 screen completed as `run_60_r2_raw5s_s42`. It is valid raw `17x1280`
-input with the unchanged 4,917-parameter Adam R2 Lite backbone, the locked
-split, and train-only channel z-score. The exact minimum-loss checkpoint at
-epoch 22 produces 92.830% balanced validation accuracy, 97.969% AUROC, 92.794%
-F1, and 92.320% sensitivity. The 2-second R2 seed-42 reference is 91.175%,
-96.645%, 91.102%, and 90.354%, respectively.
+The P0 screen and locked replications completed as runs 60/61/62. All use raw
+`17x1280` input, the unchanged 4,917-parameter Adam R2 Lite backbone, the
+locked split, and train-only channel z-score. Their exact minimum-loss
+checkpoints produce accuracies 92.830%, 92.132%, and 94.280%, respectively:
+**93.081% +/- 1.096%** across the three seeds. The matched 2-second R2 mean is
+90.200% +/- 0.850%, giving a paired +2.881% +/- 1.585% direction of change.
 
-The result passes the seed-42 screen but uses a new fully-ictal window
-population. The only valid next action is locked seed-7 and seed-123 replication
-of the exact 5-second configuration. Do not tune the 5-second model or add P1,
-P2, event evaluation, INT16 export, or test evaluation before those results.
+The 5-second model is the current accuracy candidate, but the changed
+fully-ictal window population prevents a direct benchmark replacement claim.
+It remains 1.919 points below the internal 95% mean target. The next valid P1
+test is an end-to-end two-block dilated depthwise context head on this frozen
+5-second protocol; it adds 320 parameters and preserves a Conv1D-only FPGA
+operator path. Do not perform event/test evaluation or INT16 export before P1
+has passed its seed-42 screen and, if it passes, three-seed confirmation.

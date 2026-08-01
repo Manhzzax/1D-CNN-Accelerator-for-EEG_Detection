@@ -59,6 +59,18 @@ model:
     third_kernel: 3
     third_pointwise: false
     dropout: 0.25
+  dilated_hierarchical_separable_1dcnn:
+    # Five-second accuracy candidate: R2 Lite plus two post-pooling depthwise
+    # residual context blocks. The dilations expand temporal context without
+    # recurrent, attention, or dense sequence operators.
+    temporal_filters_per_channel: 3
+    spatial_filters: 32
+    temporal_kernel: 31
+    second_kernel: 7
+    third_kernel: 3
+    dilation_one: 4
+    dilation_two: 8
+    dropout: 0.25
   residual_hierarchical_separable_1dcnn:
     # Same 31/7/3 convolution budget as the Lite hierarchy, but identity skips
     # retain stage input information before each downsampling operation.
