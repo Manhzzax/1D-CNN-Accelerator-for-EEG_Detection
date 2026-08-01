@@ -1,0 +1,42 @@
+{
+  "balanced_test_diagnostic": {
+    "metrics": {
+      "accuracy": 0.9167051222888787,
+      "auroc": 0.9663486775347544,
+      "average_precision": 0.9637542366841207,
+      "balanced_accuracy": 0.9167051222888787,
+      "f1": 0.9168968692449355,
+      "precision": 0.9147909967845659,
+      "sensitivity": 0.9190124596215967,
+      "threshold": 0.5
+    },
+    "negative_windows": 4334,
+    "positive_windows": 4334,
+    "seed": 42
+  },
+  "checkpoint_sha256": "53bf4361ff63feea3abb0057c79605035e20908a7ae9dd4493242aca4e4e1240",
+  "evaluation_kind": "exploratory_test_probe",
+  "inference": {
+    "device": "cuda",
+    "model_parameter_dtype": "torch.float32",
+    "precision_label": "FP32",
+    "use_amp": false
+  },
+  "selection_warning": "This test evaluation is exploratory. Do not use it to select a new architecture, hyperparameter, or threshold.",
+  "source_run_id": "run_75_r2_k47_k2_7_e50_es12_s42",
+  "test_prevalence_metrics": {
+    "accuracy": 0.9119226412719721,
+    "auroc": 0.9646921967278188,
+    "average_precision": 0.7715258516704658,
+    "balanced_accuracy": 0.9151130595293032,
+    "f1": 0.6548294286888615,
+    "precision": 0.5086195888136892,
+    "sensitivity": 0.9190124596215967,
+    "threshold": 0.5
+  },
+  "test_window_counts": {
+    "negative": 43340,
+    "positive": 4334,
+    "total": 47674
+  }
+}
