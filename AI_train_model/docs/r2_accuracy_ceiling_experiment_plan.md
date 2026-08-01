@@ -45,8 +45,9 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_72_r2_k47_k2_11_s42` | second temporal kernel 11 | 93.340% accuracy; below K2=7 |
 | Done | `run_73_r2_k47_k2_15_s42` | second temporal kernel 15 | 92.401% accuracy; rejected |
 | Done | `run_74_r2_k47_k2_31_s42` | second temporal kernel 31 | 92.481% accuracy; rejected |
-| 50E-A | `run_75_r2_k47_k2_7_e50_es12_s42` | 50 epochs, ES patience 12 on selected K2=7 | Tests whether longer low-LR training improves the leading architecture |
-| 50E-B | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | Direct test of whether the default stopping rule cuts off recovery |
+| Done | `run_75_r2_k47_k2_7_e50_es12_s42` | 50 epochs, ES patience 12 on selected K2=7 | 94.334% at epoch 36; confirms 30-epoch cap was limiting |
+| Done | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | No improvement; default early stop was appropriate for K2=5 |
+| 50E-C | `run_77_r2_k47_k2_11_e50_es6_s42` | 50 epochs, default ES patience 6 on K2=11 | Re-evaluate second-best K2 under the selected epoch budget |
 | K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
@@ -79,6 +80,8 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_72_r2_k47_k2_11_s42` | 47/11/3 | 5,861 | 93.340% | 98.385% | 93.305% | Second best K2 screen; completed 30 epochs |
 | `run_73_r2_k47_k2_15_s42` | 47/15/3 | 5,989 | 92.401% | 97.625% | 92.172% | Rejected |
 | `run_74_r2_k47_k2_31_s42` | 47/31/3 | 6,501 | 92.481% | 98.128% | 92.383% | Rejected |
+| `run_75_r2_k47_k2_7_e50_es12_s42` | 47/7/3 | 5,733 | **94.334%** | **98.593%** | **94.320%** | Best current selected checkpoint; epoch 36 |
+| `run_76_r2_k47_k2_5_e50_es12_s42` | 47/5/3 | 5,669 | 93.206% | 98.299% | 93.108% | Identical selected result after longer patience; no late recovery |
 
 K47/K2=7/K3=3 has the best selected-checkpoint accuracy of the completed
 kernel screens, with 94.576% sensitivity and 93.125% precision. K63 regresses
@@ -96,15 +99,21 @@ This means the first learning-rate reduction can receive only about three more
 epochs before early stopping. This is economical but can be too short for a
 late recovery after the lower learning rate.
 
-Two controlled 50-epoch runs use seed 42 and alter only the epoch cap and
-early-stopping patience from 6 to 12. They retain the scheduler, optimizer,
-model, data, and minimum-validation-loss checkpoint rule. `50E-A` tests
-whether the leading K2=7 model benefits from a longer low-LR trajectory;
-`50E-B` tests the rule directly on K2=5, which previously stopped at epoch 22.
-If 50E-B does not improve its own selected checkpoint, the observed early stop
-is supported for that configuration. If it improves materially, the default
-patience is too aggressive for this protocol and must be reconsidered for all
-subsequent comparisons.
+Two controlled 50-epoch runs assessed the former 30-epoch budget and
+early-stopping rule. Both retained the scheduler, optimizer, model, data, and
+minimum-validation-loss checkpoint rule. `50E-A` reached 94.334% at epoch 36,
+an improvement of 0.537 percentage points over its 30-epoch counterpart.
+The first 30 validation-loss values were exactly identical across the two
+runs. Replaying the default patience-6 rule on the extended trajectory would
+stop at epoch 37, after saving the epoch-36 absolute minimum. Therefore the
+binding constraint was the 30-epoch cap, not patience 6.
+
+`50E-B` directly tested the early-stopped K2=5 configuration: increasing
+patience from 6 to 12 extended training from 22 to 28 epochs but did not change
+its selected checkpoint. Thus, patience 6 is not generally too aggressive for
+this protocol. Subsequent architecture comparisons use a 50-epoch cap with
+the default patience 6; `50E-C` re-evaluates the K2=11 runner-up under that
+selected schedule before K2 is frozen.
 
 This follows early-stopping literature showing that slower stopping can yield
 small generalization gains at a substantially higher training cost, and the
@@ -146,5 +155,5 @@ final study from repeated-validation selection bias.
 ## Next Pending Command
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=7 CHBMIT_TRAIN_EPOCHS=50 CHBMIT_EARLY_STOPPING_PATIENCE=12 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_75_r2_k47_k2_7_e50_es12_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=11 CHBMIT_TRAIN_EPOCHS=50 CHBMIT_EARLY_STOPPING_PATIENCE=6 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_77_r2_k47_k2_11_e50_es6_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
