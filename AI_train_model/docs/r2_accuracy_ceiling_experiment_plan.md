@@ -36,7 +36,7 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_63_r2_dilated5s_d4_d8_s42` | post-pooling dilated context | Rejected: 92.159% |
 | Done | `run_64_r2_5s_supcon005_t01_s42` | training-only SupCon | Positive but below gate: 93.367% |
 | Done | `run_65_r2_5s_aug_g10_n02_s42` | mild train-only gain/noise | Positive but below gate: 93.985% |
-| K15 | `run_66_r2_k15_s42` | first temporal kernel 15 | Run next K value regardless of result |
+| Done | `run_66_r2_k15_s42` | first temporal kernel 15 | 93.340% accuracy; positive versus 31-sample baseline, still below gate |
 | K47 | `run_67_r2_k47_s42` | first temporal kernel 47 | Run next K value regardless of result |
 | K63 | `run_68_r2_k63_s42` | first temporal kernel 63 | Run M15+31 regardless of result |
 | M15+31 | `run_69_ms15_31_2x32_s42` | parallel depthwise temporal kernels 15 and 31 | Run W48 regardless of result |
@@ -47,6 +47,20 @@ filters per input channel, and 32 spatial filters; only the first kernel
 changes. M15+31 uses the existing compact multiscale separable CNN with two
 filters per branch and 32 spatial filters, so the model spec supplies its exact
 parameter count. W48 retains R2 `31/7/3` with 48 spatial filters.
+
+## Observed Results
+
+All figures below are from the checkpoint selected by minimum validation
+cross-entropy, rather than the epoch with maximum validation accuracy.
+
+| Run | First temporal kernel | Parameters | Validation accuracy | AUROC | F1 | Interpretation |
+|---|---:|---:|---:|---:|---:|---|
+| `run_60_r2_raw5s_s42` | 31 | 4,917 | 92.830% | 97.969% | 92.794% | Seed-42 R2 baseline |
+| `run_66_r2_k15_s42` | 15 | 4,101 | 93.340% | 98.252% | 93.243% | +0.510 percentage points while using 16.6% fewer parameters |
+
+The K15 result supports continuing the predeclared receptive-field screen. It
+does not establish superiority over the best observed seed or satisfy the
+95.0% selection gate.
 
 ## One Conditional Combination Only
 
@@ -71,8 +85,8 @@ positive directions, capacity and SupCon.
 The held-out patient test, rather than the development ladder, protects the
 final study from repeated-validation selection bias.
 
-## First Pending Command
+## Next Pending Command
 
 ```bash
-cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=15 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_66_r2_k15_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_67_r2_k47_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
