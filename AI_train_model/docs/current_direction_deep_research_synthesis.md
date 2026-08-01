@@ -115,7 +115,8 @@ Do not add without a new measured hypothesis:
    mild train-only augmentation, then one controlled 5 s capacity check. Each
    receives one seed-42 screen before replication; do not perform broad
    unstructured sweeps. The P2 contract is fixed in
-   `docs/supervised_contrastive_accuracy_screen.md`.
+   `docs/supervised_contrastive_accuracy_screen.md`; the isolated P3 contract
+   is fixed in `docs/mild_augmentation_accuracy_screen.md`.
 3. Do not use hard-negative mining as an accuracy lever. Its role is to reduce
    false alarms after the >=95% candidate has been frozen, and it may lower
    balanced clean-window accuracy by making the negative class more difficult.

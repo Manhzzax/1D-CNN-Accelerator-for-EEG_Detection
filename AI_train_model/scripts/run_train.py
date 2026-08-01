@@ -23,6 +23,7 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.data_loader import load_config, get_train_val_test_datasets
+from src.eeg_augmentation import mild_eeg_augmentation
 from src.group_dro import GroupDROObjective
 from src.model import (
     SubjectDiscriminator,
@@ -272,6 +273,33 @@ def main():
             f'coefficient {contrastive_coefficient:g} | temperature {contrastive_temperature:g} | '
             f'inference graph unchanged'
         )
+
+    augmentation_config = config['training'].get('mild_eeg_augmentation', {})
+    mild_augmentation = _env_bool(
+        'CHBMIT_MILD_EEG_AUGMENTATION', augmentation_config.get('enabled', False)
+    )
+    augmentation_gain_delta = float(os.environ.get(
+        'CHBMIT_MILD_EEG_AUGMENTATION_GAIN_DELTA',
+        augmentation_config.get('gain_delta', 0.1),
+    ))
+    augmentation_noise_std = float(os.environ.get(
+        'CHBMIT_MILD_EEG_AUGMENTATION_NOISE_STD',
+        augmentation_config.get('noise_std', 0.02),
+    ))
+    if mild_augmentation:
+        if subject_adversarial or group_dro_enabled or supervised_contrastive:
+            raise ValueError(
+                'Mild EEG augmentation, supervised contrastive, subject-adversarial, and GroupDRO are separate controlled ablations'
+            )
+        if not 0.0 <= augmentation_gain_delta < 1.0:
+            raise ValueError('CHBMIT_MILD_EEG_AUGMENTATION_GAIN_DELTA must be in [0, 1)')
+        if augmentation_noise_std < 0.0:
+            raise ValueError('CHBMIT_MILD_EEG_AUGMENTATION_NOISE_STD must be non-negative')
+        print(
+            'Training-only mild EEG augmentation enabled: '
+            f'shared gain +/-{augmentation_gain_delta:g} | z-score noise std {augmentation_noise_std:g} | '
+            f'inference graph unchanged'
+        )
     
     # 5. Set loss, optimizer, and AMP Scaler
     learning_rate = float(os.environ.get('CHBMIT_TRAIN_LEARNING_RATE', config['training']['learning_rate']))
@@ -389,6 +417,10 @@ def main():
             inputs, targets = inputs.to(device), targets.to(device)
             if domain_targets is not None:
                 domain_targets = domain_targets.to(device)
+            if mild_augmentation:
+                inputs = mild_eeg_augmentation(
+                    inputs, augmentation_gain_delta, augmentation_noise_std
+                )
             optimizer.zero_grad()
             
             if use_amp:
@@ -552,6 +584,13 @@ def main():
             "coefficient": contrastive_coefficient if supervised_contrastive else None,
             "temperature": contrastive_temperature if supervised_contrastive else None,
             "training_only_objective": supervised_contrastive,
+            "inference_parameter_delta": 0,
+        },
+        "mild_eeg_augmentation": {
+            "enabled": mild_augmentation,
+            "shared_gain_delta": augmentation_gain_delta if mild_augmentation else None,
+            "zscore_noise_std": augmentation_noise_std if mild_augmentation else None,
+            "training_only_transform": mild_augmentation,
             "inference_parameter_delta": 0,
         },
     }

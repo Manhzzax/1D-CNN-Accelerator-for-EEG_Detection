@@ -231,6 +231,12 @@ training:
     enabled: false
     coefficient: 0.05
     temperature: 0.1
+  # Independent P3 screen. A shared gain preserves channel relationships;
+  # jitter is measured after train-channel z-score and is train-only.
+  mild_eeg_augmentation:
+    enabled: false
+    gain_delta: 0.1
+    noise_std: 0.02
   early_stopping:
     enabled: true
     monitor: "val_loss"
