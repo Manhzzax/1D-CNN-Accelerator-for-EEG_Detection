@@ -157,6 +157,27 @@ Width 48 increases the model from 5,669 to 8,021 parameters but reduces
 selected-checkpoint accuracy to 93.636%. It is rejected, so additional width
 is not pursued before testing a qualitatively different compact topology.
 
+## Exploratory FP32 Test Probes
+
+At the user's explicit request, two selected checkpoints were evaluated on the
+current prepared test split by `checkpoint_eval` with AMP disabled. These are
+exploratory diagnostics, not final blinded-test claims. The test split contains
+43,340 non-seizure and 4,334 seizure windows, so raw accuracy is prevalence
+dependent; balanced accuracy and AUROC are more informative.
+
+| Source run | Architecture | Test accuracy | Test balanced accuracy | AUROC | Sensitivity | Precision | 1:1 diagnostic accuracy |
+|---|---|---:|---:|---:|---:|---:|---:|
+| `run_75_r2_k47_k2_7_e50_es12_s42` | 47/7/3, 5,733 parameters | 91.192% | **91.511%** | **96.469%** | **91.901%** | **50.862%** | **91.671%** |
+| `run_79_r2_k47_k2_7_k3_1_e50_s42` | 47/7/1, 5,669 parameters | 90.970% | 90.787% | 96.186% | 90.563% | 50.185% | 91.048% |
+
+The K3=3 checkpoint transfers better in this probe, despite the validation
+accuracy tie. Neither candidate reaches the requested 95% test balanced
+accuracy. The test split is now exposed to the development process: no further
+architecture, epoch, threshold, or preprocessing selection may use these
+numbers. A paper-level final test must instead be a newly locked
+patient-group-disjoint cohort or be estimated through a prespecified nested
+cross-validation protocol.
+
 This follows early-stopping literature showing that slower stopping can yield
 small generalization gains at a substantially higher training cost, and the
 documented intent of `ReduceLROnPlateau` to lower the learning rate after a
