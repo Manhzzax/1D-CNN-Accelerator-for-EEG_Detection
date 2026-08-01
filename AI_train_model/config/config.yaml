@@ -89,6 +89,23 @@ model:
     long_kernel: 63
     refinement_kernel: 15
     dropout: 0.25
+  paper_a_multiscale_residual_1dcnn:
+    # Paper A candidate: raw 5 s EEG, multiscale temporal morphology followed
+    # by residual depthwise-separable refinement. It is intentionally CNN-only
+    # and cannot exceed 100K trainable parameters.
+    temporal_filters_per_branch: 2
+    stage_one_filters: 64
+    stage_two_filters: 96
+    stage_three_filters: 128
+    short_kernel: 15
+    long_kernel: 47
+    stage_one_kernel: 7
+    stage_two_kernel: 5
+    stage_three_kernel: 3
+    stage_two_dilation: 2
+    stage_three_dilation: 4
+    dropout: 0.25
+    max_parameters: 100000
   parallel_multikernel_1dcnn:
     # Raw channel-mixing short/long branches, then compact refinement.
     branch_filters: 16

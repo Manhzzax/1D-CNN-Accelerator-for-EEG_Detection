@@ -1,4 +1,10 @@
-# Two-Track Research Plan: Frozen Accelerator Reference and Accuracy Development
+# Historical Two-Track Research Plan
+
+> **Superseded terminology:** as of 1 August 2026, the active work is named
+> **Paper A** (accuracy-focused 1D-CNN study) and the frozen accelerator work
+> is named **Paper B** (KV260 hardware-aware biomedical AI). The current scope
+> and non-mixing rules are in
+> [`paper_a_protocol_and_paper_b_freeze.md`](paper_a_protocol_and_paper_b_freeze.md).
 
 ## Decision
 

@@ -164,6 +164,43 @@ def _apply_residual_hierarchical_environment_overrides(model_config):
     return model_config
 
 
+def _apply_paper_a_multiscale_residual_environment_overrides(model_config):
+    """Apply Paper A CNN-only capacity-screen settings before construction."""
+    overrides = {
+        "CHBMIT_PAPERA_TEMPORAL_FILTERS_PER_BRANCH": ("temporal_filters_per_branch", int),
+        "CHBMIT_PAPERA_STAGE_ONE_FILTERS": ("stage_one_filters", int),
+        "CHBMIT_PAPERA_STAGE_TWO_FILTERS": ("stage_two_filters", int),
+        "CHBMIT_PAPERA_STAGE_THREE_FILTERS": ("stage_three_filters", int),
+        "CHBMIT_PAPERA_SHORT_KERNEL": ("short_kernel", int),
+        "CHBMIT_PAPERA_LONG_KERNEL": ("long_kernel", int),
+        "CHBMIT_PAPERA_STAGE_ONE_KERNEL": ("stage_one_kernel", int),
+        "CHBMIT_PAPERA_STAGE_TWO_KERNEL": ("stage_two_kernel", int),
+        "CHBMIT_PAPERA_STAGE_THREE_KERNEL": ("stage_three_kernel", int),
+        "CHBMIT_PAPERA_STAGE_TWO_DILATION": ("stage_two_dilation", int),
+        "CHBMIT_PAPERA_STAGE_THREE_DILATION": ("stage_three_dilation", int),
+        "CHBMIT_PAPERA_DROPOUT": ("dropout", float),
+    }
+    options = model_config["paper_a_multiscale_residual_1dcnn"]
+    for environment_name, (option_name, parser) in overrides.items():
+        value = os.environ.get(environment_name)
+        if value is not None:
+            options[option_name] = parser(value)
+    positive_options = (
+        "temporal_filters_per_branch", "stage_one_filters", "stage_two_filters",
+        "stage_three_filters", "stage_two_dilation", "stage_three_dilation",
+    )
+    if any(options[name] < 1 for name in positive_options):
+        raise ValueError("Paper A multiscale residual filter and dilation values must be positive")
+    kernel_options = (
+        "short_kernel", "long_kernel", "stage_one_kernel", "stage_two_kernel", "stage_three_kernel",
+    )
+    if any(options[name] < 1 or options[name] % 2 == 0 for name in kernel_options):
+        raise ValueError("Paper A multiscale residual kernels must be positive odd integers")
+    if not 0.0 <= options["dropout"] < 1.0:
+        raise ValueError("CHBMIT_PAPERA_DROPOUT must be in [0, 1)")
+    return model_config
+
+
 def effective_model_config(model_config=None):
     """Return the exact model contract for a newly created model or saved run."""
     if model_config is not None:
@@ -173,7 +210,8 @@ def effective_model_config(model_config=None):
     config = _apply_multiscale_separable_environment_overrides(config)
     config = _apply_hierarchical_separable_environment_overrides(config)
     config = _apply_dilated_hierarchical_environment_overrides(config)
-    return _apply_residual_hierarchical_environment_overrides(config)
+    config = _apply_residual_hierarchical_environment_overrides(config)
+    return _apply_paper_a_multiscale_residual_environment_overrides(config)
 
 class EEG1DCNN(nn.Module):
     def __init__(self, in_channels=None, input_length=None, num_classes=None):
@@ -657,6 +695,121 @@ class ParallelMultiKernelEEG1DCNN(nn.Module):
         return self.classifier(x)
 
 
+class _ResidualSeparableBlock(nn.Module):
+    """Depthwise-separable temporal refinement with an identity residual path."""
+
+    def __init__(self, channels, kernel_size, dilation=1):
+        super().__init__()
+        padding = dilation * (kernel_size // 2)
+        self.depthwise = nn.Conv1d(
+            channels,
+            channels,
+            kernel_size=kernel_size,
+            padding=padding,
+            dilation=dilation,
+            groups=channels,
+            bias=False,
+        )
+        self.pointwise = nn.Conv1d(channels, channels, kernel_size=1, bias=False)
+        self.batch_norm = nn.BatchNorm1d(channels)
+        self.activation = nn.ReLU()
+
+    def forward(self, x):
+        return self.activation(self.batch_norm(self.pointwise(self.depthwise(x))) + x)
+
+
+class PaperAMultiscaleResidualEEG1DCNN(nn.Module):
+    """Paper A raw-EEG 1D-CNN with multiscale input and residual refinement.
+
+    This is deliberately restricted to deployable one-dimensional convolution,
+    pointwise channel mixing, pooling, normalization, ReLU, and a linear head.
+    Its parameter budget is enforced at construction so an accuracy experiment
+    cannot silently exceed the project's 100K-parameter constraint.
+    """
+
+    def __init__(
+        self,
+        in_channels,
+        num_classes,
+        temporal_filters_per_branch=2,
+        stage_one_filters=48,
+        stage_two_filters=64,
+        stage_three_filters=96,
+        short_kernel=15,
+        long_kernel=47,
+        stage_one_kernel=7,
+        stage_two_kernel=5,
+        stage_three_kernel=3,
+        stage_two_dilation=2,
+        stage_three_dilation=4,
+        dropout=0.25,
+        max_parameters=100_000,
+    ):
+        super().__init__()
+        if any(kernel % 2 == 0 for kernel in (
+            short_kernel, long_kernel, stage_one_kernel, stage_two_kernel, stage_three_kernel,
+        )):
+            raise ValueError("Paper A multiscale residual kernels must be odd")
+        self.architecture_name = "paper_a_multiscale_residual_1dcnn"
+        branch_channels = in_channels * temporal_filters_per_branch
+        merged_channels = branch_channels * 2
+        self.short_depthwise = nn.Conv1d(
+            in_channels, branch_channels, kernel_size=short_kernel,
+            padding=short_kernel // 2, groups=in_channels, bias=False,
+        )
+        self.long_depthwise = nn.Conv1d(
+            in_channels, branch_channels, kernel_size=long_kernel,
+            padding=long_kernel // 2, groups=in_channels, bias=False,
+        )
+        self.input_batch_norm = nn.BatchNorm1d(merged_channels)
+        self.input_mix = nn.Conv1d(merged_channels, stage_one_filters, kernel_size=1, bias=False)
+        self.input_mix_batch_norm = nn.BatchNorm1d(stage_one_filters)
+        self.stage_one = _ResidualSeparableBlock(stage_one_filters, stage_one_kernel)
+        self.transition_two = nn.Sequential(
+            nn.Conv1d(stage_one_filters, stage_two_filters, kernel_size=1, bias=False),
+            nn.BatchNorm1d(stage_two_filters),
+            nn.ReLU(),
+        )
+        self.stage_two = _ResidualSeparableBlock(
+            stage_two_filters, stage_two_kernel, dilation=stage_two_dilation,
+        )
+        self.transition_three = nn.Sequential(
+            nn.Conv1d(stage_two_filters, stage_three_filters, kernel_size=1, bias=False),
+            nn.BatchNorm1d(stage_three_filters),
+            nn.ReLU(),
+        )
+        self.stage_three = _ResidualSeparableBlock(
+            stage_three_filters, stage_three_kernel, dilation=stage_three_dilation,
+        )
+        self.activation = nn.ReLU()
+        self.pool = nn.AvgPool1d(kernel_size=4, stride=4)
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.dropout = nn.Dropout(dropout)
+        self.classifier = nn.Linear(stage_three_filters, num_classes)
+
+        parameter_count = sum(parameter.numel() for parameter in self.parameters())
+        if parameter_count > max_parameters:
+            raise ValueError(
+                f"Paper A multiscale residual model has {parameter_count} parameters; "
+                f"the hard limit is {max_parameters}"
+            )
+
+    def forward_features(self, x):
+        short_features = self.short_depthwise(x)
+        long_features = self.long_depthwise(x)
+        x = self.activation(self.input_batch_norm(torch.cat((short_features, long_features), dim=1)))
+        x = self.pool(self.activation(self.input_mix_batch_norm(self.input_mix(x))))
+        x = self.stage_one(x)
+        x = self.pool(self.transition_two(x))
+        x = self.stage_two(x)
+        x = self.pool(self.transition_three(x))
+        x = self.stage_three(x)
+        return self.dropout(self.global_pool(x).squeeze(-1))
+
+    def forward(self, x):
+        return self.classifier(self.forward_features(x))
+
+
 def build_model(architecture=None, model_config=None):
     """Create a configured model; environment override keeps ablations isolated."""
     model_config = effective_model_config(model_config)
@@ -742,6 +895,25 @@ def build_model(architecture=None, model_config=None):
             refinement_filters=int(options["refinement_filters"]),
             refinement_kernel=int(options["refinement_kernel"]),
             dropout=float(options["dropout"]),
+        )
+    if architecture == "paper_a_multiscale_residual_1dcnn":
+        options = model_config["paper_a_multiscale_residual_1dcnn"]
+        return PaperAMultiscaleResidualEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            temporal_filters_per_branch=int(options["temporal_filters_per_branch"]),
+            stage_one_filters=int(options["stage_one_filters"]),
+            stage_two_filters=int(options["stage_two_filters"]),
+            stage_three_filters=int(options["stage_three_filters"]),
+            short_kernel=int(options["short_kernel"]),
+            long_kernel=int(options["long_kernel"]),
+            stage_one_kernel=int(options["stage_one_kernel"]),
+            stage_two_kernel=int(options["stage_two_kernel"]),
+            stage_three_kernel=int(options["stage_three_kernel"]),
+            stage_two_dilation=int(options["stage_two_dilation"]),
+            stage_three_dilation=int(options["stage_three_dilation"]),
+            dropout=float(options["dropout"]),
+            max_parameters=int(options["max_parameters"]),
         )
     raise ValueError(f"Unknown CHB-MIT model architecture: {architecture}")
 
