@@ -1,0 +1,4 @@
+{
+  "mode": "train_channel_zscore",
+  "scope": "train_only"
+}
