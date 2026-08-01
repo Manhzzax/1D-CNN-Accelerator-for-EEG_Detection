@@ -1,0 +1,171 @@
+{
+  "best_epoch": 8,
+  "best_patience_validation_loss": 0.1961178722622315,
+  "best_validation_loss": 0.1961178722622315,
+  "early_stopping": {
+    "enabled": true,
+    "min_delta": 0.001,
+    "min_epochs": 8,
+    "monitor": "val_loss",
+    "patience": 6
+  },
+  "epochs_completed": 14,
+  "epochs_requested": 30,
+  "group_dro_weights_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "history": {
+    "learning_rate": [
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.001,
+      0.0005,
+      0.0005,
+      0.0005
+    ],
+    "train_accuracy": [
+      67.350189130002,
+      87.35815249850687,
+      92.32530360342425,
+      92.35516623531754,
+      94.07724467449731,
+      94.85367310372287,
+      95.26179573959784,
+      95.17220784391797,
+      96.12781206450329,
+      96.17758311765877,
+      96.01831574756122,
+      96.49611785785387,
+      97.46167628907028,
+      96.92414891499104
+    ],
+    "train_loss": [
+      0.5793459434599936,
+      0.3380633077665603,
+      0.22241561773073476,
+      0.20093124988020689,
+      0.16717564185260658,
+      0.14454096302956718,
+      0.13342920473917486,
+      0.13007075846396948,
+      0.10718500995669213,
+      0.10043259145087179,
+      0.10464703450811923,
+      0.09759819812267254,
+      0.07549047535357664,
+      0.08544892428371267
+    ],
+    "validation_accuracy": [
+      77.98066595059076,
+      87.05692803437164,
+      88.99033297529539,
+      87.54027926960258,
+      87.32545649838883,
+      90.73576799140709,
+      89.47368421052632,
+      92.15896885069817,
+      89.23200859291084,
+      91.75617615467239,
+      83.6734693877551,
+      90.49409237379162,
+      92.26638023630505,
+      92.40064446831364
+    ],
+    "validation_loss": [
+      0.4678466132452869,
+      0.31319953746109336,
+      0.2745421708078313,
+      0.28070998217442367,
+      0.2987774066971145,
+      0.2374726095337873,
+      0.25770421494218637,
+      0.1961178722622315,
+      0.28975233899791564,
+      0.21135408464102945,
+      0.511635757734645,
+      0.2556918118745249,
+      0.19776556907355722,
+      0.2019393956238678
+    ]
+  },
+  "hyperparameters": {
+    "batch_size": 128,
+    "class_balanced_batches": true,
+    "epochs": 30,
+    "group_dro": {
+      "enabled": false,
+      "eta": null,
+      "train_patient_groups": null,
+      "training_only_objective": false
+    },
+    "learning_rate": 0.001,
+    "lr_scheduler": {
+      "factor": 0.5,
+      "name": "ReduceLROnPlateau",
+      "patience": 3
+    },
+    "optimizer": "adam",
+    "patient_group_balanced_batches": false,
+    "patient_group_sampling": {
+      "strata": null,
+      "strategy": null
+    },
+    "subject_adversarial": {
+      "enabled": false,
+      "gradient_reversal_coefficient": null,
+      "hidden_features": null,
+      "train_patient_groups": null,
+      "training_only_head": false
+    },
+    "training_seed": 42,
+    "weight_decay": 0.0001
+  },
+  "stopped_early": true,
+  "subject_adversarial_domain_loss_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "window_validation_metrics": {
+    "accuracy": 0.9215896885069818,
+    "auroc": 0.9776245989378849,
+    "average_precision": 0.9781691853375638,
+    "balanced_accuracy": 0.9215896885069818,
+    "f1": 0.9196919691969196,
+    "precision": 0.9425028184892897,
+    "sensitivity": 0.8979591836734694,
+    "threshold": 0.5
+  }
+}
