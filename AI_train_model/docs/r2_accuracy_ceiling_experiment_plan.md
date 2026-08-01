@@ -40,11 +40,13 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_67_r2_k47_s42` | first temporal kernel 47 | 93.797% accuracy; best kernel screen so far, still below gate |
 | Done | `run_68_r2_k63_s42` | first temporal kernel 63 | 93.367% accuracy; below K47, so select K1=47 |
 | Done | `run_69_r2_k47_k2_3_s42` | second temporal kernel 3 | 93.045% accuracy; lower than K2=7, but sensitivity reaches 95.005% |
-| K2=5 | `run_70_r2_k47_k2_5_s42` | second temporal kernel 5 | Batch screen; select K2 after all five runs |
-| K2=9 | `run_71_r2_k47_k2_9_s42` | second temporal kernel 9 | Batch screen; select K2 after all five runs |
-| K2=11 | `run_72_r2_k47_k2_11_s42` | second temporal kernel 11 | Batch screen; select K2 after all five runs |
-| K2=15 | `run_73_r2_k47_k2_15_s42` | second temporal kernel 15 | Batch screen; select K2 after all five runs |
-| K2=31 | `run_74_r2_k47_k2_31_s42` | second temporal kernel 31 | Batch screen; select K2, then screen K3 separately |
+| Done | `run_70_r2_k47_k2_5_s42` | second temporal kernel 5 | 93.206% accuracy; below K2=7; stopped at epoch 22 |
+| Done | `run_71_r2_k47_k2_9_s42` | second temporal kernel 9 | 91.004% accuracy; rejected |
+| Done | `run_72_r2_k47_k2_11_s42` | second temporal kernel 11 | 93.340% accuracy; below K2=7 |
+| Done | `run_73_r2_k47_k2_15_s42` | second temporal kernel 15 | 92.401% accuracy; rejected |
+| Done | `run_74_r2_k47_k2_31_s42` | second temporal kernel 31 | 92.481% accuracy; rejected |
+| 50E-A | `run_75_r2_k47_k2_7_e50_es12_s42` | 50 epochs, ES patience 12 on selected K2=7 | Tests whether longer low-LR training improves the leading architecture |
+| 50E-B | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | Direct test of whether the default stopping rule cuts off recovery |
 | K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
@@ -72,19 +74,50 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_67_r2_k47_s42` | 47 | 5,733 | 93.797% | 98.511% | 93.845% | Best kernel screen so far; +0.967 percentage points versus baseline |
 | `run_68_r2_k63_s42` | 63 | 6,549 | 93.367% | 98.385% | 93.122% | Larger first-layer field regresses versus K47 |
 | `run_69_r2_k47_k2_3_s42` | 47/3/3 | 5,605 | 93.045% | 98.268% | 93.179% | K2=3 trades lower precision for 95.005% sensitivity; below K2=7 overall |
+| `run_70_r2_k47_k2_5_s42` | 47/5/3 | 5,669 | 93.206% | 98.299% | 93.108% | Stopped at epoch 22; candidate for extended-patience check |
+| `run_71_r2_k47_k2_9_s42` | 47/9/3 | 5,797 | 91.004% | 97.282% | 90.789% | Rejected |
+| `run_72_r2_k47_k2_11_s42` | 47/11/3 | 5,861 | 93.340% | 98.385% | 93.305% | Second best K2 screen; completed 30 epochs |
+| `run_73_r2_k47_k2_15_s42` | 47/15/3 | 5,989 | 92.401% | 97.625% | 92.172% | Rejected |
+| `run_74_r2_k47_k2_31_s42` | 47/31/3 | 6,501 | 92.481% | 98.128% | 92.383% | Rejected |
 
-K47 has the best selected-checkpoint accuracy of the completed K1 screens,
-with 94.576% sensitivity and 93.125% precision. K63 regresses despite its
-larger field, so the data do not support monotonically increasing the first
-receptive field. K47 still does not establish superiority over the best
+K47/K2=7/K3=3 has the best selected-checkpoint accuracy of the completed
+kernel screens, with 94.576% sensitivity and 93.125% precision. K63 regresses
+despite its larger field, so the data do not support monotonically increasing
+the first receptive field. The K2 screen likewise does not support increasing
+the later receptive field: K2=7 remains ahead of 3, 5, 9, 11, 15, and 31.
+The selected configuration still does not establish superiority over the best
 observed seed or satisfy the 95.0% selection gate.
+
+## Extended-Training / Early-Stopping Check
+
+The default training budget is 30 epochs, `ReduceLROnPlateau` uses patience 3
+and factor 0.5, and early stopping uses patience 6 with minimum delta 0.001.
+This means the first learning-rate reduction can receive only about three more
+epochs before early stopping. This is economical but can be too short for a
+late recovery after the lower learning rate.
+
+Two controlled 50-epoch runs use seed 42 and alter only the epoch cap and
+early-stopping patience from 6 to 12. They retain the scheduler, optimizer,
+model, data, and minimum-validation-loss checkpoint rule. `50E-A` tests
+whether the leading K2=7 model benefits from a longer low-LR trajectory;
+`50E-B` tests the rule directly on K2=5, which previously stopped at epoch 22.
+If 50E-B does not improve its own selected checkpoint, the observed early stop
+is supported for that configuration. If it improves materially, the default
+patience is too aggressive for this protocol and must be reconsidered for all
+subsequent comparisons.
+
+This follows early-stopping literature showing that slower stopping can yield
+small generalization gains at a substantially higher training cost, and the
+documented intent of `ReduceLROnPlateau` to lower the learning rate after a
+metric plateaus. [Prechelt, 1998](https://pubmed.ncbi.nlm.nih.gov/12662814/)
+[PyTorch documentation](https://docs.pytorch.org/docs/stable/generated/torch.optim.lr_scheduler.ReduceLROnPlateau.html)
 
 With K1 fixed at 47, shrinking K2 from 7 to 3 reduces selected-checkpoint
 accuracy by 0.752 percentage points. This is a sensitivity/precision trade-off
-rather than an overall improvement, so K2=7 remains the K2 anchor while K2=5,
-K2=11, K2=15, and K2=31 are tested. K2=15 and K2=31 are necessary long-context
-screens because K2 follows a 4x temporal pool; their receptive fields map to
-approximately 0.53 s and 0.78 s at the output of the K3=3 stack, respectively.
+rather than an overall improvement, so K2=7 remains the K2 anchor. K2=15 and
+K2=31 were necessary long-context screens because K2 follows a 4x temporal
+pool; their receptive fields map to approximately 0.53 s and 0.78 s at the
+output of the K3=3 stack, respectively, but neither improved accuracy.
 
 ## One Conditional Combination Only
 
@@ -113,5 +146,5 @@ final study from repeated-validation selection bias.
 ## Next Pending Command
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=5 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_70_r2_k47_k2_5_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=7 CHBMIT_TRAIN_EPOCHS=50 CHBMIT_EARLY_STOPPING_PATIENCE=12 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_75_r2_k47_k2_7_e50_es12_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
