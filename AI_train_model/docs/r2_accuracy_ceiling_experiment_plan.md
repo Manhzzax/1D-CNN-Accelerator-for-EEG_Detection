@@ -49,7 +49,10 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | No improvement; default early stop was appropriate for K2=5 |
 | Done | `run_77_r2_k47_k2_11_e50_es6_s42` | 50 epochs, default ES patience 6 on K2=11 | 93.340%; does not overtake K2=7 |
 | Done | `run_78_r2_k47_k2_7_e100_es15_s42` | 100 epochs, ES patience 15 on selected K2=7 | No improvement over 50E; terminate schedule tuning |
-| K3 screen | TBD | third temporal kernel with K1/K2 fixed at 47/7 | Use 50 epochs and default ES patience 6 |
+| K3=1 | `run_79_r2_k47_k2_7_k3_1_e50_s42` | remove late temporal extent while retaining the block | Batch K3 screen |
+| K3=5 | `run_80_r2_k47_k2_7_k3_5_e50_s42` | moderately wider late temporal context | Batch K3 screen |
+| K3=7 | `run_81_r2_k47_k2_7_k3_7_e50_s42` | wider late temporal context | Batch K3 screen |
+| K3=15 | `run_82_r2_k47_k2_7_k3_15_e50_s42` | long late temporal context | Select K3 after batch screen |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
 The completed first-layer screens retained R2's second/third kernels `7/3`,
@@ -63,6 +66,13 @@ After selecting K2, the third kernel will be screened around its current value
 of 3. This one-factor-at-a-time sequence attributes any change in performance
 to the altered receptive field. Multiscale and width experiments are deferred
 until the compact per-layer kernel space is understood.
+
+The K3 screen fixes the selected `K1/K2=47/7` and uses 50 epochs with
+early-stopping patience 6. Since K3 follows two 4x average-pooling operations,
+one K3 step spans 16 input samples. The existing `K3=3` anchor has an
+approximately 0.40 s receptive field; K3 values 1, 5, 7, and 15 test roughly
+0.28 s, 0.53 s, 0.65 s, and 1.15 s respectively without changing width or
+the spatial operator.
 
 ## Observed Results
 
