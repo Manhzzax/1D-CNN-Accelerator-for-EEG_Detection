@@ -225,6 +225,12 @@ training:
     # The update is applied every training batch; 0.01 avoids a single source
     # group dominating the q distribution over an epoch.
     eta: 0.01
+  # Accuracy-screen auxiliary objective. It pulls embeddings of same-class
+  # training windows together; it adds no model parameter or inference op.
+  supervised_contrastive:
+    enabled: false
+    coefficient: 0.05
+    temperature: 0.1
   early_stopping:
     enabled: true
     monitor: "val_loss"

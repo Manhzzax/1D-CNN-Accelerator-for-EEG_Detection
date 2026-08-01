@@ -1,4 +1,35 @@
-# SERVER-02 Environment Record
+# Server Execution Environment Record
+
+## SERVER-01 (Current Training Host)
+
+Last inspected: 2026-08-01.
+
+- CPU: Intel Core i9-10940X @ 3.30 GHz (14 physical cores, 28 logical
+  threads).
+- RAM: 251 GiB total; 226 GiB available at inspection.
+- Swap: 2.0 GiB total; 1.3 GiB used at inspection.
+- GPU: NVIDIA Quadro RTX 8000 with 48 GiB VRAM.
+- NVIDIA driver: 595.71.05; `nvitop` reports CUDA driver compatibility 13.2.
+- GPU state at inspection: 0% compute utilization and 28.89 GiB shown as
+  allocated to a `No Such Process` entry. Treat this as a stale/orphaned CUDA
+  context until `nvidia-smi` and `ps` are reconciled. Do not reset the GPU
+  while its display server is active. The remaining free VRAM is still ample
+  for the present 5K-parameter EEG experiments, but the stale allocation must
+  be recorded in run logs.
+
+Before the first run on SERVER-01, verify the repository revision, Conda
+packages, CUDA visibility, raw-data root, prepared-data root, and free disk
+space in one command:
+
+```bash
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && python -c "import torch, mne, sklearn; print('torch=',torch.__version__); print('cuda=',torch.cuda.is_available()); print('gpu=',torch.cuda.get_device_name(0) if torch.cuda.is_available() else 'none'); print('mne=',mne.__version__); print('sklearn=',sklearn.__version__)" && test -d /home/ubuntu/Manh/datasets/CHB-MIT/1.0.0 && test -d data/chbmit_prepared_raw_5s_v1 && df -h . /home/ubuntu/Manh/datasets/CHB-MIT/1.0.0 && nvidia-smi
+```
+
+Do not start a training run until this command succeeds. The raw EDF and
+prepared NPZ paths must exist locally on SERVER-01; a repository clone alone
+does not contain these ignored data artifacts.
+
+## SERVER-02 (Previous Training Host)
 
 Last verified: 2026-07-28
 

@@ -31,6 +31,7 @@ from src.model import (
     gradient_reverse,
     save_model_spec,
 )
+from src.supervised_contrastive import supervised_contrastive_loss
 from src.training_sampling import patient_group_balanced_weights
 from src.utils import set_seed, plot_training_history, plot_confusion_matrix, outputs_dir
 
@@ -240,6 +241,37 @@ def main():
             'Source-only GroupDRO enabled: '
             f'{train_domain_count} train patient groups | eta {group_dro_eta:g}'
         )
+
+    contrastive_config = config['training'].get('supervised_contrastive', {})
+    supervised_contrastive = _env_bool(
+        'CHBMIT_SUPERVISED_CONTRASTIVE', contrastive_config.get('enabled', False)
+    )
+    contrastive_coefficient = float(os.environ.get(
+        'CHBMIT_SUPERVISED_CONTRASTIVE_COEFFICIENT',
+        contrastive_config.get('coefficient', 0.05),
+    ))
+    contrastive_temperature = float(os.environ.get(
+        'CHBMIT_SUPERVISED_CONTRASTIVE_TEMPERATURE',
+        contrastive_config.get('temperature', 0.1),
+    ))
+    if supervised_contrastive:
+        if subject_adversarial or group_dro_enabled:
+            raise ValueError(
+                'Supervised contrastive, subject-adversarial, and GroupDRO are separate controlled ablations'
+            )
+        if not hasattr(model, 'forward_features') or not hasattr(model, 'classifier'):
+            raise ValueError(
+                'Supervised contrastive training requires a model with forward_features and classifier'
+            )
+        if not 0.0 < contrastive_coefficient <= 1.0:
+            raise ValueError('CHBMIT_SUPERVISED_CONTRASTIVE_COEFFICIENT must be in (0, 1]')
+        if contrastive_temperature <= 0.0:
+            raise ValueError('CHBMIT_SUPERVISED_CONTRASTIVE_TEMPERATURE must be positive')
+        print(
+            'Training-only supervised contrastive loss enabled: '
+            f'coefficient {contrastive_coefficient:g} | temperature {contrastive_temperature:g} | '
+            f'inference graph unchanged'
+        )
     
     # 5. Set loss, optimizer, and AMP Scaler
     learning_rate = float(os.environ.get('CHBMIT_TRAIN_LEARNING_RATE', config['training']['learning_rate']))
@@ -286,7 +318,7 @@ def main():
         print("Standard single-precision (FP32) training enabled.")
 
     def compute_training_losses(inputs, targets, domain_targets):
-        if domain_discriminator is None:
+        if domain_discriminator is None and not supervised_contrastive:
             outputs = model(inputs)
             per_sample_classification_losses = per_sample_criterion(outputs, targets)
             classification_loss = per_sample_classification_losses.mean()
@@ -294,15 +326,21 @@ def main():
                 group_dro_objective(per_sample_classification_losses, domain_targets)
                 if group_dro_objective is not None else classification_loss
             )
-            return outputs, classification_loss, optimization_classification_loss, None
+            return outputs, classification_loss, optimization_classification_loss, None, None
         features = model.forward_features(inputs)
         outputs = model.classifier(features)
         classification_loss = criterion(outputs, targets)
-        domain_logits = domain_discriminator(
-            gradient_reverse(features, domain_loss_coefficient)
+        domain_loss = None
+        if domain_discriminator is not None:
+            domain_logits = domain_discriminator(
+                gradient_reverse(features, domain_loss_coefficient)
+            )
+            domain_loss = criterion(domain_logits, domain_targets)
+        contrastive_loss = (
+            supervised_contrastive_loss(features, targets, contrastive_temperature)
+            if supervised_contrastive else None
         )
-        domain_loss = criterion(domain_logits, domain_targets)
-        return outputs, classification_loss, classification_loss, domain_loss
+        return outputs, classification_loss, classification_loss, domain_loss, contrastive_loss
         
     # 6. Training loop
     epochs = int(os.environ.get('CHBMIT_TRAIN_EPOCHS', config['training']['epochs']))
@@ -329,6 +367,7 @@ def main():
     train_losses, val_losses = [], []
     train_accs, val_accs = [], []
     domain_losses = []
+    contrastive_losses = []
     group_dro_weights = []
     learning_rates = []
     
@@ -340,6 +379,7 @@ def main():
             domain_discriminator.train()
         running_loss = 0.0
         running_domain_loss = 0.0
+        running_contrastive_loss = 0.0
         correct_train = 0
         total_train = 0
         
@@ -354,26 +394,36 @@ def main():
             if use_amp:
                 # Forward with mixed precision
                 with torch.amp.autocast(device_type="cuda"):
-                    outputs, classification_loss, optimization_classification_loss, domain_loss = compute_training_losses(
+                    outputs, classification_loss, optimization_classification_loss, domain_loss, contrastive_loss = compute_training_losses(
                         inputs, targets, domain_targets
                     )
-                    loss = optimization_classification_loss if domain_loss is None else optimization_classification_loss + domain_loss
+                    loss = optimization_classification_loss
+                    if domain_loss is not None:
+                        loss = loss + domain_loss
+                    if contrastive_loss is not None:
+                        loss = loss + contrastive_coefficient * contrastive_loss
                 # Backward and step with scaler
                 scaler.scale(loss).backward()
                 scaler.step(optimizer)
                 scaler.update()
             else:
                 # Standard FP32 forward & backward
-                outputs, classification_loss, optimization_classification_loss, domain_loss = compute_training_losses(
+                outputs, classification_loss, optimization_classification_loss, domain_loss, contrastive_loss = compute_training_losses(
                     inputs, targets, domain_targets
                 )
-                loss = optimization_classification_loss if domain_loss is None else optimization_classification_loss + domain_loss
+                loss = optimization_classification_loss
+                if domain_loss is not None:
+                    loss = loss + domain_loss
+                if contrastive_loss is not None:
+                    loss = loss + contrastive_coefficient * contrastive_loss
                 loss.backward()
                 optimizer.step()
             
             running_loss += classification_loss.item() * inputs.size(0)
             if domain_loss is not None:
                 running_domain_loss += domain_loss.item() * inputs.size(0)
+            if contrastive_loss is not None:
+                running_contrastive_loss += contrastive_loss.item() * inputs.size(0)
             _, predicted = outputs.max(1)
             total_train += targets.size(0)
             correct_train += predicted.eq(targets).sum().item()
@@ -417,6 +467,9 @@ def main():
         domain_losses.append(
             running_domain_loss / total_train if domain_discriminator is not None else None
         )
+        contrastive_losses.append(
+            running_contrastive_loss / total_train if supervised_contrastive else None
+        )
         group_dro_weights.append(
             group_dro_objective.weights().cpu().tolist() if group_dro_objective is not None else None
         )
@@ -425,7 +478,11 @@ def main():
             f" | Domain Loss: {running_domain_loss / total_train:.4f}"
             if domain_discriminator is not None else ""
         )
-        print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%{domain_loss_message}")
+        contrastive_loss_message = (
+            f" | SupCon Loss: {running_contrastive_loss / total_train:.4f}"
+            if supervised_contrastive else ""
+        )
+        print(f"Epoch [{epoch+1:2d}/{epochs}] | Train Loss: {epoch_train_loss:.4f} | Train Acc: {epoch_train_acc:.2f}% | Val Loss: {epoch_val_loss:.4f} | Val Acc: {epoch_val_acc:.2f}%{domain_loss_message}{contrastive_loss_message}")
         
         # Always preserve the absolute validation-loss minimum. `min_delta`
         # controls only whether patience is reset, not which checkpoint is evaluated.
@@ -490,6 +547,13 @@ def main():
             "train_patient_groups": train_domain_count if group_dro_enabled else None,
             "training_only_objective": group_dro_enabled,
         },
+        "supervised_contrastive": {
+            "enabled": supervised_contrastive,
+            "coefficient": contrastive_coefficient if supervised_contrastive else None,
+            "temperature": contrastive_temperature if supervised_contrastive else None,
+            "training_only_objective": supervised_contrastive,
+            "inference_parameter_delta": 0,
+        },
     }
     with open(os.path.join(outputs_dir, "hyperparameters.json"), "w") as output_file:
         json.dump(hyperparameters, output_file, indent=2, sort_keys=True)
@@ -526,6 +590,7 @@ def main():
         },
         "hyperparameters": hyperparameters,
         "subject_adversarial_domain_loss_per_epoch": domain_losses,
+        "supervised_contrastive_loss_per_epoch": contrastive_losses,
         "group_dro_weights_per_epoch": group_dro_weights,
         "history": {
             "train_loss": train_losses,
