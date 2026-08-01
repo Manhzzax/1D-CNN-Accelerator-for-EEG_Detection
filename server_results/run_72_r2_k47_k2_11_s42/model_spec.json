@@ -1,0 +1,60 @@
+{
+  "architecture": "hierarchical_separable_1dcnn",
+  "model_config": {
+    "architecture": "hierarchical_separable_1dcnn",
+    "dilated_hierarchical_separable_1dcnn": {
+      "dilation_one": 4,
+      "dilation_two": 8,
+      "dropout": 0.25,
+      "second_kernel": 7,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31,
+      "third_kernel": 3
+    },
+    "hierarchical_separable_1dcnn": {
+      "dropout": 0.25,
+      "second_kernel": 11,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 47,
+      "third_kernel": 3,
+      "third_pointwise": false
+    },
+    "input_channels": 17,
+    "input_length": 1280,
+    "multiscale_separable_1dcnn": {
+      "dropout": 0.25,
+      "long_kernel": 63,
+      "refinement_kernel": 15,
+      "short_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_branch": 1
+    },
+    "num_classes": 2,
+    "parallel_multikernel_1dcnn": {
+      "branch_filters": 16,
+      "dropout": 0.25,
+      "long_kernel": 31,
+      "refinement_filters": 32,
+      "refinement_kernel": 5,
+      "short_kernel": 15
+    },
+    "residual_hierarchical_separable_1dcnn": {
+      "dropout": 0.25,
+      "second_kernel": 7,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31,
+      "third_kernel": 3
+    },
+    "separable_1dcnn": {
+      "dropout": 0.25,
+      "refinement_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 2,
+      "temporal_kernel": 31
+    }
+  },
+  "parameter_count": 5861
+}
