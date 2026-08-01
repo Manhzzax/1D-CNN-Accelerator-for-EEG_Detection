@@ -49,10 +49,11 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | No improvement; default early stop was appropriate for K2=5 |
 | Done | `run_77_r2_k47_k2_11_e50_es6_s42` | 50 epochs, default ES patience 6 on K2=11 | 93.340%; does not overtake K2=7 |
 | Done | `run_78_r2_k47_k2_7_e100_es15_s42` | 100 epochs, ES patience 15 on selected K2=7 | No improvement over 50E; terminate schedule tuning |
-| K3=1 | `run_79_r2_k47_k2_7_k3_1_e50_s42` | remove late temporal extent while retaining the block | Batch K3 screen |
-| K3=5 | `run_80_r2_k47_k2_7_k3_5_e50_s42` | moderately wider late temporal context | Batch K3 screen |
-| K3=7 | `run_81_r2_k47_k2_7_k3_7_e50_s42` | wider late temporal context | Batch K3 screen |
-| K3=15 | `run_82_r2_k47_k2_7_k3_15_e50_s42` | long late temporal context | Select K3 after batch screen |
+| Done | `run_79_r2_k47_k2_7_k3_1_e50_s42` | remove late temporal extent while retaining the block | 94.334%; accuracy tie with K3=3 at 64 fewer parameters |
+| Done | `run_80_r2_k47_k2_7_k3_5_e50_s42` | moderately wider late temporal context | 92.025%; rejected |
+| Done | `run_81_r2_k47_k2_7_k3_7_e50_s42` | wider late temporal context | 93.636%; rejected |
+| Done | `run_82_r2_k47_k2_7_k3_15_e50_s42` | long late temporal context | 93.045%; rejected |
+| W48 | `run_83_r2_k47_k2_7_k3_1_w48_e50_s42` | spatial width 48 instead of 32 on Pareto K3=1 candidate | Capacity screen |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
 The completed first-layer screens retained R2's second/third kernels `7/3`,
@@ -95,6 +96,10 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_76_r2_k47_k2_5_e50_es12_s42` | 47/5/3 | 5,669 | 93.206% | 98.299% | 93.108% | Identical selected result after longer patience; no late recovery |
 | `run_77_r2_k47_k2_11_e50_es6_s42` | 47/11/3 | 5,861 | 93.340% | 98.385% | 93.305% | No gain after increasing cap; K2=7 remains selected |
 | `run_78_r2_k47_k2_7_e100_es15_s42` | 47/7/3 | 5,733 | 94.334% | 98.593% | 94.320% | Same checkpoint as 50E; extra 3 epochs do not improve result |
+| `run_79_r2_k47_k2_7_k3_1_e50_s42` | 47/7/1 | **5,669** | **94.334%** | **98.797%** | 94.265% | Accuracy tie with K3=3; fewer parameters and higher AUROC/precision |
+| `run_80_r2_k47_k2_7_k3_5_e50_s42` | 47/7/5 | 5,797 | 92.025% | 97.573% | 91.940% | Rejected |
+| `run_81_r2_k47_k2_7_k3_7_e50_s42` | 47/7/7 | 5,861 | 93.636% | 98.491% | 93.476% | Rejected |
+| `run_82_r2_k47_k2_7_k3_15_e50_s42` | 47/7/15 | 6,117 | 93.045% | 98.060% | 92.933% | Rejected |
 
 K47/K2=7/K3=3 has the best selected-checkpoint accuracy of the completed
 kernel screens, with 94.576% sensitivity and 93.125% precision. K63 regresses
@@ -138,6 +143,14 @@ The 100-epoch stress test stopped at epoch 46 and returned exactly the same
 epoch-36 checkpoint and metrics as the 50-epoch run. Therefore neither the
 100-epoch cap nor patience 15 is adopted. The fixed schedule for the K3
 architecture screen is 50 epochs with early-stopping patience 6.
+
+The K3 sweep does not support a wider final temporal receptive field. K3=1
+matches the 94.334% accuracy of K3=3 while removing 64 inference parameters,
+and it has higher AUROC (98.797% versus 98.593%) and precision (95.432% versus
+94.549%). K3=1 is therefore the Pareto candidate for hardware-aware capacity
+screens; K3=3 remains the accuracy-equivalent reference. The next isolated
+change is width 48, retaining K1/K2/K3=47/7/1 and the selected 50-epoch
+schedule.
 
 This follows early-stopping literature showing that slower stopping can yield
 small generalization gains at a substantially higher training cost, and the
