@@ -146,3 +146,17 @@ it is motivation only until independently reproduced. [Pedram et al., 2026 prepr
    promising but global pooling is the apparent bottleneck, implement P1.
 4. Any candidate that clears the screen must be confirmed with seeds 7 and 123
    before it receives an INT16 export or any FPGA work.
+
+## P0 outcome: 5-second seed-42 screen
+
+The P0 screen completed as `run_60_r2_raw5s_s42`. It is valid raw `17x1280`
+input with the unchanged 4,917-parameter Adam R2 Lite backbone, the locked
+split, and train-only channel z-score. The exact minimum-loss checkpoint at
+epoch 22 produces 92.830% balanced validation accuracy, 97.969% AUROC, 92.794%
+F1, and 92.320% sensitivity. The 2-second R2 seed-42 reference is 91.175%,
+96.645%, 91.102%, and 90.354%, respectively.
+
+The result passes the seed-42 screen but uses a new fully-ictal window
+population. The only valid next action is locked seed-7 and seed-123 replication
+of the exact 5-second configuration. Do not tune the 5-second model or add P1,
+P2, event evaluation, INT16 export, or test evaluation before those results.

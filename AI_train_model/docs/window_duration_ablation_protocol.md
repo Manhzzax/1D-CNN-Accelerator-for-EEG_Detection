@@ -108,3 +108,35 @@ comparable replacement for the 2 s result.
 
 This design lets the paper state whether longer context helps this compact raw
 CNN, without hiding its latency, short-event coverage, or KV260 memory cost.
+
+## Recorded 5-Second Seed-42 Screen
+
+The isolated raw 5-second preparation completed with the locked recording
+split and train-only channel z-score. It retains 5,023/1,862/4,334 ictal
+windows in train/validation/test, compared with 5,344/1,949/4,520 at 2 s. The
+loss of sampled ictal windows is 6.0% in train and 4.5% in validation, so the
+context ablation remains interpretable. It must nevertheless be reported as a
+new window population, not as an identical-window comparison.
+
+`run_60_r2_raw5s_s42` keeps the Adam R2 Lite `31/7/3` model and all training
+hyperparameters unchanged; only the raw input length changes from 512 to 1,280
+samples/channel. The model still has 4,917 trainable parameters. Its selected
+checkpoint is epoch 22, the exact minimum validation-loss epoch.
+
+| Validation metric | R2 Lite, 2 s | R2 Lite, 5 s seed 42 | Difference |
+|---|---:|---:|---:|
+| Accuracy | 91.175% | **92.830%** | +1.655 pp |
+| AUROC | 96.645% | **97.969%** | +1.324 pp |
+| Average precision | 96.826% | **98.085%** | +1.259 pp |
+| F1 | 91.102% | **92.794%** | +1.692 pp |
+| Sensitivity | 90.354% | **92.320%** | +1.966 pp |
+| Precision | 91.862% | **93.272%** | +1.410 pp |
+
+This passes the predeclared seed-42 screening margin of 0.5 percentage points.
+It is promising evidence that longer raw context helps the unchanged compact
+backbone. It is not a 95% result, a clinical result, or a direct replacement
+for the 2-second benchmark because the fully ictal window set changed. The next
+action is a **locked replication** on seeds 7 and 123 with no architecture,
+optimizer, data, threshold, or early-stopping changes. No event evaluation,
+test evaluation, INT16 export, or 5-second dilated-head development is allowed
+until the three-seed result is available.
