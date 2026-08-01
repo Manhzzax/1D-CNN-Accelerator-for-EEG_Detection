@@ -16,6 +16,12 @@ The master index is [reference_inventory.csv](reference_inventory.csv). It has
 `46` unique entries after removing duplicate rows found in the original
 `benchmark.tex`. It is an index of evidence, not a leaderboard.
 
+[authoritative_core.csv](authoritative_core.csv) is the smaller controlled
+source set permitted to underpin the current research claims. Its admission,
+metric-provenance, seed-reporting, and fair-comparison rules are defined in
+[curation_standard.md](curation_standard.md). A high reported accuracy is not
+admitted as a comparator until its original evaluation protocol is known.
+
 [tbiocas_core_references.bib](tbiocas_core_references.bib) is a curated
 15-source BibTeX seed for the accelerator manuscript. It deliberately contains
 only sources likely to support claims in the main text; it is not the complete
