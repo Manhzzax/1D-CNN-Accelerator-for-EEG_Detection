@@ -167,6 +167,17 @@ the SupCon coefficient, temperature, or early-stopping settings and do not
 replicate seeds 7/123. Preserve P2 as the leading development screen and move
 to the one predeclared mild train-only augmentation experiment.
 
+### Controlled P3 Outcome: Mild Augmentation Improves Accuracy but Not the Gate
+
+`run_65_r2_5s_aug_g10_n02_s42` selected epoch 23 by validation CE loss and
+reached 93.985% accuracy, 98.546% AUROC, 93.893% F1, 92.481% sensitivity, and
+95.349% precision. Its augmentation is training-only (shared gain +/-10% plus
+z-score noise standard deviation 0.02), so it keeps the 4,917-parameter
+inference graph. It improves matched baseline seed-42 accuracy by 1.155
+points, but its sensitivity is lower than P2 and it remains 1.015 points below
+the gate. Do not tune or replicate it. The bounded ceiling ladder is now
+defined in `docs/r2_accuracy_ceiling_experiment_plan.md`.
+
 ## Paper Thesis
 
 > We co-design and measure a raw multichannel depthwise-separable EEG detector

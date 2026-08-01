@@ -40,3 +40,12 @@ gain/noise/patience, and proceed to the one bounded capacity check.
 ```bash
 cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_MILD_EEG_AUGMENTATION=true CHBMIT_MILD_EEG_AUGMENTATION_GAIN_DELTA=0.1 CHBMIT_MILD_EEG_AUGMENTATION_NOISE_STD=0.02 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_65_r2_5s_aug_g10_n02_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
+
+## Outcome
+
+`run_65_r2_5s_aug_g10_n02_s42` selected epoch 23 by validation CE loss and
+achieved 93.985% accuracy, 98.546% AUROC, 93.893% F1, 92.481% sensitivity,
+and 95.349% precision. It improves matched baseline seed-42 accuracy by 1.155
+points but is below the 95.0% gate and reduces sensitivity relative to P2.
+Do not tune augmentation magnitudes or replicate it; continue through the
+bounded architecture ladder in `docs/r2_accuracy_ceiling_experiment_plan.md`.
