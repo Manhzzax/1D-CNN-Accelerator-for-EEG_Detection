@@ -39,7 +39,7 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_66_r2_k15_s42` | first temporal kernel 15 | 93.340% accuracy; positive versus 31-sample baseline, still below gate |
 | Done | `run_67_r2_k47_s42` | first temporal kernel 47 | 93.797% accuracy; best kernel screen so far, still below gate |
 | Done | `run_68_r2_k63_s42` | first temporal kernel 63 | 93.367% accuracy; below K47, so select K1=47 |
-| K2=3 | `run_69_r2_k47_k2_3_s42` | second temporal kernel 3 | Run next K2 value regardless of result |
+| Done | `run_69_r2_k47_k2_3_s42` | second temporal kernel 3 | 93.045% accuracy; lower than K2=7, but sensitivity reaches 95.005% |
 | K2=5 | `run_70_r2_k47_k2_5_s42` | second temporal kernel 5 | Run next K2 value regardless of result |
 | K2=11 | `run_71_r2_k47_k2_11_s42` | second temporal kernel 11 | Select K2, then screen K3 separately |
 | K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
@@ -65,12 +65,18 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_66_r2_k15_s42` | 15 | 4,101 | 93.340% | 98.252% | 93.243% | +0.510 percentage points while using 16.6% fewer parameters |
 | `run_67_r2_k47_s42` | 47 | 5,733 | 93.797% | 98.511% | 93.845% | Best kernel screen so far; +0.967 percentage points versus baseline |
 | `run_68_r2_k63_s42` | 63 | 6,549 | 93.367% | 98.385% | 93.122% | Larger first-layer field regresses versus K47 |
+| `run_69_r2_k47_k2_3_s42` | 47/3/3 | 5,605 | 93.045% | 98.268% | 93.179% | K2=3 trades lower precision for 95.005% sensitivity; below K2=7 overall |
 
 K47 has the best selected-checkpoint accuracy of the completed K1 screens,
 with 94.576% sensitivity and 93.125% precision. K63 regresses despite its
 larger field, so the data do not support monotonically increasing the first
 receptive field. K47 still does not establish superiority over the best
 observed seed or satisfy the 95.0% selection gate.
+
+With K1 fixed at 47, shrinking K2 from 7 to 3 reduces selected-checkpoint
+accuracy by 0.752 percentage points. This is a sensitivity/precision trade-off
+rather than an overall improvement, so K2=7 remains the K2 anchor while K2=5
+and K2=11 are tested.
 
 ## One Conditional Combination Only
 
@@ -99,5 +105,5 @@ final study from repeated-validation selection bias.
 ## Next Pending Command
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=3 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_69_r2_k47_k2_3_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=5 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_70_r2_k47_k2_5_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
