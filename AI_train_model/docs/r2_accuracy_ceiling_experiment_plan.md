@@ -50,7 +50,6 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_77_r2_k47_k2_11_e50_es6_s42` | 50 epochs, default ES patience 6 on K2=11 | 93.340%; does not overtake K2=7 |
 | Done | `run_78_r2_k47_k2_7_e100_es15_s42` | 100 epochs, ES patience 15 on selected K2=7 | No improvement over 50E; terminate schedule tuning |
 | K3 screen | TBD | third temporal kernel with K1/K2 fixed at 47/7 | Use 50 epochs and default ES patience 6 |
-| K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
 The completed first-layer screens retained R2's second/third kernels `7/3`,
