@@ -38,15 +38,21 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_65_r2_5s_aug_g10_n02_s42` | mild train-only gain/noise | Positive but below gate: 93.985% |
 | Done | `run_66_r2_k15_s42` | first temporal kernel 15 | 93.340% accuracy; positive versus 31-sample baseline, still below gate |
 | Done | `run_67_r2_k47_s42` | first temporal kernel 47 | 93.797% accuracy; best kernel screen so far, still below gate |
-| K63 | `run_68_r2_k63_s42` | first temporal kernel 63 | Run M15+31 regardless of result |
-| M15+31 | `run_69_ms15_31_2x32_s42` | parallel depthwise temporal kernels 15 and 31 | Run W48 regardless of result |
-| W48 | `run_70_r2_w48_s42` | spatial width 48 instead of 32 | Consider one combination only under rule below |
+| Done | `run_68_r2_k63_s42` | first temporal kernel 63 | 93.367% accuracy; below K47, so select K1=47 |
+| K2=3 | `run_69_r2_k47_k2_3_s42` | second temporal kernel 3 | Run next K2 value regardless of result |
+| K2=5 | `run_70_r2_k47_k2_5_s42` | second temporal kernel 5 | Run next K2 value regardless of result |
+| K2=11 | `run_71_r2_k47_k2_11_s42` | second temporal kernel 11 | Select K2, then screen K3 separately |
+| K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
+| M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
-The kernel screens retain R2's second/third kernels `7/3`, three temporal
-filters per input channel, and 32 spatial filters; only the first kernel
-changes. M15+31 uses the existing compact multiscale separable CNN with two
-filters per branch and 32 spatial filters, so the model spec supplies its exact
-parameter count. W48 retains R2 `31/7/3` with 48 spatial filters.
+The completed first-layer screens retained R2's second/third kernels `7/3`,
+three temporal filters per input channel, and 32 spatial filters. K47 is now
+the selected first-layer kernel. The next K2 screens alter only the second
+kernel (`3`, `5`, or `11`); `K2=7` is already represented by `run_67`.
+After selecting K2, the third kernel will be screened around its current value
+of 3. This one-factor-at-a-time sequence attributes any change in performance
+to the altered receptive field. Multiscale and width experiments are deferred
+until the compact per-layer kernel space is understood.
 
 ## Observed Results
 
@@ -58,19 +64,22 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_60_r2_raw5s_s42` | 31 | 4,917 | 92.830% | 97.969% | 92.794% | Seed-42 R2 baseline |
 | `run_66_r2_k15_s42` | 15 | 4,101 | 93.340% | 98.252% | 93.243% | +0.510 percentage points while using 16.6% fewer parameters |
 | `run_67_r2_k47_s42` | 47 | 5,733 | 93.797% | 98.511% | 93.845% | Best kernel screen so far; +0.967 percentage points versus baseline |
+| `run_68_r2_k63_s42` | 63 | 6,549 | 93.367% | 98.385% | 93.122% | Larger first-layer field regresses versus K47 |
 
-The K15 and K47 results support continuing the predeclared receptive-field
-screen. K47 has the best selected-checkpoint accuracy of the kernel screens,
-with 94.576% sensitivity and 93.125% precision. It still does not establish
-superiority over the best observed seed or satisfy the 95.0% selection gate.
+K47 has the best selected-checkpoint accuracy of the completed K1 screens,
+with 94.576% sensitivity and 93.125% precision. K63 regresses despite its
+larger field, so the data do not support monotonically increasing the first
+receptive field. K47 still does not establish superiority over the best
+observed seed or satisfy the 95.0% selection gate.
 
 ## One Conditional Combination Only
 
-If W48 improves on the plain R2 seed-42 baseline (92.830%) but remains below
-95%, run exactly one final screen: W48 + the already-fixed SupCon objective
-(`0.05`, temperature `0.1`). Otherwise do not combine factors. This prevents
-an open-ended hyperparameter search while testing the only two independently
-positive directions, capacity and SupCon.
+If the selected per-layer kernel configuration improves on the plain R2
+seed-42 baseline (92.830%) but remains below 95%, run exactly one final
+screen: that configuration plus the already-fixed SupCon objective (`0.05`,
+temperature `0.1`). Otherwise do not combine factors. This prevents an
+open-ended hyperparameter search while testing one independently positive
+training-only objective on the best compact architecture.
 
 ## Stop and Replication Rules
 
@@ -90,5 +99,5 @@ final study from repeated-validation selection bias.
 ## Next Pending Command
 
 ```bash
-source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=63 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_68_r2_k63_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
+source ~/miniconda3/etc/profile.d/conda.sh && conda activate chbmit-cnn && cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && git pull origin main && CHBMIT_WINDOW_SEC=5 CHBMIT_PREPARED_OUTPUT_DIR=chbmit_prepared_raw_5s_v1 CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn CHBMIT_HIERARCHICAL_TEMPORAL_KERNEL=47 CHBMIT_HIERARCHICAL_SECOND_KERNEL=3 CHBMIT_TRAIN_SEED=42 CHBMIT_RUN_ID=run_69_r2_k47_k2_3_s42 CHBMIT_SKIP_TEST_EVALUATION=1 python main.py --mode train
 ```
