@@ -150,6 +150,22 @@ and 123. Preserve it as a negative, controlled ablation and proceed to the
 predeclared supervised-contrastive auxiliary-loss screen rather than tuning
 its dilations, widths, or patience.
 
+### Controlled P2 Outcome: Supervised Contrastive Loss Improves but Does Not Pass
+
+`run_64_r2_5s_supcon005_t01_s42` retained the 4,917-parameter inference
+model and added the training-only objective `CE + 0.05 * SupCon` with
+temperature 0.1. The validation-CE-selected epoch-23 checkpoint achieved
+93.367% accuracy, 98.112% AUROC, 93.394% F1, 93.770% sensitivity, and
+93.021% precision. Relative to the matched baseline seed 42, accuracy rose
+0.837 points and sensitivity 1.450 points, while parameter count and
+inference graph were unchanged.
+
+This is useful evidence that representation regularisation helps the compact
+R2 model, but it does not meet the predeclared 95% seed-42 gate. Do not tune
+the SupCon coefficient, temperature, or early-stopping settings and do not
+replicate seeds 7/123. Preserve P2 as the leading development screen and move
+to the one predeclared mild train-only augmentation experiment.
+
 ## Paper Thesis
 
 > We co-design and measure a raw multichannel depthwise-separable EEG detector

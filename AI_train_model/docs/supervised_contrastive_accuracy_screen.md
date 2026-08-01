@@ -50,3 +50,18 @@ cd ~/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model && CHBMIT_WINDOW_S
 
 Use the standard result-push command with `r=run_64_r2_5s_supcon005_t01_s42`
 after the run completes.
+
+## Outcome
+
+`run_64_r2_5s_supcon005_t01_s42` selected epoch 23 by validation CE loss and
+achieved 93.367% accuracy, 98.112% AUROC, 93.394% F1, 93.770% sensitivity,
+and 93.021% precision. The `hyperparameters.json` confirms coefficient 0.05,
+temperature 0.1, and an inference-parameter delta of zero. Relative to the
+matched seed-42 R2 baseline, this is a +0.837 percentage-point accuracy gain
+and a +1.450-point sensitivity gain.
+
+It remains below the predeclared 95.0% seed-42 gate. Therefore P2 is a
+positive development ablation but not a replication candidate, final model, or
+paper headline. Do not tune its coefficient, temperature, or early-stopping
+settings on this validation cohort. Proceed once to P3 augmentation under a
+separate fixed contract.
