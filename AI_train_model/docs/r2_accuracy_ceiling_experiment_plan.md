@@ -48,7 +48,8 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_75_r2_k47_k2_7_e50_es12_s42` | 50 epochs, ES patience 12 on selected K2=7 | 94.334% at epoch 36; confirms 30-epoch cap was limiting |
 | Done | `run_76_r2_k47_k2_5_e50_es12_s42` | 50 epochs, ES patience 12 on early-stopped K2=5 | No improvement; default early stop was appropriate for K2=5 |
 | Done | `run_77_r2_k47_k2_11_e50_es6_s42` | 50 epochs, default ES patience 6 on K2=11 | 93.340%; does not overtake K2=7 |
-| 100E | `run_78_r2_k47_k2_7_e100_es15_s42` | 100 epochs, ES patience 15 on selected K2=7 | Exploratory late-convergence stress test; not part of the 50E selection protocol |
+| Done | `run_78_r2_k47_k2_7_e100_es15_s42` | 100 epochs, ES patience 15 on selected K2=7 | No improvement over 50E; terminate schedule tuning |
+| K3 screen | TBD | third temporal kernel with K1/K2 fixed at 47/7 | Use 50 epochs and default ES patience 6 |
 | K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
@@ -84,6 +85,7 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_75_r2_k47_k2_7_e50_es12_s42` | 47/7/3 | 5,733 | **94.334%** | **98.593%** | **94.320%** | Best current selected checkpoint; epoch 36 |
 | `run_76_r2_k47_k2_5_e50_es12_s42` | 47/5/3 | 5,669 | 93.206% | 98.299% | 93.108% | Identical selected result after longer patience; no late recovery |
 | `run_77_r2_k47_k2_11_e50_es6_s42` | 47/11/3 | 5,861 | 93.340% | 98.385% | 93.305% | No gain after increasing cap; K2=7 remains selected |
+| `run_78_r2_k47_k2_7_e100_es15_s42` | 47/7/3 | 5,733 | 94.334% | 98.593% | 94.320% | Same checkpoint as 50E; extra 3 epochs do not improve result |
 
 K47/K2=7/K3=3 has the best selected-checkpoint accuracy of the completed
 kernel screens, with 94.576% sensitivity and 93.125% precision. K63 regresses
@@ -122,6 +124,11 @@ as its 30-epoch counterpart. Therefore K2=7 is frozen for the next layer
 screen. The requested 100-epoch/patience-15 run is explicitly exploratory: it
 tests late convergence of this frozen candidate but must not be pooled with the
 50-epoch architecture screens when choosing K3.
+
+The 100-epoch stress test stopped at epoch 46 and returned exactly the same
+epoch-36 checkpoint and metrics as the 50-epoch run. Therefore neither the
+100-epoch cap nor patience 15 is adopted. The fixed schedule for the K3
+architecture screen is 50 epochs with early-stopping patience 6.
 
 This follows early-stopping literature showing that slower stopping can yield
 small generalization gains at a substantially higher training cost, and the
