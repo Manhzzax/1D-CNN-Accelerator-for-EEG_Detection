@@ -53,7 +53,7 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_80_r2_k47_k2_7_k3_5_e50_s42` | moderately wider late temporal context | 92.025%; rejected |
 | Done | `run_81_r2_k47_k2_7_k3_7_e50_s42` | wider late temporal context | 93.636%; rejected |
 | Done | `run_82_r2_k47_k2_7_k3_15_e50_s42` | long late temporal context | 93.045%; rejected |
-| W48 | `run_83_r2_k47_k2_7_k3_1_w48_e50_s42` | spatial width 48 instead of 32 on Pareto K3=1 candidate | Capacity screen |
+| Done | `run_83_r2_k47_k2_7_k3_1_w48_e50_s42` | spatial width 48 instead of 32 on Pareto K3=1 candidate | 93.636%; rejected versus width 32 |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
 The completed first-layer screens retained R2's second/third kernels `7/3`,
@@ -100,6 +100,7 @@ cross-entropy, rather than the epoch with maximum validation accuracy.
 | `run_80_r2_k47_k2_7_k3_5_e50_s42` | 47/7/5 | 5,797 | 92.025% | 97.573% | 91.940% | Rejected |
 | `run_81_r2_k47_k2_7_k3_7_e50_s42` | 47/7/7 | 5,861 | 93.636% | 98.491% | 93.476% | Rejected |
 | `run_82_r2_k47_k2_7_k3_15_e50_s42` | 47/7/15 | 6,117 | 93.045% | 98.060% | 92.933% | Rejected |
+| `run_83_r2_k47_k2_7_k3_1_w48_e50_s42` | 47/7/1, width 48 | 8,021 | 93.636% | 98.291% | 93.582% | Wider model regresses versus width-32 Pareto candidate |
 
 K47/K2=7/K3=3 has the best selected-checkpoint accuracy of the completed
 kernel screens, with 94.576% sensitivity and 93.125% precision. K63 regresses
@@ -151,6 +152,10 @@ and it has higher AUROC (98.797% versus 98.593%) and precision (95.432% versus
 screens; K3=3 remains the accuracy-equivalent reference. The next isolated
 change is width 48, retaining K1/K2/K3=47/7/1 and the selected 50-epoch
 schedule.
+
+Width 48 increases the model from 5,669 to 8,021 parameters but reduces
+selected-checkpoint accuracy to 93.636%. It is rejected, so additional width
+is not pursued before testing a qualitatively different compact topology.
 
 This follows early-stopping literature showing that slower stopping can yield
 small generalization gains at a substantially higher training cost, and the
