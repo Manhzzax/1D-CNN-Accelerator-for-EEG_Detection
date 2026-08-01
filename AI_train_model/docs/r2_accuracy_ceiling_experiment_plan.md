@@ -41,14 +41,17 @@ claims, because their cohorts and splits differ. [Wang et al., 2021](https://doi
 | Done | `run_68_r2_k63_s42` | first temporal kernel 63 | 93.367% accuracy; below K47, so select K1=47 |
 | Done | `run_69_r2_k47_k2_3_s42` | second temporal kernel 3 | 93.045% accuracy; lower than K2=7, but sensitivity reaches 95.005% |
 | K2=5 | `run_70_r2_k47_k2_5_s42` | second temporal kernel 5 | Run next K2 value regardless of result |
-| K2=11 | `run_71_r2_k47_k2_11_s42` | second temporal kernel 11 | Select K2, then screen K3 separately |
+| K2=11 | `run_71_r2_k47_k2_11_s42` | second temporal kernel 11 | Run next K2 value regardless of result |
+| K2=15 | `run_72_r2_k47_k2_15_s42` | second temporal kernel 15 | Run next K2 value regardless of result |
+| K2=31 | `run_73_r2_k47_k2_31_s42` | second temporal kernel 31 | Select K2, then screen K3 separately |
 | K3 screen | TBD | third temporal kernel around current K3=3 | Use the selected K1/K2 only |
 | M15+31 / W48 | TBD | multiscale or width after per-layer kernel screens | Consider only if no per-layer configuration passes the gate |
 
 The completed first-layer screens retained R2's second/third kernels `7/3`,
 three temporal filters per input channel, and 32 spatial filters. K47 is now
 the selected first-layer kernel. The next K2 screens alter only the second
-kernel (`3`, `5`, or `11`); `K2=7` is already represented by `run_67`.
+kernel (`3`, `5`, `11`, `15`, or `31`); `K2=7` is already represented by
+`run_67`.
 After selecting K2, the third kernel will be screened around its current value
 of 3. This one-factor-at-a-time sequence attributes any change in performance
 to the altered receptive field. Multiscale and width experiments are deferred
@@ -75,8 +78,10 @@ observed seed or satisfy the 95.0% selection gate.
 
 With K1 fixed at 47, shrinking K2 from 7 to 3 reduces selected-checkpoint
 accuracy by 0.752 percentage points. This is a sensitivity/precision trade-off
-rather than an overall improvement, so K2=7 remains the K2 anchor while K2=5
-and K2=11 are tested.
+rather than an overall improvement, so K2=7 remains the K2 anchor while K2=5,
+K2=11, K2=15, and K2=31 are tested. K2=15 and K2=31 are necessary long-context
+screens because K2 follows a 4x temporal pool; their receptive fields map to
+approximately 0.53 s and 0.78 s at the output of the K3=3 stack, respectively.
 
 ## One Conditional Combination Only
 
