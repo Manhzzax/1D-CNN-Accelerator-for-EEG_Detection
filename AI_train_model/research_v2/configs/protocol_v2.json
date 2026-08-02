@@ -1,0 +1,65 @@
+{
+  "version": "v2.0.0",
+  "claim_scope": "shared_model_within_case_longitudinal_internal_evaluation",
+  "dataset": {
+    "name": "CHB-MIT Scalp EEG Database v1.0.0",
+    "sample_rate_hz": 256,
+    "canonical_channels": 17,
+    "patient_identity_note": "chb01 and chb21 are one patient group for patient-disjoint work"
+  },
+  "preprocessing": {
+    "filter_mode": "causal_iir",
+    "bandpass_hz": [0.5, 45.0],
+    "notch_hz": 60.0,
+    "normalization": "train_channel_zscore",
+    "window_sec": 5.0,
+    "stride_sec": 1.0,
+    "interictal_guard_sec": 30.0
+  },
+  "labels": {
+    "rule": "causal_window_endpoint",
+    "interval_convention": "half_open_samples",
+    "classifier_guard_policy": "exclude_nonictal_endpoints_within_guard",
+    "continuous_event_replay": "all_windows_no_guard_removal"
+  },
+  "window_sampling": {
+    "normal_to_positive_ratio": {
+      "train": 1.0,
+      "val": 1.0,
+      "test": 1.0
+    }
+  },
+  "split": {
+    "strategy": "blocked_forward_chaining_by_case_recording_group",
+    "requested_outer_folds": 5,
+    "fallback_outer_folds": 3,
+    "require_aggregate_ictal_events_in_inner_val_and_outer_test": true
+  },
+  "training": {
+    "training_seeds": [7, 42, 123, 314, 2718],
+    "dataset_sampling_seed": 20260802,
+    "precision": "amp_fp16_train_fp32_evaluate",
+    "max_epochs": 50,
+    "min_epochs": 12,
+    "early_stopping_patience": 12,
+    "early_stopping_min_delta": 0.001,
+    "hyperparameter_grid": {
+      "learning_rate": [0.001, 0.0003],
+      "weight_decay": [0.0001, 0.0005]
+    }
+  },
+  "evaluation": {
+    "window_primary_metrics": ["balanced_accuracy", "auroc"],
+    "report_accuracy_on": "explicitly_balanced_1_to_1_windows_only",
+    "primary_far_per_hour": 0.5,
+    "report_far_per_hour": [0.1, 0.5, 1.0],
+    "refractory_sec": 30,
+    "alarm_matching": "one_to_one_first_alarm_per_event",
+    "confidence_interval": "paired_bootstrap_10000"
+  },
+  "hardware": {
+    "quantization_primary": "int16",
+    "dpu_audit_before_hls": true,
+    "hardware_implementation_after_model_freeze": true
+  }
+}

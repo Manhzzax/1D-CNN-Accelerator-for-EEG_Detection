@@ -144,15 +144,20 @@ def load_normalization_spec(output_dir):
         return json.load(input_file)
 
 
-def get_train_val_test_datasets():
-    """Load immutable recording-grouped splits and prevent split/normalization leakage."""
+def get_train_val_test_datasets(include_test=True):
+    """Load immutable splits and optionally avoid loading an unopened test partition."""
     config = load_config()
     data_config = config["data"]
     model_config = config["model"]
     prepared_dir_name = os.environ.get(
         "CHBMIT_PREPARED_OUTPUT_DIR", data_config["prepared_output_dir"]
     )
-    prepared_dir = os.path.join(project_dir, "data", prepared_dir_name)
+    explicit_prepared_dir = os.environ.get("CHBMIT_PREPARED_DIR")
+    prepared_dir = (
+        os.path.abspath(explicit_prepared_dir)
+        if explicit_prepared_dir
+        else os.path.join(project_dir, "data", prepared_dir_name)
+    )
     feature_spec = load_feature_spec(prepared_dir)
     expected_channels = model_config["input_channels"]
     expected_length = model_config["input_length"]
@@ -170,15 +175,20 @@ def get_train_val_test_datasets():
     val_x, val_y, val_records, val_channels, val_weights, _ = _load_prepared_split(
         prepared_dir, "val", expected_channels, expected_length
     )
-    test_x, test_y, test_records, test_channels, test_weights, _ = _load_prepared_split(
-        prepared_dir, "test", expected_channels, expected_length
-    )
-    if not (np.array_equal(channels, val_channels) and np.array_equal(channels, test_channels)):
+    if include_test:
+        test_x, test_y, test_records, test_channels, test_weights, _ = _load_prepared_split(
+            prepared_dir, "test", expected_channels, expected_length
+        )
+    else:
+        test_x = test_y = test_records = test_channels = test_weights = None
+    if not np.array_equal(channels, val_channels):
+        raise ValueError("Prepared splits do not share an identical channel order")
+    if include_test and not np.array_equal(channels, test_channels):
         raise ValueError("Prepared splits do not share an identical channel order")
 
     train_record_set = set(train_records.tolist())
     val_record_set = set(val_records.tolist())
-    test_record_set = set(test_records.tolist())
+    test_record_set = set(test_records.tolist()) if include_test else set()
     if train_record_set & val_record_set or train_record_set & test_record_set or val_record_set & test_record_set:
         raise ValueError("Recording leakage detected between prepared splits")
 
@@ -189,19 +199,24 @@ def get_train_val_test_datasets():
         std = np.maximum(std, np.finfo(np.float32).eps)
         train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
         val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
-        test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
+        if include_test:
+            test_x = _scale_split(test_x, mean, std).astype(np.float32, copy=False)
     elif normalization_mode == "per_recording_zscore":
         # Each split is transformed per recording, independently and without labels.
         train_x, train_recording_stats = _scale_per_recording(train_x, train_records)
         val_x, val_recording_stats = _scale_per_recording(val_x, val_records)
-        test_x, test_recording_stats = _scale_per_recording(test_x, test_records)
-        recording_stats = {**train_recording_stats, **val_recording_stats, **test_recording_stats}
+        if include_test:
+            test_x, test_recording_stats = _scale_per_recording(test_x, test_records)
+            recording_stats = {**train_recording_stats, **val_recording_stats, **test_recording_stats}
+        else:
+            recording_stats = {**train_recording_stats, **val_recording_stats}
         mean = np.zeros(expected_channels, dtype=np.float32)
         std = np.ones(expected_channels, dtype=np.float32)
     else:
         train_x = window_channel_zscore(train_x)
         val_x = window_channel_zscore(val_x)
-        test_x = window_channel_zscore(test_x)
+        if include_test:
+            test_x = window_channel_zscore(test_x)
         mean = np.zeros(expected_channels, dtype=np.float32)
         std = np.ones(expected_channels, dtype=np.float32)
 
@@ -224,13 +239,17 @@ def get_train_val_test_datasets():
             json.dump(recording_stats, output_file, sort_keys=True)
             output_file.write("\n")
     split_summary = {
-        "prepared_output_dir": prepared_dir_name,
+        "prepared_output_dir": prepared_dir,
         "normalization_mode": normalization_mode,
         "feature_representation": feature_spec,
         "channels": channels.tolist(),
         "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},
         "val": {"samples": len(val_y), "ictal": int(val_y.sum()), "recordings": len(val_record_set)},
-        "test": {"samples": len(test_y), "ictal": int(test_y.sum()), "recordings": len(test_record_set)},
+        "test": (
+            {"samples": len(test_y), "ictal": int(test_y.sum()), "recordings": len(test_record_set)}
+            if include_test
+            else {"loaded": False, "reason": "test_evaluation_skipped"}
+        ),
     }
     with open(os.path.join(outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
         json.dump(split_summary, output_file, indent=2, sort_keys=True)
@@ -240,10 +259,13 @@ def get_train_val_test_datasets():
     for split_name, split in split_summary.items():
         if split_name in {"channels", "prepared_output_dir", "normalization_mode", "feature_representation"}:
             continue
-        print(
-            f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "
-            f"{split['recordings']} recordings"
-        )
+        if split.get("loaded") is False:
+            print("  test: not loaded (test evaluation skipped)")
+        else:
+            print(
+                f"  {split_name}: {split['samples']} windows | {split['ictal']} ictal | "
+                f"{split['recordings']} recordings"
+            )
 
     train_domain_labels, train_domain_mapping = patient_group_labels(train_records)
     split_summary["train_patient_groups"] = {
@@ -257,5 +279,5 @@ def get_train_val_test_datasets():
     return (
         EEGDataset(train_x, train_y, train_weights, domain_labels=train_domain_labels),
         EEGDataset(val_x, val_y, val_weights),
-        EEGDataset(test_x, test_y, test_weights),
+        EEGDataset(test_x, test_y, test_weights) if include_test else None,
     )

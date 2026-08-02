@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "V2 EEG literature card",
+  "type": "object",
+  "required": ["paper_id", "title", "year", "venue", "url_or_doi", "task", "dataset", "metric_provenance"],
+  "properties": {
+    "paper_id": {"type": "string"},
+    "title": {"type": "string"},
+    "year": {"type": "integer"},
+    "venue": {"type": "string"},
+    "url_or_doi": {"type": "string"},
+    "task": {"type": "string"},
+    "dataset": {"type": "string"},
+    "subjects_or_cases": {"type": ["string", "null"]},
+    "channels": {"type": ["string", "null"]},
+    "window_sec": {"type": ["number", "null"]},
+    "stride_sec": {"type": ["number", "null"]},
+    "label_rule": {"type": ["string", "null"]},
+    "split_protocol": {"type": ["string", "null"]},
+    "seed_reporting": {"type": ["string", "null"]},
+    "parameter_count": {"type": ["string", "null"]},
+    "macs_or_flops": {"type": ["string", "null"]},
+    "metric_provenance": {"type": "string", "enum": ["direct_primary", "direct_paper_table", "secondary_citation", "not_reported"]}
+  }
+}

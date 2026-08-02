@@ -1,0 +1,15 @@
+{
+  "version": "v2.0.0",
+  "selection_rule": "All entries are predeclared. Architecture changes require a new registry version before any V2 outer-fold result is inspected.",
+  "promotion_rule": "A model above 25K parameters advances only when paired bootstrap confidence intervals show a benefit in both balanced accuracy and AUROC, event sensitivity does not regress at FAR <= 0.5/h, and the model is Pareto-nondominated for parameters, MACs, peak activation memory, and INT16 degradation.",
+  "candidates": [
+    {"candidate_id": "B0_bandpower_linear", "role": "baseline", "family": "causal_bandpower_linear", "parameter_budget": "classical"},
+    {"candidate_id": "B1_vanilla_1dcnn", "role": "baseline", "family": "raw_vanilla_1dcnn", "parameter_budget": "up_to_25k"},
+    {"candidate_id": "B2_deep_matched_1dcnn", "role": "baseline", "family": "raw_deep_parameter_matched_1dcnn", "parameter_budget": "up_to_25k"},
+    {"candidate_id": "B3_multiscale_inception_1dcnn", "role": "baseline", "family": "raw_multiscale_inception_1dcnn", "parameter_budget": "up_to_25k"},
+    {"candidate_id": "B4_dilated_lightseizure_like", "role": "baseline", "family": "raw_dilated_1dcnn", "parameter_budget": "up_to_25k"},
+    {"candidate_id": "B5_eegwavenet_like", "role": "baseline", "family": "raw_wavenet_like_1dcnn", "parameter_budget": "25k_100k"},
+    {"candidate_id": "P1_historical_m31_31_7_3", "role": "historical_reference_retrained", "family": "hierarchical_depthwise_separable_1dcnn", "parameter_budget": "5k_15k", "kernels": [31, 7, 3]},
+    {"candidate_id": "P2_historical_m47_47_7_3", "role": "historical_reference_retrained", "family": "hierarchical_depthwise_separable_1dcnn", "parameter_budget": "5k_15k", "kernels": [47, 7, 3]}
+  ]
+}

@@ -1,0 +1,1 @@
+paper_id,method,dataset,subjects_or_cases,split_protocol,window_sec,stride_sec,accuracy_percent,balanced_accuracy_percent,auroc,event_sensitivity_percent,far_per_hour,parameters,metric_provenance,url_or_doi,comparability_note

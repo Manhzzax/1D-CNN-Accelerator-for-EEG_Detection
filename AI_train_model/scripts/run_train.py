@@ -108,8 +108,12 @@ def main():
     print("RUNNING MODEL TRAINING & EVALUATION")
     print("=" * 60)
     
-    # 3. Get datasets
-    train_dataset, val_dataset, test_dataset = get_train_val_test_datasets()
+    # 3. Keep an unopened outer test partition out of process memory during
+    # validation-only V2 architecture and hyperparameter selection.
+    skip_test_evaluation = _env_bool('CHBMIT_SKIP_TEST_EVALUATION', False)
+    train_dataset, val_dataset, test_dataset = get_train_val_test_datasets(
+        include_test=not skip_test_evaluation
+    )
     
     batch_size = int(os.environ.get('CHBMIT_TRAIN_BATCH_SIZE', config['training']['batch_size']))
     num_workers = config['training'].get('num_workers', 4)
@@ -173,9 +177,11 @@ def main():
         val_dataset, batch_size=batch_size, shuffle=False, 
         num_workers=num_workers, pin_memory=pin_memory
     )
-    test_loader = DataLoader(
-        test_dataset, batch_size=batch_size, shuffle=False, 
-        num_workers=num_workers, pin_memory=pin_memory
+    test_loader = (
+        DataLoader(test_dataset, batch_size=batch_size, shuffle=False,
+                   num_workers=num_workers, pin_memory=pin_memory)
+        if test_dataset is not None
+        else None
     )
     
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -642,7 +648,7 @@ def main():
     }
 
     # Validation-only search trials must not consume the held-out test metrics.
-    if _env_bool('CHBMIT_SKIP_TEST_EVALUATION', False):
+    if skip_test_evaluation:
         with open(os.path.join(outputs_dir, "training_summary.json"), "w") as output_file:
             json.dump(training_summary, output_file, indent=2, sort_keys=True)
             output_file.write("\n")
