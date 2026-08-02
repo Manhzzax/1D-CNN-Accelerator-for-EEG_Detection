@@ -1,0 +1,14 @@
+{
+  "checkpoint_path": "outputs/v2_f00_p1_m31_lr1e3_wd5e4_s07/best_model.pth",
+  "checkpoint_sha256": "d18c3aa5172641fe515fcae7e2a7272f205656894048704ae2eabe81098442a0",
+  "commit_hash": "2d8da09ea57e1b0102e2daa8797f24beced58bbf",
+  "config_path": "research_v2/configs/protocol_v2.json",
+  "config_sha256": "6dce3772c0d023b4d01b65f7d150cbab2e80aa881141a14549b3b1ead33991da",
+  "created_at_utc": "2026-08-02T16:57:11.538064+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "5b09dd3893dfbab2d6321dae598bed158f2417e2c9dfd1574d688e1cd14f0be3",
+  "split_path": "research_v2/manifests/temporal_v2/fold_00_manifest.csv",
+  "split_sha256": "9812087888ecbe8bac435c5e7f28f4c7ce5018aaef61d60423ddbc222c4beb5b",
+  "training_seed": 7
+}
