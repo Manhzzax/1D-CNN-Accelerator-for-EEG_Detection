@@ -58,6 +58,12 @@ After a grid selects a configuration by checkpoint validation loss,
 For P2, use run prefix `v2_f00_p2_m47_lr3e4_wd5e4`, kernels `47 7 3`, learning
 rate `0.0003`, and weight decay `0.0005`.
 
+For baselines B0 through B5, use `tools/screen_baseline_grid.sh` with the
+exact candidate ID from `configs/candidate_registry_v2.json`. The script maps
+the candidate ID to its frozen implementation, performs the four-setting
+inner grid on seed 7, records the registry hash in provenance, and refuses
+outer-test tensors.
+
 ## Layout
 
 - `configs/`: immutable protocol and candidate registry.

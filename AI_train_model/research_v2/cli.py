@@ -56,6 +56,8 @@ def _provenance(args: argparse.Namespace) -> None:
         training_seed=args.training_seed,
         dataset_sampling_seed=args.dataset_sampling_seed,
         precision=args.precision,
+        registry_path=args.registry,
+        candidate_id=args.candidate_id,
     )
     print(f"V2 provenance written: {args.output} ({provenance['provenance_hash']})")
 
@@ -90,6 +92,8 @@ def main() -> None:
     provenance = subparsers.add_parser("provenance", help="Write immutable metadata for a completed V2 run")
     provenance.add_argument("--project-root", required=True)
     provenance.add_argument("--protocol", required=True)
+    provenance.add_argument("--registry")
+    provenance.add_argument("--candidate-id")
     provenance.add_argument("--fold-manifest", required=True)
     provenance.add_argument("--checkpoint")
     provenance.add_argument("--training-seed", required=True, type=int)

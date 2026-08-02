@@ -41,6 +41,20 @@ model:
   num_classes: 2
   input_channels: 17     # Locked canonical bipolar montage
   input_length: 256      # 1 second of EEG recording at 256 Hz
+  v2_bandpower_linear:
+    # Non-learned log bandpower features from each completed causal window.
+    # This is a classical reference, not an FPGA deployment candidate.
+    bands_hz: [[0.5, 4.0], [4.0, 8.0], [8.0, 13.0], [13.0, 30.0], [30.0, 45.0]]
+  v2_vanilla_1dcnn:
+    # Plain full-convolution baseline with global average pooling.
+    channels: [16, 24, 32]
+    kernels: [7, 5, 3]
+    dropout: 0.25
+  v2_deep_matched_1dcnn:
+    # Four ordinary convolution blocks, close to M31's parameter budget.
+    channels: [12, 16, 20, 24]
+    kernels: [7, 5, 5, 3]
+    dropout: 0.25
   separable_1dcnn:
     # Per-channel temporal filters -> pointwise spatial mixing -> temporal refinement.
     temporal_filters_per_channel: 2

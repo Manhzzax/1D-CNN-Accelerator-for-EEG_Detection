@@ -46,6 +46,8 @@ def write_run_provenance(
     training_seed: int,
     dataset_sampling_seed: int,
     precision: str,
+    registry_path: str | Path | None = None,
+    candidate_id: str | None = None,
 ) -> dict:
     payload = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
@@ -59,6 +61,9 @@ def write_run_provenance(
         "training_seed": int(training_seed),
         "dataset_sampling_seed": int(dataset_sampling_seed),
         "precision": precision,
+        "candidate_registry_path": str(registry_path) if registry_path else None,
+        "candidate_registry_sha256": file_sha256(registry_path) if registry_path else None,
+        "candidate_id": candidate_id,
     }
     payload["provenance_hash"] = canonical_json_hash(payload)
     save_json(output_path, payload)

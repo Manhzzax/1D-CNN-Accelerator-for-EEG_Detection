@@ -11,12 +11,13 @@ prepared_dir="$1"
 run_id="$2"
 seed="$3"
 root="$(git rev-parse --show-toplevel)/AI_train_model"
+architecture="${CHBMIT_V2_MODEL_ARCHITECTURE:-hierarchical_separable_1dcnn}"
 
 cd "$root"
 CHBMIT_WINDOW_SEC=5 \
 CHBMIT_FILTER_MODE=causal_iir \
 CHBMIT_PREPARED_DIR="$prepared_dir" \
-CHBMIT_MODEL_ARCHITECTURE=hierarchical_separable_1dcnn \
+CHBMIT_MODEL_ARCHITECTURE="$architecture" \
 CHBMIT_TRAIN_SEED="$seed" \
 CHBMIT_RUN_ID="$run_id" \
 CHBMIT_SKIP_TEST_EVALUATION=1 \

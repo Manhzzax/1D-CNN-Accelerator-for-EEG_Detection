@@ -287,6 +287,74 @@ class EEG1DCNN(nn.Module):
         return x
 
 
+class V2BandpowerLinear(nn.Module):
+    """Classical log-bandpower linear reference using only a completed window."""
+
+    def __init__(self, in_channels, num_classes, bands_hz, sample_rate_hz=256):
+        super().__init__()
+        if not bands_hz or any(len(band) != 2 or band[0] < 0 or band[1] <= band[0] for band in bands_hz):
+            raise ValueError("Bandpower bands must be non-empty [low, high] pairs")
+        self.architecture_name = "v2_bandpower_linear"
+        self.sample_rate_hz = float(sample_rate_hz)
+        self.bands_hz = tuple((float(low), float(high)) for low, high in bands_hz)
+        self.classifier = nn.Linear(in_channels * len(self.bands_hz), num_classes)
+
+    def forward_features(self, x):
+        spectrum = torch.fft.rfft(x, dim=-1)
+        power = spectrum.real.square() + spectrum.imag.square()
+        frequencies = torch.fft.rfftfreq(x.shape[-1], d=1.0 / self.sample_rate_hz, device=x.device)
+        features = []
+        for low_hz, high_hz in self.bands_hz:
+            mask = (frequencies >= low_hz) & (frequencies < high_hz)
+            if not torch.any(mask):
+                raise ValueError(f"No FFT bins available for band [{low_hz}, {high_hz})")
+            features.append(torch.log1p(power[..., mask].mean(dim=-1)))
+        return torch.cat(features, dim=1)
+
+    def forward(self, x):
+        return self.classifier(self.forward_features(x))
+
+
+class V2PlainEEG1DCNN(nn.Module):
+    """Compact ordinary-convolution CNN baseline with shape-independent pooling."""
+
+    def __init__(self, in_channels, num_classes, channels, kernels, dropout, architecture_name):
+        super().__init__()
+        if len(channels) != len(kernels) or not channels:
+            raise ValueError("Plain CNN channels and kernels must be non-empty and have equal length")
+        if any(int(channel) < 1 for channel in channels):
+            raise ValueError("Plain CNN channel counts must be positive")
+        if any(int(kernel) < 1 or int(kernel) % 2 == 0 for kernel in kernels):
+            raise ValueError("Plain CNN kernels must be positive odd integers")
+        if not 0.0 <= float(dropout) < 1.0:
+            raise ValueError("Plain CNN dropout must be in [0, 1)")
+        self.architecture_name = architecture_name
+        blocks = []
+        current_channels = int(in_channels)
+        for output_channels, kernel in zip(channels, kernels):
+            output_channels = int(output_channels)
+            kernel = int(kernel)
+            blocks.append(nn.Sequential(
+                nn.Conv1d(current_channels, output_channels, kernel_size=kernel, padding=kernel // 2, bias=False),
+                nn.BatchNorm1d(output_channels),
+                nn.ReLU(),
+                nn.AvgPool1d(kernel_size=2, stride=2),
+            ))
+            current_channels = output_channels
+        self.blocks = nn.ModuleList(blocks)
+        self.dropout = nn.Dropout(float(dropout))
+        self.global_pool = nn.AdaptiveAvgPool1d(1)
+        self.classifier = nn.Linear(current_channels, num_classes)
+
+    def forward_features(self, x):
+        for block in self.blocks:
+            x = block(x)
+        return self.dropout(self.global_pool(x).squeeze(-1))
+
+    def forward(self, x):
+        return self.classifier(self.forward_features(x))
+
+
 class SeparableEEG1DCNN(nn.Module):
     """EEGNet-inspired raw-signal CNN with explicit temporal then spatial mixing."""
 
@@ -821,6 +889,24 @@ def build_model(architecture=None, model_config=None):
             in_channels=model_config["input_channels"],
             input_length=model_config["input_length"],
             num_classes=model_config["num_classes"],
+        )
+    if architecture == "v2_bandpower_linear":
+        options = model_config["v2_bandpower_linear"]
+        return V2BandpowerLinear(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            bands_hz=options["bands_hz"],
+            sample_rate_hz=256,
+        )
+    if architecture in {"v2_vanilla_1dcnn", "v2_deep_matched_1dcnn"}:
+        options = model_config[architecture]
+        return V2PlainEEG1DCNN(
+            in_channels=model_config["input_channels"],
+            num_classes=model_config["num_classes"],
+            channels=options["channels"],
+            kernels=options["kernels"],
+            dropout=options["dropout"],
+            architecture_name=architecture,
         )
     if architecture == "separable_1dcnn":
         options = model_config["separable_1dcnn"]
