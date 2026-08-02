@@ -12,6 +12,14 @@ result_dir="$2"
 repo_root="$(git rev-parse --show-toplevel)"
 destination="$repo_root/AI_train_model/research_v2/artifacts/$run_id"
 required=(provenance.json model_spec.json training_summary.json validation_window_metrics.json)
+branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD)" || {
+  echo "Refusing to package from a detached HEAD" >&2
+  exit 1
+}
+if [[ "$branch" == "main" ]]; then
+  echo "Refusing to push V2 artifacts to main; switch to research/v2-scientific-reports" >&2
+  exit 1
+fi
 
 for file in "${required[@]}"; do
   [[ -f "$result_dir/$file" ]] || { echo "MISSING: $result_dir/$file" >&2; exit 1; }
@@ -25,4 +33,4 @@ cp "$result_dir"/{provenance.json,model_spec.json,training_summary.json,validati
 
 git -C "$repo_root" add -f -- "AI_train_model/research_v2/artifacts/$run_id"
 git -C "$repo_root" commit -m "results(v2): add $run_id"
-git -C "$repo_root" push origin main
+git -C "$repo_root" push origin "HEAD:$branch"
