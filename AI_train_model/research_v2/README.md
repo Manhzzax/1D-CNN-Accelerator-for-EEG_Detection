@@ -32,6 +32,9 @@ three-fold fallback; it never moves recordings to manufacture coverage.
 `tools/train_fold.sh` trains one V2 candidate without evaluating its outer test
 windows. It expects a frozen prepared fold, a unique run ID, and one of the
 five declared training seeds. Outer evaluation is a separate post-freeze step.
+After training, write `provenance.json` in the run output with the `provenance`
+subcommand, then use `bash research_v2/tools/package_run.sh <run_id> <output>`
+to commit only the reproducibility artifact.
 
 ## Layout
 

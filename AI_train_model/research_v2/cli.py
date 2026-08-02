@@ -9,7 +9,7 @@ from .folds import load_recording_manifest, select_feasible_protocol, write_prot
 from .inventory import write_inventory
 from .preparation import prepare_fold_windows
 from .protocol import load_json, validate_protocol_config
-from .registry import load_candidate_registry
+from .registry import load_candidate_registry, write_run_provenance
 
 
 def _validate(args: argparse.Namespace) -> None:
@@ -46,6 +46,20 @@ def _prepare_fold(args: argparse.Namespace) -> None:
     print(f"V2 fold preparation complete: {summary['outputs']}")
 
 
+def _provenance(args: argparse.Namespace) -> None:
+    provenance = write_run_provenance(
+        args.output,
+        project_root=args.project_root,
+        config_path=args.protocol,
+        split_path=args.fold_manifest,
+        checkpoint_path=args.checkpoint,
+        training_seed=args.training_seed,
+        dataset_sampling_seed=args.dataset_sampling_seed,
+        precision=args.precision,
+    )
+    print(f"V2 provenance written: {args.output} ({provenance['provenance_hash']})")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description="V2 CHB-MIT protocol utilities")
     subparsers = parser.add_subparsers(dest="command", required=True)
@@ -71,6 +85,17 @@ def main() -> None:
     prepare.add_argument("--fold-manifest", required=True)
     prepare.add_argument("--output", required=True)
     prepare.set_defaults(handler=_prepare_fold)
+
+    provenance = subparsers.add_parser("provenance", help="Write immutable metadata for a completed V2 run")
+    provenance.add_argument("--project-root", required=True)
+    provenance.add_argument("--protocol", required=True)
+    provenance.add_argument("--fold-manifest", required=True)
+    provenance.add_argument("--checkpoint")
+    provenance.add_argument("--training-seed", required=True, type=int)
+    provenance.add_argument("--dataset-sampling-seed", required=True, type=int)
+    provenance.add_argument("--precision", required=True, choices=("amp_fp16_train_fp32_evaluate", "fp32"))
+    provenance.add_argument("--output", required=True)
+    provenance.set_defaults(handler=_provenance)
 
     args = parser.parse_args()
     args.handler(args)
