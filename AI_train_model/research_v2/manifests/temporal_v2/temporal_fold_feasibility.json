@@ -1,0 +1,289 @@
+{
+  "fallback_used": false,
+  "protocol_hash": "53b1093f3c376d4767b36f1c7be86f441603e4aacc598e4f85ccef74eaab6bf5",
+  "requested_audit": {
+    "fold_count": 5,
+    "folds": [
+      {
+        "chronology_violations": [],
+        "fold_index": 0,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 380,
+            "seizures": 114
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 34
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 108,
+            "seizures": 36
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 14
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 1,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 286,
+            "seizures": 87
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 94,
+            "seizures": 27
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 207,
+            "seizures": 50
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 34
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 2,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 187,
+            "seizures": 69
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 18
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 306,
+            "seizures": 84
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 94,
+            "seizures": 27
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 3,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 88,
+            "seizures": 42
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 27
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 400,
+            "seizures": 111
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 18
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 4,
+        "summary": {
+          "future": {
+            "cases": 0,
+            "recordings": 0,
+            "seizures": 0
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 88,
+            "seizures": 42
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 499,
+            "seizures": 129
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 27
+          }
+        },
+        "valid": true
+      }
+    ],
+    "valid": true
+  },
+  "requested_outer_folds": 5,
+  "selected_audit": {
+    "fold_count": 5,
+    "folds": [
+      {
+        "chronology_violations": [],
+        "fold_index": 0,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 380,
+            "seizures": 114
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 34
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 108,
+            "seizures": 36
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 14
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 1,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 286,
+            "seizures": 87
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 94,
+            "seizures": 27
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 207,
+            "seizures": 50
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 34
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 2,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 187,
+            "seizures": 69
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 18
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 306,
+            "seizures": 84
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 94,
+            "seizures": 27
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 3,
+        "summary": {
+          "future": {
+            "cases": 24,
+            "recordings": 88,
+            "seizures": 42
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 27
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 400,
+            "seizures": 111
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 18
+          }
+        },
+        "valid": true
+      },
+      {
+        "chronology_violations": [],
+        "fold_index": 4,
+        "summary": {
+          "future": {
+            "cases": 0,
+            "recordings": 0,
+            "seizures": 0
+          },
+          "test": {
+            "cases": 24,
+            "recordings": 88,
+            "seizures": 42
+          },
+          "train": {
+            "cases": 24,
+            "recordings": 499,
+            "seizures": 129
+          },
+          "val": {
+            "cases": 24,
+            "recordings": 99,
+            "seizures": 27
+          }
+        },
+        "valid": true
+      }
+    ],
+    "valid": true
+  },
+  "selected_outer_folds": 5,
+  "strategy": "blocked_forward_chaining_by_case_recording_group"
+}
