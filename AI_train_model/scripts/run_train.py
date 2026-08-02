@@ -381,7 +381,9 @@ def main():
     early_stopping = config['training'].get('early_stopping', {})
     early_stopping_enabled = early_stopping.get('enabled', False)
     early_stopping_monitor = early_stopping.get('monitor', 'val_loss')
-    min_epochs = int(early_stopping.get('min_epochs', 1))
+    min_epochs = int(os.environ.get(
+        'CHBMIT_EARLY_STOPPING_MIN_EPOCHS', early_stopping.get('min_epochs', 1)
+    ))
     early_stopping_patience = int(os.environ.get(
         'CHBMIT_EARLY_STOPPING_PATIENCE', early_stopping.get('patience', epochs)
     ))

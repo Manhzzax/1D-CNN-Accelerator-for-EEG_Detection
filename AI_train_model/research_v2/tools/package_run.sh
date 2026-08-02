@@ -11,7 +11,7 @@ run_id="$1"
 result_dir="$2"
 repo_root="$(git rev-parse --show-toplevel)"
 destination="$repo_root/AI_train_model/research_v2/artifacts/$run_id"
-required=(provenance.json model_spec.json training_summary.json validation_window_metrics.json)
+required=(best_model.pth provenance.json model_spec.json training_summary.json validation_window_metrics.json)
 branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD)" || {
   echo "Refusing to package from a detached HEAD" >&2
   exit 1
@@ -26,11 +26,13 @@ for file in "${required[@]}"; do
 done
 
 mkdir -p "$destination"
-cp "$result_dir"/{provenance.json,model_spec.json,training_summary.json,validation_window_metrics.json} "$destination/"
+cp "$result_dir"/{best_model.pth,provenance.json,model_spec.json,training_summary.json,validation_window_metrics.json} "$destination/"
+[[ -f "$result_dir/hyperparameters.json" ]] && cp "$result_dir/hyperparameters.json" "$destination/"
 [[ -f "$result_dir/event_metrics.json" ]] && cp "$result_dir/event_metrics.json" "$destination/"
 [[ -f "$result_dir/int16_validation.json" ]] && cp "$result_dir/int16_validation.json" "$destination/"
 [[ -f "$result_dir/model_mac_activation.json" ]] && cp "$result_dir/model_mac_activation.json" "$destination/"
 
-git -C "$repo_root" add -f -- "AI_train_model/research_v2/artifacts/$run_id"
-git -C "$repo_root" commit -m "results(v2): add $run_id"
+artifact_path="AI_train_model/research_v2/artifacts/$run_id"
+git -C "$repo_root" add -f -- "$artifact_path"
+git -C "$repo_root" commit --only -m "results(v2): add $run_id" -- "$artifact_path"
 git -C "$repo_root" push origin "HEAD:$branch"

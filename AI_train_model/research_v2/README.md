@@ -39,7 +39,14 @@ windows. It expects a frozen prepared fold, a unique run ID, and one of the
 five declared training seeds. Outer evaluation is a separate post-freeze step.
 After training, write `provenance.json` in the run output with the `provenance`
 subcommand, then use `bash research_v2/tools/package_run.sh <run_id> <output>`
-to commit only the reproducibility artifact.
+to commit the small checkpoint and reproducibility artifact.
+
+For the selected M31 configuration, create a new train/validation-only
+directory and run `bash research_v2/tools/run_m31_seed_confirmation.sh
+research_v2/generated/fold_00_trainval_v2`. It enforces the frozen 50/12/12
+epoch contract, runs seeds `7, 42, 123, 314, 2718`, and never opens the outer
+test set. Its final line prints a single `package_runs.sh` command, which adds
+the five small checkpoints and reproducibility files as one result commit.
 
 ## Layout
 
