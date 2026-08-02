@@ -53,6 +53,11 @@ screen for a predeclared hierarchical candidate on seed 7. For example, P2
 uses candidate tag `p2_m47` and kernels `47 7 3`. It also refuses a prepared
 directory containing outer-test tensors.
 
+After a grid selects a configuration by checkpoint validation loss,
+`tools/confirm_hierarchical_seeds.sh` confirms it across the five fixed seeds.
+For P2, use run prefix `v2_f00_p2_m47_lr3e4_wd5e4`, kernels `47 7 3`, learning
+rate `0.0003`, and weight decay `0.0005`.
+
 ## Layout
 
 - `configs/`: immutable protocol and candidate registry.
