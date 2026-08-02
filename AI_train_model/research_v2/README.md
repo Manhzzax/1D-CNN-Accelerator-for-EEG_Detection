@@ -48,6 +48,11 @@ epoch contract, runs seeds `7, 42, 123, 314, 2718`, and never opens the outer
 test set. Its final line prints a single `package_runs.sh` command, which adds
 the five small checkpoints and reproducibility files as one result commit.
 
+`tools/screen_hierarchical_grid.sh` performs the same 4-setting inner-grid
+screen for a predeclared hierarchical candidate on seed 7. For example, P2
+uses candidate tag `p2_m47` and kernels `47 7 3`. It also refuses a prepared
+directory containing outer-test tensors.
+
 ## Layout
 
 - `configs/`: immutable protocol and candidate registry.
