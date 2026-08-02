@@ -29,6 +29,11 @@ The fold audit selects five folds only if every aggregate inner-validation and
 outer-test partition contains seizure events. Otherwise it writes the frozen
 three-fold fallback; it never moves recordings to manufacture coverage.
 
+`prepare-fold` deliberately materializes only train/validation windows by
+default. Use `--include-test` only after the candidate and all inner-fold
+choices are frozen; this prevents outer future recordings from entering a
+development process even as unlabeled tensors.
+
 `tools/train_fold.sh` trains one V2 candidate without evaluating its outer test
 windows. It expects a frozen prepared fold, a unique run ID, and one of the
 five declared training seeds. Outer evaluation is a separate post-freeze step.

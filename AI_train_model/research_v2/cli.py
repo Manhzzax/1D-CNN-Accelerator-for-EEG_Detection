@@ -42,7 +42,7 @@ def _inventory(args: argparse.Namespace) -> None:
 def _prepare_fold(args: argparse.Namespace) -> None:
     config = load_json(args.protocol)
     validate_protocol_config(config)
-    summary = prepare_fold_windows(args.fold_manifest, args.output, config)
+    summary = prepare_fold_windows(args.fold_manifest, args.output, config, include_test=args.include_test)
     print(f"V2 fold preparation complete: {summary['outputs']}")
 
 
@@ -84,6 +84,7 @@ def main() -> None:
     prepare.add_argument("--protocol", required=True)
     prepare.add_argument("--fold-manifest", required=True)
     prepare.add_argument("--output", required=True)
+    prepare.add_argument("--include-test", action="store_true", help="Materialize outer-test windows only after model freeze")
     prepare.set_defaults(handler=_prepare_fold)
 
     provenance = subparsers.add_parser("provenance", help="Write immutable metadata for a completed V2 run")

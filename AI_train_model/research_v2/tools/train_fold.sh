@@ -3,7 +3,7 @@
 set -euo pipefail
 
 if [[ $# -ne 3 ]]; then
-  echo "Usage: $0 <prepared_fold_dir> <run_id> <training_seed>" >&2
+  echo "Usage: $0 <prepared_train_val_dir> <run_id> <training_seed>" >&2
   exit 2
 fi
 

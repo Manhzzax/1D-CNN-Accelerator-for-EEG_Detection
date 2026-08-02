@@ -64,17 +64,17 @@ def _load_rows(path: str | Path) -> list[dict]:
     return rows
 
 
-def _count_targets(rows: list[dict], config: dict) -> dict:
+def _count_targets(rows: list[dict], config: dict, active_splits: tuple[str, ...]) -> dict:
     preprocessing = config["preprocessing"]
     sample_rate = int(config["dataset"]["sample_rate_hz"])
     window_samples = int(float(preprocessing["window_sec"]) * sample_rate)
     stride_samples = int(float(preprocessing["stride_sec"]) * sample_rate)
     guard_samples = int(float(preprocessing["interictal_guard_sec"]) * sample_rate)
     ratios = config["window_sampling"]["normal_to_positive_ratio"]
-    result = {split: {"positive": 0, "normal_candidates": 0} for split in ACTIVE_SPLITS}
+    result = {split: {"positive": 0, "normal_candidates": 0} for split in active_splits}
     for row in rows:
         split = row["split"]
-        if split not in ACTIVE_SPLITS:
+        if split not in active_splits:
             continue
         intervals = json.loads(row["seizure_intervals_json"])
         sample_intervals = [(round(float(start) * sample_rate), round(float(end) * sample_rate)) for start, end in intervals]
@@ -119,8 +119,10 @@ def _save_split(output: Path, split: str, collector: _Collector, rng) -> dict:
     }
 
 
-def prepare_fold_windows(fold_manifest: str | Path, output_dir: str | Path, config: dict) -> dict:
-    """Write clean classifier windows and a full test recording manifest for one fold."""
+def prepare_fold_windows(
+    fold_manifest: str | Path, output_dir: str | Path, config: dict, include_test: bool = False
+) -> dict:
+    """Write fold-local windows without opening outer test data by default."""
     import mne
     import numpy as np
     from src.chbmit_preparation import extract_canonical_bipolar_data, filter_eeg
@@ -132,16 +134,17 @@ def prepare_fold_windows(fold_manifest: str | Path, output_dir: str | Path, conf
     window_samples = int(float(preprocessing["window_sec"]) * sample_rate)
     stride_samples = int(float(preprocessing["stride_sec"]) * sample_rate)
     guard_samples = int(float(preprocessing["interictal_guard_sec"]) * sample_rate)
-    targets = _count_targets(rows, config)
+    active_splits = ("train", "val", "test") if include_test else ("train", "val")
+    targets = _count_targets(rows, config, active_splits)
     sampling_seed = int(config["training"]["dataset_sampling_seed"])
     collectors = {
         split: _Collector(targets[split]["normal_target"], np.random.default_rng(sampling_seed + index))
-        for index, split in enumerate(ACTIVE_SPLITS)
+        for index, split in enumerate(active_splits)
     }
     output = Path(output_dir)
     output.mkdir(parents=True, exist_ok=True)
 
-    active_rows = [row for row in rows if row["split"] in ACTIVE_SPLITS]
+    active_rows = [row for row in rows if row["split"] in active_splits]
     for record_index, row in enumerate(active_rows, start=1):
         raw = mne.io.read_raw_edf(row["edf_path"], preload=True, verbose="ERROR")
         try:
@@ -167,15 +170,18 @@ def prepare_fold_windows(fold_manifest: str | Path, output_dir: str | Path, conf
 
     outputs = {
         split: _save_split(output, split, collectors[split], np.random.default_rng(sampling_seed + 100 + index))
-        for index, split in enumerate(ACTIVE_SPLITS)
+        for index, split in enumerate(active_splits)
     }
     save_feature_spec(output, {"name": "raw", "input_shape": [17, window_samples]})
-    test_rows = [row for row in rows if row["split"] == "test"]
-    with (output / "continuous_test_recordings.csv").open("w", newline="", encoding="utf-8") as target:
-        fields = list(test_rows[0])
-        writer = csv.DictWriter(target, fieldnames=fields)
-        writer.writeheader()
-        writer.writerows(test_rows)
+    test_manifest = None
+    if include_test:
+        test_rows = [row for row in rows if row["split"] == "test"]
+        with (output / "continuous_test_recordings.csv").open("w", newline="", encoding="utf-8") as target:
+            fields = list(test_rows[0])
+            writer = csv.DictWriter(target, fieldnames=fields)
+            writer.writeheader()
+            writer.writerows(test_rows)
+        test_manifest = str(output / "continuous_test_recordings.csv")
     summary = {
         "protocol": "research_v2_causal_endpoint",
         "fold_manifest": str(fold_manifest),
@@ -183,9 +189,10 @@ def prepare_fold_windows(fold_manifest: str | Path, output_dir: str | Path, conf
         "config_hash": canonical_json_hash(config),
         "window_samples": window_samples,
         "sampling_seed": sampling_seed,
+        "included_splits": list(active_splits),
         "targets": targets,
         "outputs": outputs,
-        "continuous_test_manifest": str(output / "continuous_test_recordings.csv"),
+        "continuous_test_manifest": test_manifest,
     }
     save_json(output / "preparation_summary.json", summary)
     return summary
