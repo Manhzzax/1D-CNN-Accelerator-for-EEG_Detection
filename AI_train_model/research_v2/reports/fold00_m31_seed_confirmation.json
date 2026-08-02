@@ -1,0 +1,38 @@
+{
+  "report_id": "fold00_m31_seed_confirmation",
+  "status": "inner_validation_only",
+  "candidate_id": "P1_historical_m31_31_7_3",
+  "run_prefix": "v2_f00_p1_m31_lr1e3_wd5e4_e50",
+  "outer_fold": 0,
+  "protocol_commit": "a75d3e0a6eb3964aaf41b70d89458b1e820c73db",
+  "training": {
+    "learning_rate": 0.001,
+    "weight_decay": 0.0005,
+    "epochs_requested": 50,
+    "min_epochs": 12,
+    "early_stopping_patience": 12,
+    "early_stopping_min_delta": 0.001,
+    "seeds": [7, 42, 123, 314, 2718]
+  },
+  "per_seed": [
+    {"seed": 7, "balanced_accuracy": 0.8961290323, "auroc": 0.9518368366, "average_precision": 0.9519595160, "f1": 0.8952504880, "best_epoch": 18},
+    {"seed": 42, "balanced_accuracy": 0.8916129032, "auroc": 0.9499438085, "average_precision": 0.9523368357, "f1": 0.8873994638, "best_epoch": 22},
+    {"seed": 123, "balanced_accuracy": 0.8587096774, "auroc": 0.9283038502, "average_precision": 0.9326813625, "f1": 0.8513238289, "best_epoch": 16},
+    {"seed": 314, "balanced_accuracy": 0.8987096774, "auroc": 0.9460836629, "average_precision": 0.9468869091, "f1": 0.8971840210, "best_epoch": 13},
+    {"seed": 2718, "balanced_accuracy": 0.8735483871, "auroc": 0.9399300728, "average_precision": 0.9451605663, "f1": 0.8659370725, "best_epoch": 16}
+  ],
+  "aggregate": {
+    "balanced_accuracy_mean": 0.8837419355,
+    "balanced_accuracy_sample_std": 0.017102,
+    "balanced_accuracy_range": [0.8587096774, 0.8987096774],
+    "auroc_mean": 0.9432196462,
+    "auroc_sample_std": 0.0095,
+    "auroc_range": [0.9283038502, 0.9518368366],
+    "average_precision_mean": 0.9458050387,
+    "average_precision_sample_std": 0.007974,
+    "f1_mean": 0.8794185748,
+    "f1_sample_std": 0.020006,
+    "best_epoch_range": [13, 22]
+  },
+  "interpretation": "This is a seed-stability confirmation on one inner temporal validation partition. It neither selects a final architecture nor evaluates the sealed outer test partition."
+}
