@@ -27,8 +27,10 @@ esac
 
 cd "$root"
 manifest="research_v2/manifests/temporal_v21/confirmation_f${fold}_manifest.csv"
+run_ids=()
 for seed in "${seeds[@]}"; do
   run="v21_f${fold}_${tag}_s${seed}"
+  run_ids+=("$run")
   CHBMIT_V2_MODEL_ARCHITECTURE="$architecture" \
   CHBMIT_TRAIN_LEARNING_RATE="$lr" \
   CHBMIT_TRAIN_WEIGHT_DECAY="$wd" \
@@ -37,4 +39,7 @@ for seed in "${seeds[@]}"; do
   python -m research_v2 v21-evaluate-confirmation --protocol research_v2/configs/protocol_v2_1.json --fold-manifest "$manifest" --prepared-dir "$prepared_dir" --run-dir "outputs/$run" --output "outputs/$run/v21_confirmation"
 done
 
-echo "V2.1 candidate completed. Package with: bash research_v2/tools/package_v21_runs.sh ${seeds[@]/#/v21_f${fold}_${tag}_s}"
+printf 'V2.1 candidate completed. Package with:\n'
+printf 'bash research_v2/tools/package_v21_runs.sh'
+printf ' %q' "${run_ids[@]}"
+printf '\n'
