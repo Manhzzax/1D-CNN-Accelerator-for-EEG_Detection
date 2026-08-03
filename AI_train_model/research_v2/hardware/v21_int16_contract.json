@@ -1,0 +1,13 @@
+{
+  "protocol_version": "v2.1.0",
+  "status": "interface_frozen_before_final_holdout; synthesis_not_claimed",
+  "input_layout": "NCT",
+  "input_shape": [1, 17, 1280],
+  "weights": "symmetric_int16",
+  "activations": "symmetric_int16",
+  "bias_and_accumulator": "int32",
+  "activation_scale_calibration": "final_train_only_then_checked_on_block5",
+  "deployment_export_seed": 42,
+  "export_rule": "Export the representative predeclared seed after final candidate and policy freeze; do not choose the best sealed-test seed.",
+  "required_before_hardware_claim": ["bit_accurate_reference_agreement", "parameter_tensor_export", "KV260_DPU_or_HLS_operator_coverage", "on_board_latency_power_measurement"]
+}

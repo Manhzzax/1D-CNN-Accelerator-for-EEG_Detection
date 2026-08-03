@@ -13,6 +13,15 @@ class BootstrapInterval:
     replicates: int
 
 
+@dataclass(frozen=True)
+class RateInterval:
+    estimate: float
+    lower: float
+    upper: float
+    numerator: int
+    denominator: float
+
+
 def paired_bootstrap_interval(reference, candidate, replicates: int = 10_000, seed: int = 20260802) -> BootstrapInterval:
     """Return a percentile CI for paired metric differences.
 
@@ -67,3 +76,40 @@ def promotion_decision(
             else "large_model_gate_failed"
         ),
     }
+
+
+def patient_group_cluster_bootstrap(
+    contributions: dict[str, tuple[int, int]], replicates: int = 10_000, seed: int = 20260802,
+) -> BootstrapInterval:
+    """Bootstrap a rate by patient group, never by sessions or windows."""
+    import numpy as np
+
+    if len(contributions) < 2:
+        raise ValueError("Patient-group bootstrap requires at least two independent groups")
+    if replicates < 100:
+        raise ValueError("At least 100 bootstrap replicates are required")
+    values = np.asarray(list(contributions.values()), dtype=np.float64)
+    if values.ndim != 2 or values.shape[1] != 2 or np.any(values < 0) or np.any(values[:, 1] <= 0):
+        raise ValueError("Contributions must be non-negative (numerator, denominator) pairs")
+    estimate = values[:, 0].sum() / values[:, 1].sum() if values[:, 1].sum() else 0.0
+    rng = np.random.default_rng(seed)
+    indices = rng.integers(0, len(values), size=(replicates, len(values)))
+    sampled = values[indices].sum(axis=1)
+    rates = np.divide(sampled[:, 0], sampled[:, 1], out=np.zeros(replicates), where=sampled[:, 1] > 0)
+    lower, upper = np.quantile(rates, [0.025, 0.975])
+    return BootstrapInterval(float(estimate), float(lower), float(upper), replicates)
+
+
+def poisson_exact_far_interval(false_alarms: int, nonictal_hours: float, confidence: float = 0.95) -> RateInterval:
+    """Garwood exact Poisson interval for FAR/h from all available replay hours."""
+    from scipy.stats import chi2
+
+    if false_alarms < 0 or nonictal_hours <= 0.0 or not 0.0 < confidence < 1.0:
+        raise ValueError("Invalid Poisson FAR interval inputs")
+    alpha = 1.0 - confidence
+    lower_count = 0.0 if false_alarms == 0 else 0.5 * chi2.ppf(alpha / 2.0, 2 * false_alarms)
+    upper_count = 0.5 * chi2.ppf(1.0 - alpha / 2.0, 2 * (false_alarms + 1))
+    return RateInterval(
+        estimate=float(false_alarms / nonictal_hours), lower=float(lower_count / nonictal_hours),
+        upper=float(upper_count / nonictal_hours), numerator=int(false_alarms), denominator=float(nonictal_hours),
+    )

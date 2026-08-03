@@ -196,3 +196,99 @@ def prepare_fold_windows(
     }
     save_json(output / "preparation_summary.json", summary)
     return summary
+
+
+def prepare_v21_confirmation_windows(fold_manifest: str | Path, output_dir: str | Path, config: dict) -> dict:
+    """Materialize train, calibration, and temporal-evaluation windows without a test set."""
+    return _prepare_selected_windows(
+        fold_manifest, output_dir, config, ("train", "val", "temporal_eval"), ("val", "temporal_eval"),
+        "research_v2_1_confirmation",
+    )
+
+
+def prepare_v21_final_windows(fold_manifest: str | Path, output_dir: str | Path, config: dict) -> dict:
+    """Materialize the final holdout only after a separate freeze authorization check."""
+    if Path(output_dir).exists():
+        raise RuntimeError("V2.1 final holdout output must not overwrite an existing directory")
+    return _prepare_selected_windows(
+        fold_manifest, output_dir, config, ("train", "val", "test"), ("val", "test"),
+        "research_v2_1_final_holdout",
+    )
+
+
+def _prepare_selected_windows(
+    fold_manifest: str | Path,
+    output_dir: str | Path,
+    config: dict,
+    active_splits: tuple[str, ...],
+    continuous_manifest_splits: tuple[str, ...],
+    protocol_name: str,
+) -> dict:
+    import mne
+    import numpy as np
+    from src.chbmit_preparation import extract_canonical_bipolar_data, filter_eeg
+    from src.feature_representation import save_feature_spec
+
+    rows = _load_rows(fold_manifest)
+    preprocessing = config["preprocessing"]
+    sample_rate = int(config["dataset"]["sample_rate_hz"])
+    window_samples = int(float(preprocessing["window_sec"]) * sample_rate)
+    stride_samples = int(float(preprocessing["stride_sec"]) * sample_rate)
+    guard_samples = int(float(preprocessing["interictal_guard_sec"]) * sample_rate)
+    targets = _count_targets(rows, config, active_splits)
+    sampling_seed = int(config["training"]["dataset_sampling_seed"])
+    collectors = {
+        split: _Collector(targets[split]["normal_target"], np.random.default_rng(sampling_seed + index))
+        for index, split in enumerate(active_splits)
+    }
+    output = Path(output_dir)
+    if protocol_name == "research_v2_1_confirmation" and (
+        (output / "chbmit_test.npz").exists() or (output / "continuous_test_recordings.csv").exists()
+    ):
+        raise RuntimeError("V2.1 confirmation output must not contain sealed-test artifacts")
+    output.mkdir(parents=True, exist_ok=True)
+    active_rows = [row for row in rows if row["split"] in active_splits]
+    for record_index, row in enumerate(active_rows, start=1):
+        raw = mne.io.read_raw_edf(row["edf_path"], preload=True, verbose="ERROR")
+        try:
+            if int(round(raw.info["sfreq"])) != sample_rate:
+                raise ValueError(f"Unexpected sample rate in {row['recording_id']}")
+            data = extract_canonical_bipolar_data(raw)
+        finally:
+            raw.close()
+        data = filter_eeg(
+            data, sample_rate, preprocessing["bandpass_hz"][0], preprocessing["bandpass_hz"][1],
+            preprocessing["notch_hz"], preprocessing["filter_mode"],
+        )
+        intervals_seconds = json.loads(row["seizure_intervals_json"])
+        intervals = [(round(float(start) * sample_rate), round(float(end) * sample_rate)) for start, end in intervals_seconds]
+        positives, normals, _ = causal_window_index(data.shape[1], intervals, window_samples, stride_samples, guard_samples)
+        collector = collectors[row["split"]]
+        for start in positives:
+            collector.add_positive(data[:, start:start + window_samples], {"recording_id": row["recording_id"], "start_sample": int(start)})
+        for start in normals:
+            collector.normals.add(data[:, start:start + window_samples], {"recording_id": row["recording_id"], "start_sample": int(start)})
+        if record_index % 10 == 0 or record_index == len(active_rows):
+            print(f"  V2.1 prepared recordings: {record_index}/{len(active_rows)}")
+    outputs = {
+        split: _save_split(output, split, collectors[split], np.random.default_rng(sampling_seed + 100 + index))
+        for index, split in enumerate(active_splits)
+    }
+    save_feature_spec(output, {"name": "raw", "input_shape": [17, window_samples]})
+    continuous_manifests = {}
+    for split in continuous_manifest_splits:
+        split_rows = [row for row in rows if row["split"] == split]
+        path = output / f"continuous_{split}_recordings.csv"
+        with path.open("w", newline="", encoding="utf-8") as target:
+            writer = csv.DictWriter(target, fieldnames=list(split_rows[0]))
+            writer.writeheader()
+            writer.writerows(split_rows)
+        continuous_manifests[split] = str(path)
+    summary = {
+        "protocol": protocol_name, "fold_manifest": str(fold_manifest),
+        "fold_manifest_sha256": file_sha256(fold_manifest), "config_hash": canonical_json_hash(config),
+        "window_samples": window_samples, "sampling_seed": sampling_seed, "included_splits": list(active_splits),
+        "targets": targets, "outputs": outputs, "continuous_manifests": continuous_manifests,
+    }
+    save_json(output / "preparation_summary.json", summary)
+    return summary

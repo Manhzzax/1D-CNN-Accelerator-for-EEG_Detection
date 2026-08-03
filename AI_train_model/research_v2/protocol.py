@@ -103,7 +103,10 @@ def validate_protocol_config(config: dict) -> None:
         raise ValueError("V2 requires causal_window_endpoint labels")
     if float(preprocessing["window_sec"]) != 5.0 or float(preprocessing["stride_sec"]) != 1.0:
         raise ValueError("The V2 primary protocol is fixed at 5-second windows and 1-second stride")
-    if int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
+    if config.get("version") == "v2.1.0":
+        _validate_v21_split(split, config["dataset"])
+        _validate_v21_hardware(config["hardware"])
+    elif int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
         raise ValueError("V2 requires a five-fold feasibility audit with three-fold fallback")
     if float(evaluation["primary_far_per_hour"]) != 0.5:
         raise ValueError("V2 primary event endpoint is sensitivity at FAR <= 0.5/h")
@@ -112,3 +115,32 @@ def validate_protocol_config(config: dict) -> None:
         raise ValueError(f"V2 training seeds are fixed: {expected_seeds}")
     if training["max_epochs"] != 50 or training["min_epochs"] != 12 or training["early_stopping_patience"] != 12:
         raise ValueError("V2 training budget is fixed at 50/12/12 epochs")
+
+
+def _validate_v21_split(split: dict, dataset: dict) -> None:
+    if split.get("strategy") != "patient_group_cumulative_duration_forward_chaining":
+        raise ValueError("V2.1 requires patient-group cumulative-duration forward chaining")
+    if int(split.get("base_block_count", 0)) != 7 or int(split.get("confirmation_folds", 0)) != 3:
+        raise ValueError("V2.1 requires seven base blocks and three confirmation folds")
+    if split.get("final_test_status") != "sealed_until_final_freeze":
+        raise ValueError("V2.1 final test must remain sealed until final freeze")
+    grouping = split.get("patient_grouping", {})
+    mapping = grouping.get("case_to_patient_group", {})
+    if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
+        raise ValueError("V2.1 must merge chb01 and chb21 into subject_01_21")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb01", "chb21"]:
+        raise ValueError("V2.1 requires explicit chb01 then chb21 session order")
+    gate = split.get("feasibility_gate", {})
+    if int(gate.get("minimum_union_seizures", 0)) != 20 or int(gate.get("minimum_seizure_contributing_patient_groups", 0)) != 5:
+        raise ValueError("V2.1 feasibility gate requires 20 seizures from five patient groups")
+    if float(gate.get("minimum_nonictal_replay_hours", 0.0)) != 24.0:
+        raise ValueError("V2.1 feasibility gate requires 24 non-ictal replay hours")
+    if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
+        raise ValueError("V2.1 must report 24 case IDs and 23 patient groups")
+
+
+def _validate_v21_hardware(hardware: dict) -> None:
+    if hardware.get("input_layout") != "NCT" or list(hardware.get("input_shape", [])) != [1, 17, 1280]:
+        raise ValueError("V2.1 hardware contract requires NCT input [1, 17, 1280]")
+    if hardware.get("quantization_primary") != "symmetric_int16_weights_activations_int32_bias_accumulator":
+        raise ValueError("V2.1 primary quantization contract is symmetric INT16 with INT32 accumulators")

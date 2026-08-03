@@ -1,5 +1,34 @@
 # Research V2
 
+## V2.1 Patient-Group Protocol
+
+V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It
+preserves the V2 causal 5 s / 1 s shared-model setting but corrects the
+evaluation design: `chb01` and `chb21` form one patient group, recording blocks
+are formed by cumulative EEG duration, and block 6 cannot be materialized
+until a hashed final decision is frozen. V2.0 folders and results are pilot
+archive evidence only.
+
+Confirmation has three forward folds: `F00: train 0, calibrate 1, evaluate 2`,
+`F01: train 0-1, calibrate 2, evaluate 3`, and `F02: train 0-2, calibrate 3,
+evaluate 4`. Blocks 5 and 6 are excluded from confirmation. Calibration alone
+chooses the predeclared threshold/policy grid; temporal evaluation is reported
+once with that policy. Results use patient-group cluster bootstrap CIs and a
+Poisson FAR interval, so repeated seeds and the two sessions of subject 01/21
+are never treated as independent patients.
+
+On the server, first run:
+
+```bash
+bash research_v2/tools/prepare_v21_confirmation_caches.sh
+bash research_v2/tools/train_v21_candidate.sh research_v2/generated_v21/f00_confirmation 00 B2_deep_matched_1dcnn
+```
+
+The first command caches each fold once and validates hashes on every later
+call. The second command is restricted to B0, B1, B2, and B4 and never creates
+or reads a block-6 tensor. Package a completed candidate using the exact
+command printed by the script.
+
 This workspace replaces neither `src/` nor legacy runs. It is the immutable
 scientific contract for the new CHB-MIT study: shared-model, within-case,
 blocked forward temporal evaluation with causal preprocessing and labels.

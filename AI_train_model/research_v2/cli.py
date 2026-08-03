@@ -7,9 +7,10 @@ from pathlib import Path
 
 from .folds import load_recording_manifest, select_feasible_protocol, write_protocol_artifacts
 from .inventory import write_inventory
-from .preparation import prepare_fold_windows
-from .protocol import load_json, validate_protocol_config
+from .preparation import prepare_fold_windows, prepare_v21_confirmation_windows, prepare_v21_final_windows
+from .protocol import load_json, save_json, validate_protocol_config
 from .registry import load_candidate_registry, write_run_provenance
+from .v21 import audit_session_timestamps, audit_v21, create_final_freeze, verify_final_freeze, write_v21_artifacts
 
 
 def _validate(args: argparse.Namespace) -> None:
@@ -31,6 +32,68 @@ def _fold_audit(args: argparse.Namespace) -> None:
     print(
         f"Temporal fold audit: selected {artifact['selected_outer_folds']} folds "
         f"(fallback_used={artifact['fallback_used']}). Output: {Path(args.output)}"
+    )
+
+
+def _v21_audit(args: argparse.Namespace) -> None:
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    rows = load_recording_manifest(args.manifest)
+    required = {"edf_path", "sample_count", "sampling_rate_hz", "seizure_intervals_json"}
+    missing = required.difference(rows[0])
+    if missing:
+        raise ValueError(f"V2.1 manifest requires fields missing from audit: {sorted(missing)}")
+    audit = audit_v21(rows, config)
+    audit["session_audit"] = audit_session_timestamps(rows, config)
+    report = write_v21_artifacts(args.output, audit, config)
+    if not audit["valid"]:
+        raise RuntimeError("V2.1 duration-based confirmation partitions failed the predeclared feasibility gate")
+    print(
+        f"V2.1 audit passed: {len(audit['confirmation_folds'])} confirmation folds | "
+        f"audit hash: {report['audit_hash']}"
+    )
+
+
+def _v21_prepare_confirmation(args: argparse.Namespace) -> None:
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    summary = prepare_v21_confirmation_windows(args.fold_manifest, args.output, config)
+    print(f"V2.1 confirmation preparation complete: {summary['outputs']}")
+
+
+def _v21_freeze_final(args: argparse.Namespace) -> None:
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    freeze = create_final_freeze(args.protocol, args.final_manifest, args.decision, args.output)
+    print(f"V2.1 final freeze written: {args.output} ({freeze['freeze_hash']})")
+
+
+def _v21_prepare_final(args: argparse.Namespace) -> None:
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    freeze = verify_final_freeze(args.freeze, args.protocol, args.final_manifest)
+    marker = Path(args.freeze).with_suffix(".opened.json")
+    if marker.exists():
+        raise RuntimeError(f"V2.1 final holdout has already been materialized: {marker}")
+    if Path(args.output).exists():
+        raise RuntimeError(f"V2.1 final output path must be new and empty: {args.output}")
+    summary = prepare_v21_final_windows(args.final_manifest, args.output, config)
+    save_json(marker, {
+        "freeze_hash": freeze["freeze_hash"], "final_manifest": str(args.final_manifest),
+        "prepared_output": str(args.output), "status": "final_holdout_materialized_no_science_changes_allowed",
+    })
+    print(f"V2.1 final preparation authorized by {freeze['freeze_hash']}: {summary['outputs']}")
+
+
+def _v21_evaluate_confirmation(args: argparse.Namespace) -> None:
+    from .v21_evaluation import score_and_evaluate_run
+
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    result = score_and_evaluate_run(args.run_dir, args.prepared_dir, args.fold_manifest, config, args.output)
+    print(
+        f"V2.1 temporal confirmation: calibration policy {result['selected_calibration_policy']['policy_name']} | "
+        f"temporal sensitivity {result['temporal_evaluation']['event_sensitivity']:.4f}"
     )
 
 
@@ -76,6 +139,40 @@ def main() -> None:
     folds.add_argument("--manifest", required=True)
     folds.add_argument("--output", required=True)
     folds.set_defaults(handler=_fold_audit)
+
+    v21_folds = subparsers.add_parser("v21-audit", help="Create sealed V2.1 patient-group duration manifests")
+    v21_folds.add_argument("--protocol", required=True)
+    v21_folds.add_argument("--manifest", required=True)
+    v21_folds.add_argument("--output", required=True)
+    v21_folds.set_defaults(handler=_v21_audit)
+
+    v21_prepare = subparsers.add_parser("v21-prepare-confirmation", help="Prepare a V2.1 train/calibration/temporal-evaluation cache")
+    v21_prepare.add_argument("--protocol", required=True)
+    v21_prepare.add_argument("--fold-manifest", required=True)
+    v21_prepare.add_argument("--output", required=True)
+    v21_prepare.set_defaults(handler=_v21_prepare_confirmation)
+
+    v21_freeze = subparsers.add_parser("v21-freeze-final", help="Freeze the final decision before opening block 6")
+    v21_freeze.add_argument("--protocol", required=True)
+    v21_freeze.add_argument("--final-manifest", required=True)
+    v21_freeze.add_argument("--decision", required=True)
+    v21_freeze.add_argument("--output", required=True)
+    v21_freeze.set_defaults(handler=_v21_freeze_final)
+
+    v21_final = subparsers.add_parser("v21-prepare-final", help="Prepare block 6 only with a matching final freeze")
+    v21_final.add_argument("--protocol", required=True)
+    v21_final.add_argument("--final-manifest", required=True)
+    v21_final.add_argument("--freeze", required=True)
+    v21_final.add_argument("--output", required=True)
+    v21_final.set_defaults(handler=_v21_prepare_final)
+
+    v21_eval = subparsers.add_parser("v21-evaluate-confirmation", help="Calibrate on val and evaluate once on temporal_eval")
+    v21_eval.add_argument("--protocol", required=True)
+    v21_eval.add_argument("--fold-manifest", required=True)
+    v21_eval.add_argument("--prepared-dir", required=True)
+    v21_eval.add_argument("--run-dir", required=True)
+    v21_eval.add_argument("--output", required=True)
+    v21_eval.set_defaults(handler=_v21_evaluate_confirmation)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")
     inventory.add_argument("--roots", required=True, nargs="+")
