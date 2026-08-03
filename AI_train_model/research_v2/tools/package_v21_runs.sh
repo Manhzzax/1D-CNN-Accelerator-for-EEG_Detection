@@ -7,6 +7,9 @@ repo_root="$(git rev-parse --show-toplevel)"
 root="$repo_root/AI_train_model"
 branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD)" || exit 1
 [[ "$branch" == "research/v2.1-patient-forward" ]] || { echo "Refusing to package V2.1 outside its branch" >&2; exit 1; }
+git_clean() {
+  env -u LD_LIBRARY_PATH -u LD_PRELOAD git -C "$repo_root" "$@"
+}
 
 for run in "$@"; do
   source="$root/outputs/$run"
@@ -23,6 +26,6 @@ done
 
 git -C "$repo_root" diff --cached --quiet && { echo "No new V2.1 artifacts; nothing to commit."; exit 0; }
 git -C "$repo_root" commit -m "results(v2.1): add confirmation artifacts"
-git -C "$repo_root" fetch origin
-git -C "$repo_root" rebase "origin/$branch"
-git -C "$repo_root" push origin "HEAD:$branch"
+git_clean fetch origin
+git_clean rebase "origin/$branch"
+git_clean push origin "HEAD:$branch"
