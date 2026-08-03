@@ -1,0 +1,46 @@
+{
+  "batch_size": 128,
+  "class_balanced_batches": true,
+  "epochs": 50,
+  "group_dro": {
+    "enabled": false,
+    "eta": null,
+    "train_patient_groups": null,
+    "training_only_objective": false
+  },
+  "learning_rate": 0.001,
+  "lr_scheduler": {
+    "factor": 0.5,
+    "name": "ReduceLROnPlateau",
+    "patience": 3
+  },
+  "mild_eeg_augmentation": {
+    "enabled": false,
+    "inference_parameter_delta": 0,
+    "shared_gain_delta": null,
+    "training_only_transform": false,
+    "zscore_noise_std": null
+  },
+  "optimizer": "adam",
+  "patient_group_balanced_batches": false,
+  "patient_group_sampling": {
+    "strata": null,
+    "strategy": null
+  },
+  "subject_adversarial": {
+    "enabled": false,
+    "gradient_reversal_coefficient": null,
+    "hidden_features": null,
+    "train_patient_groups": null,
+    "training_only_head": false
+  },
+  "supervised_contrastive": {
+    "coefficient": null,
+    "enabled": false,
+    "inference_parameter_delta": 0,
+    "temperature": null,
+    "training_only_objective": false
+  },
+  "training_seed": 42,
+  "weight_decay": 0.0005
+}
