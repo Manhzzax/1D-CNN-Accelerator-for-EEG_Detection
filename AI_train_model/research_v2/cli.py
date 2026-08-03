@@ -90,7 +90,10 @@ def _v21_evaluate_confirmation(args: argparse.Namespace) -> None:
 
     config = load_json(args.protocol)
     validate_protocol_config(config)
-    result = score_and_evaluate_run(args.run_dir, args.prepared_dir, args.fold_manifest, config, args.output)
+    result = score_and_evaluate_run(
+        args.run_dir, args.prepared_dir, args.fold_manifest, config, args.output,
+        reuse_existing_scores=args.reuse_existing_scores,
+    )
     print(
         f"V2.1 temporal confirmation: calibration policy {result['selected_calibration_policy']['policy_name']} | "
         f"temporal sensitivity {result['temporal_evaluation']['event_sensitivity']:.4f}"
@@ -172,6 +175,7 @@ def main() -> None:
     v21_eval.add_argument("--prepared-dir", required=True)
     v21_eval.add_argument("--run-dir", required=True)
     v21_eval.add_argument("--output", required=True)
+    v21_eval.add_argument("--reuse-existing-scores", action="store_true", help="Recover an interrupted evaluation only after recording IDs are verified")
     v21_eval.set_defaults(handler=_v21_evaluate_confirmation)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")

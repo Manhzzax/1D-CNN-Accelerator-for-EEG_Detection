@@ -8,8 +8,9 @@ from pathlib import Path
 
 import numpy as np
 
-from src.event_evaluation import event_metrics, save_scores, score_continuous_recordings
+from src.event_evaluation import event_metrics, load_scores, save_scores, score_continuous_recordings
 from src.model import build_model_from_run
+from .protocol import canonical_json_hash, file_sha256
 from .statistics import patient_group_cluster_bootstrap, poisson_exact_far_interval
 
 
@@ -97,9 +98,10 @@ def patient_group_uncertainty(scores: dict, rows: list[dict], policy: dict, conf
         far_values[0] += int(metric["false_alarms"])
         far_values[1] += float(metric["interictal_hours"])
 
-    sensitivity_ci = patient_group_cluster_bootstrap(
-        {group: (values[0], values[1]) for group, values in sensitivity.items()}
-    )
+    seizure_group_sensitivity = {
+        group: (values[0], values[1]) for group, values in sensitivity.items() if values[1] > 0
+    }
+    sensitivity_ci = _cluster_interval_or_unavailable(seizure_group_sensitivity)
     far_ci = patient_group_cluster_bootstrap(
         {group: (int(values[0]), values[1]) for group, values in far.items()}
     )
@@ -108,7 +110,8 @@ def patient_group_uncertainty(scores: dict, rows: list[dict], policy: dict, conf
     poisson_ci = poisson_exact_far_interval(total_false_alarms, total_hours)
     return {
         "independent_patient_groups": len(sensitivity),
-        "event_sensitivity_cluster_bootstrap_95ci": sensitivity_ci.__dict__,
+        "seizure_contributing_patient_groups": len(seizure_group_sensitivity),
+        "event_sensitivity_cluster_bootstrap_95ci": sensitivity_ci,
         "far_per_hour_cluster_bootstrap_95ci": far_ci.__dict__,
         "far_per_hour_poisson_exact_95ci": poisson_ci.__dict__,
         "per_patient_group": {
@@ -121,6 +124,26 @@ def patient_group_uncertainty(scores: dict, rows: list[dict], policy: dict, conf
     }
 
 
+def _cluster_interval_or_unavailable(contributions: dict[str, tuple[int, int]]) -> dict:
+    """Event sensitivity is undefined for a patient group with zero events."""
+    if len(contributions) < 2:
+        return {
+            "estimable": False,
+            "reason": "fewer_than_two_seizure_contributing_patient_groups_in_partition",
+            "contributing_patient_groups": len(contributions),
+        }
+    return {"estimable": True, **patient_group_cluster_bootstrap(contributions).__dict__}
+
+
+def _load_recovery_scores(path: Path, rows: list[dict]) -> dict:
+    scores = load_scores(path)
+    expected = [row["recording_id"] for row in rows]
+    observed = [record["recording_id"] for record in scores["records"]]
+    if observed != expected:
+        raise ValueError(f"Recovery scores do not match the V2.1 manifest: {path}")
+    return scores
+
+
 def score_and_evaluate_run(
     run_dir: str | Path,
     prepared_dir: str | Path,
@@ -129,6 +152,7 @@ def score_and_evaluate_run(
     output_dir: str | Path,
     use_amp: bool = False,
     batch_size: int = 128,
+    reuse_existing_scores: bool = False,
 ) -> dict:
     """Select policy on calibration recordings and apply it once to temporal_eval recordings."""
     import torch
@@ -143,17 +167,24 @@ def score_and_evaluate_run(
     preprocessing = v21_preprocessing(config)
     calibration_rows = load_manifest_rows(manifest_path, "val")
     temporal_rows = load_manifest_rows(manifest_path, "temporal_eval")
-    calibration_scores = score_continuous_recordings(
-        model, device, calibration_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
-        normalization_mode="train_channel_zscore",
-    )
-    save_scores(output_dir / "continuous_calibration_scores.npz", calibration_scores)
+    calibration_path = output_dir / "continuous_calibration_scores.npz"
+    temporal_path = output_dir / "continuous_temporal_eval_scores.npz"
+    if reuse_existing_scores:
+        calibration_scores = _load_recovery_scores(calibration_path, calibration_rows)
+        temporal_scores = _load_recovery_scores(temporal_path, temporal_rows)
+    else:
+        calibration_scores = score_continuous_recordings(
+            model, device, calibration_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
+            normalization_mode="train_channel_zscore",
+        )
+        save_scores(calibration_path, calibration_scores)
     selected, sweep = select_calibration_policy(calibration_scores, config)
-    temporal_scores = score_continuous_recordings(
-        model, device, temporal_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
-        normalization_mode="train_channel_zscore",
-    )
-    save_scores(output_dir / "continuous_temporal_eval_scores.npz", temporal_scores)
+    if not reuse_existing_scores:
+        temporal_scores = score_continuous_recordings(
+            model, device, temporal_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
+            normalization_mode="train_channel_zscore",
+        )
+        save_scores(temporal_path, temporal_scores)
     temporal_metrics = event_metrics(
         temporal_scores, selected["threshold"], preprocessing["sample_rate_hz"], preprocessing["window_sec"],
         config["evaluation"]["refractory_sec"], selected["positive_windows"], selected["decision_window_windows"], selected["policy_name"],
@@ -164,6 +195,13 @@ def score_and_evaluate_run(
         "selection_rule": config["evaluation"]["calibration_rule"], "selected_calibration_policy": selected,
         "temporal_evaluation": temporal_metrics, "calibration_recordings": len(calibration_rows),
         "temporal_evaluation_recordings": len(temporal_rows), "temporal_uncertainty": temporal_uncertainty,
+        "reused_existing_scores": bool(reuse_existing_scores),
+        "evaluation_inputs": {
+            "protocol_hash": canonical_json_hash(config), "manifest_sha256": file_sha256(manifest_path),
+            "checkpoint_sha256": file_sha256(run_dir / "best_model.pth"),
+            "scaler_mean_sha256": file_sha256(run_dir / "scaler_mean.npy"),
+            "scaler_scale_sha256": file_sha256(run_dir / "scaler_scale.npy"),
+        },
     }
     with (output_dir / "temporal_confirmation.json").open("w", encoding="utf-8") as target:
         json.dump(payload, target, indent=2, sort_keys=True)

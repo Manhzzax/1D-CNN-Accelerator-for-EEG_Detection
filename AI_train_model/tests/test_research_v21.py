@@ -112,6 +112,13 @@ class V21ProtocolTests(unittest.TestCase):
         self.assertEqual(interval.replicates, 100)
         self.assertAlmostEqual(interval.mean_difference, 0.5)
 
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
+    def test_event_bootstrap_excludes_groups_without_events(self):
+        from research_v2.v21_evaluation import _cluster_interval_or_unavailable
+
+        interval = _cluster_interval_or_unavailable({"subject_02": (1, 2)})
+        self.assertFalse(interval["estimable"])
+
     def test_v21_config_contract(self):
         validate_protocol_config(_config())
         self.assertEqual(canonical_json_hash(_config()), canonical_json_hash(_config()))
