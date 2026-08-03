@@ -34,6 +34,12 @@ default. Use `--include-test` only after the candidate and all inner-fold
 choices are frozen; this prevents outer future recordings from entering a
 development process even as unlabeled tensors.
 
+For the full study, use `bash research_v2/tools/prepare_all_trainval_folds.sh`
+once after the fold audit. It builds the reusable train/validation-only NPZ
+cache for every selected outer fold, validates its manifest and protocol hashes
+on later invocations, and refuses both partial caches and any outer-test tensor.
+Every architecture, optimizer setting, and seed must reuse that fold cache.
+
 `tools/train_fold.sh` trains one V2 candidate without evaluating its outer test
 windows. It expects a frozen prepared fold, a unique run ID, and one of the
 five declared training seeds. Outer evaluation is a separate post-freeze step.
