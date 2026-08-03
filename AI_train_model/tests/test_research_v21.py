@@ -22,7 +22,7 @@ def _config():
             "confirmation_folds": 3, "final_test_status": "sealed_until_final_freeze",
             "patient_grouping": {
                 "case_to_patient_group": {"chb01": "subject_01_21", "chb21": "subject_01_21"},
-                "session_order": {"subject_01_21": ["chb01", "chb21"]},
+                "session_order": {"subject_01_21": ["chb21", "chb01"]},
                 "session_order_evidence": "test",
             },
             "feasibility_gate": {
@@ -66,10 +66,13 @@ def _rows():
 class V21ProtocolTests(unittest.TestCase):
     def test_patient_group_merge_and_duration_blocks(self):
         assigned = assign_patient_group_blocks(_rows(), _config()["split"])
-        subject_rows = [row for row in assigned if row["patient_group"] == "subject_01_21"]
+        subject_rows = sorted(
+            (row for row in assigned if row["patient_group"] == "subject_01_21"),
+            key=lambda row: row["patient_recording_order"],
+        )
         self.assertEqual(len(subject_rows), 7)
-        self.assertEqual([row["case_id"] for row in subject_rows[:4]], ["chb01"] * 4)
-        self.assertEqual([row["case_id"] for row in subject_rows[4:]], ["chb21"] * 3)
+        self.assertEqual([row["case_id"] for row in subject_rows[:3]], ["chb21"] * 3)
+        self.assertEqual([row["case_id"] for row in subject_rows[3:]], ["chb01"] * 4)
         self.assertEqual(sorted({row["temporal_block"] for row in subject_rows}), list(range(7)))
 
     def test_confirmation_gate_and_sealed_final_block(self):

@@ -14,8 +14,9 @@ not patient-independent validation and it is not an external clinical trial.
 
 CHB-MIT contains 24 case IDs but V2.1 reports 23 patient groups. `chb01` and
 `chb21` are the two ordered sessions of `subject_01_21`; they are not two
-independent observations. EDF header timestamps audit session order, followed
-by the recording order inside each session.
+independent observations. EDF headers verify `chb21` (2055-08-10 to
+2055-08-13) before `chb01` (2076-11-06 to 2076-11-08), followed by recording
+order inside each session.
 
 Each patient group is partitioned into seven contiguous, duration-balanced
 recording blocks. EDF recordings are never fragmented. The audit exports, for

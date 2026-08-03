@@ -35,8 +35,8 @@
     "final_test_status": "sealed_until_final_freeze",
     "patient_grouping": {
       "case_to_patient_group": {"chb01": "subject_01_21", "chb21": "subject_01_21"},
-      "session_order": {"subject_01_21": ["chb01", "chb21"]},
-      "session_order_evidence": "EDF acquisition timestamps, then recording_order_in_case"
+      "session_order": {"subject_01_21": ["chb21", "chb01"]},
+      "session_order_evidence": "Verified EDF acquisition timestamps: chb21 2055-08-10 to 2055-08-13, then chb01 2076-11-06 to 2076-11-08; recording_order_in_case within each session"
     },
     "feasibility_gate": {
       "minimum_union_seizures": 20,

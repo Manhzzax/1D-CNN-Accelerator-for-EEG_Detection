@@ -128,8 +128,8 @@ def _validate_v21_split(split: dict, dataset: dict) -> None:
     mapping = grouping.get("case_to_patient_group", {})
     if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
         raise ValueError("V2.1 must merge chb01 and chb21 into subject_01_21")
-    if grouping.get("session_order", {}).get("subject_01_21") != ["chb01", "chb21"]:
-        raise ValueError("V2.1 requires explicit chb01 then chb21 session order")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb21", "chb01"]:
+        raise ValueError("V2.1 requires EDF-verified chb21 then chb01 session order")
     gate = split.get("feasibility_gate", {})
     if int(gate.get("minimum_union_seizures", 0)) != 20 or int(gate.get("minimum_seizure_contributing_patient_groups", 0)) != 5:
         raise ValueError("V2.1 feasibility gate requires 20 seizures from five patient groups")
