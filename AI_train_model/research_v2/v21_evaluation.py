@@ -43,7 +43,7 @@ def policy_grid(config: dict) -> list[dict]:
     return [{**policy, "threshold": float(value)} for policy in policies for value in thresholds]
 
 
-def select_calibration_policy(scores: dict, config: dict) -> tuple[dict, list[dict]]:
+def select_calibration_policy(scores: dict, config: dict) -> tuple[dict | None, list[dict]]:
     preprocessing = v21_preprocessing(config)
     evaluation = config["evaluation"]
     metrics = []
@@ -56,7 +56,7 @@ def select_calibration_policy(scores: dict, config: dict) -> tuple[dict, list[di
         metrics.append(result)
     eligible = [result for result in metrics if result["calibration_far_target_met"]]
     if not eligible:
-        raise RuntimeError("No predeclared V2.1 threshold/policy satisfies calibration FAR <= 0.5/h")
+        return None, metrics
     selected = max(eligible, key=lambda value: (
         value["event_sensitivity"], -(value["median_detection_delay_sec"] if value["median_detection_delay_sec"] is not None else float("inf")), -value["false_alarms_per_hour"],
     ))
@@ -171,7 +171,7 @@ def score_and_evaluate_run(
     temporal_path = output_dir / "continuous_temporal_eval_scores.npz"
     if reuse_existing_scores:
         calibration_scores = _load_recovery_scores(calibration_path, calibration_rows)
-        temporal_scores = _load_recovery_scores(temporal_path, temporal_rows)
+        temporal_scores = _load_recovery_scores(temporal_path, temporal_rows) if temporal_path.exists() else None
     else:
         calibration_scores = score_continuous_recordings(
             model, device, calibration_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
@@ -179,6 +179,25 @@ def score_and_evaluate_run(
         )
         save_scores(calibration_path, calibration_scores)
     selected, sweep = select_calibration_policy(calibration_scores, config)
+    if selected is None:
+        minimum_far = min(sweep, key=lambda metric: metric["false_alarms_per_hour"])
+        best_unconstrained = max(sweep, key=lambda metric: metric["event_sensitivity"])
+        payload = {
+            "selection_split": "calibration", "evaluation_split": "temporal_eval",
+            "selection_rule": config["evaluation"]["calibration_rule"],
+            "policy_selection_status": "no_feasible_calibration_policy",
+            "selected_calibration_policy": None,
+            "calibration_minimum_far_policy": minimum_far,
+            "calibration_best_unconstrained_policy": best_unconstrained,
+            "temporal_evaluation": None,
+            "temporal_evaluation_status": "not_opened_no_calibration_policy_met_far_target",
+            "calibration_recordings": len(calibration_rows),
+            "temporal_evaluation_recordings": 0,
+            "reused_existing_scores": bool(reuse_existing_scores),
+            "evaluation_inputs": _evaluation_inputs(run_dir, manifest_path, config),
+        }
+        _write_evaluation_artifacts(output_dir, payload, sweep)
+        return payload
     if not reuse_existing_scores:
         temporal_scores = score_continuous_recordings(
             model, device, temporal_rows, preprocessing, batch_size, use_amp, scaler_mean, scaler_scale,
@@ -192,21 +211,30 @@ def score_and_evaluate_run(
     temporal_uncertainty = patient_group_uncertainty(temporal_scores, temporal_rows, selected, config)
     payload = {
         "selection_split": "calibration", "evaluation_split": "temporal_eval",
-        "selection_rule": config["evaluation"]["calibration_rule"], "selected_calibration_policy": selected,
+        "selection_rule": config["evaluation"]["calibration_rule"], "policy_selection_status": "feasible_calibration_policy_selected",
+        "selected_calibration_policy": selected,
         "temporal_evaluation": temporal_metrics, "calibration_recordings": len(calibration_rows),
         "temporal_evaluation_recordings": len(temporal_rows), "temporal_uncertainty": temporal_uncertainty,
         "reused_existing_scores": bool(reuse_existing_scores),
-        "evaluation_inputs": {
-            "protocol_hash": canonical_json_hash(config), "manifest_sha256": file_sha256(manifest_path),
-            "checkpoint_sha256": file_sha256(run_dir / "best_model.pth"),
-            "scaler_mean_sha256": file_sha256(run_dir / "scaler_mean.npy"),
-            "scaler_scale_sha256": file_sha256(run_dir / "scaler_scale.npy"),
-        },
+        "evaluation_inputs": _evaluation_inputs(run_dir, manifest_path, config),
     }
+    _write_evaluation_artifacts(output_dir, payload, sweep)
+    return payload
+
+
+def _evaluation_inputs(run_dir: Path, manifest_path: str | Path, config: dict) -> dict:
+    return {
+        "protocol_hash": canonical_json_hash(config), "manifest_sha256": file_sha256(manifest_path),
+        "checkpoint_sha256": file_sha256(run_dir / "best_model.pth"),
+        "scaler_mean_sha256": file_sha256(run_dir / "scaler_mean.npy"),
+        "scaler_scale_sha256": file_sha256(run_dir / "scaler_scale.npy"),
+    }
+
+
+def _write_evaluation_artifacts(output_dir: Path, payload: dict, sweep: list[dict]) -> None:
     with (output_dir / "temporal_confirmation.json").open("w", encoding="utf-8") as target:
         json.dump(payload, target, indent=2, sort_keys=True)
         target.write("\n")
     with (output_dir / "calibration_policy_sweep.json").open("w", encoding="utf-8") as target:
         json.dump(sweep, target, indent=2, sort_keys=True)
         target.write("\n")
-    return payload

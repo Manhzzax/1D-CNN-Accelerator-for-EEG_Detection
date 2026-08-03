@@ -119,6 +119,23 @@ class V21ProtocolTests(unittest.TestCase):
         interval = _cluster_interval_or_unavailable({"subject_02": (1, 2)})
         self.assertFalse(interval["estimable"])
 
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
+    def test_no_far_eligible_policy_is_a_rejection_not_an_exception(self):
+        from research_v2.v21_evaluation import select_calibration_policy
+
+        scores = {
+            "probabilities": __import__("numpy").ones(6), "start_samples": __import__("numpy").arange(6),
+            "record_offsets": __import__("numpy").asarray([0, 6]),
+            "records": [{"sample_count": 100, "seizure_intervals": [[1, 5]]}],
+        }
+        config = {
+            "dataset": {"sample_rate_hz": 1}, "preprocessing": {"window_sec": 1, "stride_sec": 1, "bandpass_hz": [0.5, 1.0], "notch_hz": 1, "filter_mode": "causal_iir"},
+            "evaluation": {"refractory_sec": 0, "primary_far_per_hour": 0.0, "temporal_policies": [[1, 1]], "threshold_grid": {"minimum": 0.9, "maximum": 0.9, "step": 0.1}},
+        }
+        selected, sweep = select_calibration_policy(scores, config)
+        self.assertIsNone(selected)
+        self.assertEqual(len(sweep), 1)
+
     def test_v21_config_contract(self):
         validate_protocol_config(_config())
         self.assertEqual(canonical_json_hash(_config()), canonical_json_hash(_config()))

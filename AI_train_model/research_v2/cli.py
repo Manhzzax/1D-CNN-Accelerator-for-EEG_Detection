@@ -94,10 +94,13 @@ def _v21_evaluate_confirmation(args: argparse.Namespace) -> None:
         args.run_dir, args.prepared_dir, args.fold_manifest, config, args.output,
         reuse_existing_scores=args.reuse_existing_scores,
     )
-    print(
-        f"V2.1 temporal confirmation: calibration policy {result['selected_calibration_policy']['policy_name']} | "
-        f"temporal sensitivity {result['temporal_evaluation']['event_sensitivity']:.4f}"
-    )
+    if result["policy_selection_status"] == "no_feasible_calibration_policy":
+        print("V2.1 temporal confirmation: no calibration policy met the FAR target; temporal evaluation remained sealed")
+    else:
+        print(
+            f"V2.1 temporal confirmation: calibration policy {result['selected_calibration_policy']['policy_name']} | "
+            f"temporal sensitivity {result['temporal_evaluation']['event_sensitivity']:.4f}"
+        )
 
 
 def _inventory(args: argparse.Namespace) -> None:
