@@ -34,5 +34,10 @@ cp "$result_dir"/{best_model.pth,provenance.json,model_spec.json,training_summar
 
 artifact_path="AI_train_model/research_v2/artifacts/$run_id"
 git -C "$repo_root" add -f -- "$artifact_path"
+git -C "$repo_root" diff --cached --quiet -- "$artifact_path" && {
+  echo "No new V2 artifact changes to commit; pushing any earlier local result commit" >&2
+  git -C "$repo_root" push origin "HEAD:$branch"
+  exit 0
+}
 git -C "$repo_root" commit --only -m "results(v2): add $run_id" -- "$artifact_path"
 git -C "$repo_root" push origin "HEAD:$branch"

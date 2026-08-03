@@ -37,7 +37,8 @@ for run_id in "$@"; do
 done
 
 git -C "$repo_root" diff --cached --quiet -- "${artifact_paths[@]}" && {
-  echo "No new V2 artifact changes to commit" >&2
+  echo "No new V2 artifact changes to commit; pushing any earlier local result commit" >&2
+  git -C "$repo_root" push origin "HEAD:$branch"
   exit 0
 }
 git -C "$repo_root" commit --only -m "results(v2): add seed confirmation batch" -- "${artifact_paths[@]}"
