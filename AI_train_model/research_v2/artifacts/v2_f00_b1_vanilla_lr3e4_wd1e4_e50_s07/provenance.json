@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B1_vanilla_1dcnn",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v2_f00_b1_vanilla_lr3e4_wd1e4_e50_s07/best_model.pth",
+  "checkpoint_sha256": "04ae96e9b76ef0a04282eca4e1786acc8fa233ac14f25f72ef7021fd34596e06",
+  "commit_hash": "12f4a555398da4ab2e37db0e66df386a90b78a8e",
+  "config_path": "research_v2/configs/protocol_v2.json",
+  "config_sha256": "6dce3772c0d023b4d01b65f7d150cbab2e80aa881141a14549b3b1ead33991da",
+  "created_at_utc": "2026-08-03T00:01:41.228714+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "35c96d50772cc5c187c11b349f4f39699f018402c7bf7c6cbdccaef2d4a9bcc7",
+  "split_path": "research_v2/manifests/temporal_v2/fold_00_manifest.csv",
+  "split_sha256": "9812087888ecbe8bac435c5e7f28f4c7ce5018aaef61d60423ddbc222c4beb5b",
+  "training_seed": 7
+}
