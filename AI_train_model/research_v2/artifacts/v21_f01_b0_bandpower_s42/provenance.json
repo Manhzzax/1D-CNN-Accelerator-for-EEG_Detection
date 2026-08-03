@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B0_bandpower_linear",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v21_f01_b0_bandpower_s42/best_model.pth",
+  "checkpoint_sha256": "83b4d3e71ed2d7228088de8be640a13b8ee6c3a70f4331588cacd701703a1e6d",
+  "commit_hash": "c5879bd8aaf56bcd8571bc819ce5c8b4908e8ea1",
+  "config_path": "research_v2/configs/protocol_v2_1.json",
+  "config_sha256": "d9c32d62e9021d0ab13df9e3789fb6eef99ace715dc00cb95696ff9808dde8e6",
+  "created_at_utc": "2026-08-03T16:18:53.136967+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "548526939c59d1041169a19461618b8179ce3ac52b7ed79c9b0992b57de87306",
+  "split_path": "research_v2/manifests/temporal_v21/confirmation_f01_manifest.csv",
+  "split_sha256": "0376446fd962b3e4fc5634c8f562c8e0b853d288fbed86894ebf2dce5f39ec23",
+  "training_seed": 42
+}
