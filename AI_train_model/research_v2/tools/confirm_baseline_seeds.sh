@@ -2,8 +2,8 @@
 # Confirm one inner-selected V2 baseline setting across all five fixed seeds.
 set -euo pipefail
 
-if [[ $# -ne 4 ]]; then
-  echo "Usage: $0 <prepared_train_val_dir> <candidate_id> <learning_rate> <weight_decay>" >&2
+if [[ $# -ne 4 && $# -ne 5 ]]; then
+  echo "Usage: $0 <prepared_train_val_dir> <candidate_id> <learning_rate> <weight_decay> [fold_index]" >&2
   exit 2
 fi
 
@@ -11,6 +11,12 @@ prepared_dir="$1"
 candidate_id="$2"
 learning_rate="$3"
 weight_decay="$4"
+fold_index="${5:-0}"
+if [[ ! "$fold_index" =~ ^[0-9]+$ ]]; then
+  echo "fold_index must be a non-negative integer" >&2
+  exit 2
+fi
+fold_tag="$(printf 'f%02d' "$fold_index")"
 repo_root="$(git rev-parse --show-toplevel)"
 root="$repo_root/AI_train_model"
 branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD)" || {
@@ -51,7 +57,7 @@ esac
 cd "$root"
 run_ids=()
 for seed in 7 42 123 314 2718; do
-  run_id="v2_f00_${tag}_${setting}_e50_s${seed}"
+  run_id="v2_${fold_tag}_${tag}_${setting}_e50_s${seed}"
   run_ids+=("$run_id")
   CHBMIT_V2_MODEL_ARCHITECTURE="$architecture" \
   CHBMIT_TRAIN_LEARNING_RATE="$learning_rate" \
@@ -62,7 +68,7 @@ for seed in 7 42 123 314 2718; do
     --protocol research_v2/configs/protocol_v2.json \
     --registry research_v2/configs/candidate_registry_v2.json \
     --candidate-id "$candidate_id" \
-    --fold-manifest research_v2/manifests/temporal_v2/fold_00_manifest.csv \
+    --fold-manifest "research_v2/manifests/temporal_v2/fold_$(printf '%02d' "$fold_index")_manifest.csv" \
     --checkpoint "outputs/$run_id/best_model.pth" \
     --training-seed "$seed" \
     --dataset-sampling-seed 20260802 \
