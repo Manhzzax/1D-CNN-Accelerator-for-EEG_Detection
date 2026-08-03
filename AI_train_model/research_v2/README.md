@@ -64,6 +64,11 @@ the candidate ID to its frozen implementation, performs the four-setting
 inner grid on seed 7, records the registry hash in provenance, and refuses
 outer-test tensors.
 
+For any baseline that is competitive in its seed-7 screen, use
+`tools/confirm_baseline_seeds.sh` with the selected grid setting before making
+an architecture decision. It preserves the same V2 budget and packages the
+five fixed seed IDs for a single push.
+
 ## Layout
 
 - `configs/`: immutable protocol and candidate registry.
