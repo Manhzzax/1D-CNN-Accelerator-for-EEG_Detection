@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B5_eegwavenet_like",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v2_f00_b5_residual_lr1e3_wd1e4_e50_s07/best_model.pth",
+  "checkpoint_sha256": "a6421eb66186c8b1dd35b5bf09f9f77f44b17d1f2ed13e53d043f4f2ef9c96d6",
+  "commit_hash": "805920ca302fe7fb9469d9832a11d5e1d56d9171",
+  "config_path": "research_v2/configs/protocol_v2.json",
+  "config_sha256": "6dce3772c0d023b4d01b65f7d150cbab2e80aa881141a14549b3b1ead33991da",
+  "created_at_utc": "2026-08-03T00:57:27.163148+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "0a7c71d76a4685874637a41013a67d5a3db613196681f2b127ae3b5d96d35878",
+  "split_path": "research_v2/manifests/temporal_v2/fold_00_manifest.csv",
+  "split_sha256": "9812087888ecbe8bac435c5e7f28f4c7ce5018aaef61d60423ddbc222c4beb5b",
+  "training_seed": 7
+}
