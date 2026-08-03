@@ -1,0 +1,51 @@
+{
+  "calibration_best_unconstrained_policy": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "calibration_far_target_met": false,
+    "decision_window_windows": 6,
+    "detected_events": 23,
+    "event_sensitivity": 1.0,
+    "false_alarms": 1525,
+    "false_alarms_per_hour": 10.88542740669067,
+    "interictal_hours": 140.09555555555556,
+    "mean_detection_delay_sec": 9.956521739130435,
+    "median_detection_delay_sec": 9.0,
+    "policy_name": "3_of_6",
+    "positive_windows": 3,
+    "threshold": 0.85,
+    "total_events": 23
+  },
+  "calibration_minimum_far_policy": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "calibration_far_target_met": false,
+    "decision_window_windows": 20,
+    "detected_events": 6,
+    "event_sensitivity": 0.2608695652173913,
+    "false_alarms": 74,
+    "false_alarms_per_hour": 0.5282109036689243,
+    "interictal_hours": 140.09555555555556,
+    "mean_detection_delay_sec": 48.833333333333336,
+    "median_detection_delay_sec": 44.5,
+    "policy_name": "10_of_20",
+    "positive_windows": 10,
+    "threshold": 0.9990000000000001,
+    "total_events": 23
+  },
+  "calibration_recordings": 97,
+  "evaluation_inputs": {
+    "checkpoint_sha256": "22bf6e0e914995fca20d3e92a6fdb8c269e5c848cafedb54a0d968bc6affd190",
+    "manifest_sha256": "0376446fd962b3e4fc5634c8f562c8e0b853d288fbed86894ebf2dce5f39ec23",
+    "protocol_hash": "f2da4d6d30fd4f378b70ac49f6aa7ac9ecfdfc16c151e6b643bee6afd218664a",
+    "scaler_mean_sha256": "d421f41cf6744935db30dc4bcf3d2cae75a7582dea97a926f15805ebc7836310",
+    "scaler_scale_sha256": "332258cf543b3a064be8f72e7a04213f5206513081f43bfb8532432a74052cb0"
+  },
+  "evaluation_split": "temporal_eval",
+  "policy_selection_status": "no_feasible_calibration_policy",
+  "reused_existing_scores": true,
+  "selected_calibration_policy": null,
+  "selection_rule": "maximize_sensitivity_subject_to_observed_calibration_far_at_or_below_target",
+  "selection_split": "calibration",
+  "temporal_evaluation": null,
+  "temporal_evaluation_recordings": 0,
+  "temporal_evaluation_status": "not_opened_no_calibration_policy_met_far_target"
+}
