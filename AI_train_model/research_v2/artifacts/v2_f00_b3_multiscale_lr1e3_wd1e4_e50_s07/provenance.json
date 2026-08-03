@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B3_multiscale_inception_1dcnn",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v2_f00_b3_multiscale_lr1e3_wd1e4_e50_s07/best_model.pth",
+  "checkpoint_sha256": "405bae6c09f6c0a2af90452921e99efe6e15d24f57a5ddabe577796197ae0701",
+  "commit_hash": "d90bc48fb483b8d9a65abedbef6e3b744b4adddb",
+  "config_path": "research_v2/configs/protocol_v2.json",
+  "config_sha256": "6dce3772c0d023b4d01b65f7d150cbab2e80aa881141a14549b3b1ead33991da",
+  "created_at_utc": "2026-08-03T00:22:21.645958+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "86f96d3850b382af3c1d1b5a5c8df68530b812fe9feea3deac5b29d013cc8c9b",
+  "split_path": "research_v2/manifests/temporal_v2/fold_00_manifest.csv",
+  "split_sha256": "9812087888ecbe8bac435c5e7f28f4c7ce5018aaef61d60423ddbc222c4beb5b",
+  "training_seed": 7
+}
