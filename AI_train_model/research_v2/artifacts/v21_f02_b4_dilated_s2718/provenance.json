@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B4_dilated_lightseizure_like",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v21_f02_b4_dilated_s2718/best_model.pth",
+  "checkpoint_sha256": "acb6f96a7c5050c02335bfe84cd437e197e4973fb7e7fcceabc805fbf8d40577",
+  "commit_hash": "0eaa7d256c0e142c3c859ee805c467b92fcab057",
+  "config_path": "research_v2/configs/protocol_v2_1.json",
+  "config_sha256": "d9c32d62e9021d0ab13df9e3789fb6eef99ace715dc00cb95696ff9808dde8e6",
+  "created_at_utc": "2026-08-04T10:24:08.043829+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "8aae644a36e4767ea5e1324f02276abb51edabf86af5392595eee597349e6c8d",
+  "split_path": "research_v2/manifests/temporal_v21/confirmation_f02_manifest.csv",
+  "split_sha256": "9ddd30ab87f1fcb3408aa883c7f56d7d1646cf35779b1f22aeb1c0bf672a5d0b",
+  "training_seed": 2718
+}
