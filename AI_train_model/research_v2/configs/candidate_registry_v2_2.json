@@ -1,0 +1,18 @@
+{
+  "version": "v2.2.0",
+  "selection_rule": "This registry is a development-only, one-candidate capacity study. V2.1 temporal folds are consumed development evidence; no result is a final holdout claim.",
+  "promotion_rule": "A post-development final protocol is required before blocks 5 or 6 may be opened. The candidate must be assessed by fold consistency, five-seed variation, event sensitivity, FAR, parameter count, INT16 degradation, and hardware feasibility.",
+  "candidates": [
+    {
+      "candidate_id": "C1_multiscale_residual_57k",
+      "role": "far_robustness_capacity_candidate",
+      "family": "raw_multiscale_residual_depthwise_separable_1dcnn",
+      "implementation": "paper_a_multiscale_residual_1dcnn; 15/47 multiscale depthwise input branches, 1x1 mixing, residual depthwise-separable 7/5/3 refinement with dilations 1/2/4",
+      "parameter_budget": "25k_100k",
+      "expected_parameter_count": 57446,
+      "inference_contract": "raw causal 17x1280 EEG; Conv1D, depthwise Conv1D, pointwise Conv1D, BatchNorm, ReLU, AvgPool, residual add, global average pool, linear classifier",
+      "optimizer": {"learning_rate": 0.0003, "weight_decay": 0.0005},
+      "seeds": [7, 42, 123, 314, 2718]
+    }
+  ]
+}

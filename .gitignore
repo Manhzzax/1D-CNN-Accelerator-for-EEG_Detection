@@ -228,7 +228,10 @@ AI_train_model/outputs/
 # V2 generated artifacts and raw derived EEG data.
 AI_train_model/research_v2/artifacts/
 AI_train_model/research_v2/generated/
+AI_train_model/research_v2/generated_v21/
+AI_train_model/research_v2/generated_v22/
 AI_train_model/research_v2/manifests/temporal_v2/
+AI_train_model/research_v2/manifests/temporal_v21/
 
 # Generated LaTeX files for the TBioCAS manuscript; source remains versioned.
 AI_train_model/paper/tbiocas_kv260/*.aux

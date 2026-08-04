@@ -103,8 +103,12 @@ def validate_protocol_config(config: dict) -> None:
         raise ValueError("V2 requires causal_window_endpoint labels")
     if float(preprocessing["window_sec"]) != 5.0 or float(preprocessing["stride_sec"]) != 1.0:
         raise ValueError("The V2 primary protocol is fixed at 5-second windows and 1-second stride")
-    if config.get("version") == "v2.1.0":
+    version = config.get("version")
+    if version == "v2.1.0":
         _validate_v21_split(split, config["dataset"])
+        _validate_v21_hardware(config["hardware"])
+    elif version == "v2.2.0":
+        _validate_v22_split(split, config["dataset"])
         _validate_v21_hardware(config["hardware"])
     elif int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
         raise ValueError("V2 requires a five-fold feasibility audit with three-fold fallback")
@@ -137,6 +141,24 @@ def _validate_v21_split(split: dict, dataset: dict) -> None:
         raise ValueError("V2.1 feasibility gate requires 24 non-ictal replay hours")
     if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
         raise ValueError("V2.1 must report 24 case IDs and 23 patient groups")
+
+
+def _validate_v22_split(split: dict, dataset: dict) -> None:
+    """Validate the V2.2 development-only extension of the V2.1 partitions."""
+    if split.get("strategy") != "patient_group_cumulative_duration_forward_chaining":
+        raise ValueError("V2.2 requires patient-group cumulative-duration forward chaining")
+    if int(split.get("base_block_count", 0)) != 7 or int(split.get("development_folds", 0)) != 3:
+        raise ValueError("V2.2 requires seven base blocks and three development folds")
+    if split.get("final_test_status") != "sealed_v22_development_only":
+        raise ValueError("V2.2 must keep blocks 5 and 6 sealed during development")
+    grouping = split.get("patient_grouping", {})
+    mapping = grouping.get("case_to_patient_group", {})
+    if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
+        raise ValueError("V2.2 must merge chb01 and chb21 into subject_01_21")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb21", "chb01"]:
+        raise ValueError("V2.2 requires EDF-verified chb21 then chb01 session order")
+    if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
+        raise ValueError("V2.2 must report 24 case IDs and 23 patient groups")
 
 
 def _validate_v21_hardware(hardware: dict) -> None:

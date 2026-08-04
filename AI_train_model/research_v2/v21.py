@@ -228,6 +228,9 @@ def _strip_rows(audit: dict) -> dict:
 
 def create_final_freeze(protocol_path: str | Path, manifest_path: str | Path, decision_path: str | Path, output_path: str | Path) -> dict:
     """Seal all final choices before block-6 tensors can be materialized."""
+    protocol = json.loads(Path(protocol_path).read_text(encoding="utf-8"))
+    if protocol.get("version") != "v2.1.0":
+        raise ValueError("Only a dedicated post-development final protocol may authorize a holdout; V2.2 cannot open blocks 5 or 6")
     with Path(decision_path).open("r", encoding="utf-8") as source:
         decision = json.load(source)
     required = {
@@ -237,7 +240,6 @@ def create_final_freeze(protocol_path: str | Path, manifest_path: str | Path, de
     missing = required.difference(decision)
     if missing:
         raise ValueError(f"Final decision is missing required frozen fields: {sorted(missing)}")
-    protocol = json.loads(Path(protocol_path).read_text(encoding="utf-8"))
     training = protocol["training"]
     candidate = training["frozen_candidates"].get(decision["candidate_id"])
     if candidate is None:

@@ -13,8 +13,13 @@ from .protocol import canonical_json_hash, file_sha256, load_json, save_json
 def load_candidate_registry(path: str | Path) -> dict:
     registry = load_json(path)
     candidates = registry.get("candidates", [])
-    if len(candidates) != 8:
+    version = registry.get("version")
+    if version in {None, "v2.0.0", "v2.1.0"} and len(candidates) != 8:
         raise ValueError("V2 registry must contain six baselines and two historical references")
+    if version == "v2.2.0" and len(candidates) != 1:
+        raise ValueError("V2.2-A must contain exactly one predeclared capacity candidate")
+    if version not in {None, "v2.0.0", "v2.1.0", "v2.2.0"}:
+        raise ValueError(f"Unsupported V2 candidate registry version: {version}")
     seen = set()
     for candidate in candidates:
         candidate_id = candidate.get("candidate_id")

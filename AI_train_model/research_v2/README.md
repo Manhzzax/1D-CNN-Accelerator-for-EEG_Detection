@@ -1,5 +1,27 @@
 # Research V2
 
+## V2.2-A Capacity Study
+
+The active branch `research/v2.2-far-robustness` contains the V2.2-A
+development-only capacity study. It reuses the audited V2.1 F00--F02 causal
+cache read-only and evaluates one preregistered `57,446`-parameter raw
+multiscale residual 1D CNN across five seeds. It cannot open blocks 5 or 6;
+its results cannot be presented as final validation. See
+[`docs/v22_execution_plan.md`](docs/v22_execution_plan.md) and
+[`reports/v22_preregistration.md`](reports/v22_preregistration.md).
+
+Run the one-time cache-contract check, then the five-seed candidate per fold:
+
+```bash
+bash research_v2/tools/prepare_v22_development_caches.sh
+bash research_v2/tools/train_v22_capacity_candidate.sh 00
+```
+
+The training command prints the matching package command. Packaged V2.2
+artifacts include the checkpoint, architecture/hyperparameter contract, and
+training-only normalization tensors, but exclude derived EEG/cache and
+continuous-score data.
+
 ## V2.1 Patient-Group Protocol
 
 V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It

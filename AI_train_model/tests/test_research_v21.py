@@ -140,6 +140,20 @@ class V21ProtocolTests(unittest.TestCase):
         validate_protocol_config(_config())
         self.assertEqual(canonical_json_hash(_config()), canonical_json_hash(_config()))
 
+    def test_v22_is_development_only_and_cannot_open_final_holdout(self):
+        protocol_path = Path(__file__).resolve().parents[1] / "research_v2" / "configs" / "protocol_v2_2.json"
+        config = json.loads(protocol_path.read_text(encoding="utf-8"))
+        validate_protocol_config(config)
+        self.assertEqual(config["split"]["final_test_status"], "sealed_v22_development_only")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            decision = root / "decision.json"
+            manifest = root / "final.csv"
+            decision.write_text("{}", encoding="utf-8")
+            manifest.write_text("recording_id\nexample\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
+
 
 if __name__ == "__main__":
     unittest.main()
