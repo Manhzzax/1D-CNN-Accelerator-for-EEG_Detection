@@ -1,0 +1,211 @@
+{
+  "calibration_recordings": 98,
+  "evaluation_inputs": {
+    "checkpoint_sha256": "b457e259efcf6da640bc3612685be1a9f48da56424eec8c78be02525eabc5768",
+    "manifest_sha256": "5b12cf0fa46677bd8f772f5663f7e8f418b85a6f3924cafe103dfca4f0adee35",
+    "protocol_hash": "6ef0274fc93ea17aa1b3ed49076666ab9cbbaba96f7369e888d0e34fd4672128",
+    "scaler_mean_sha256": "d1b6289f462db62da55cf95413fac16ea41eea71ff4b87a8043f51143f2c1139",
+    "scaler_scale_sha256": "bd610f532378276a8726ed970535605a399dda2f3b1f2e1d5c221508a46ddfb4"
+  },
+  "evaluation_split": "temporal_eval",
+  "policy_selection_status": "feasible_calibration_policy_selected",
+  "reused_existing_scores": false,
+  "selected_calibration_policy": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "calibration_far_target_met": true,
+    "decision_window_windows": 12,
+    "detected_events": 11,
+    "event_sensitivity": 0.55,
+    "false_alarms": 65,
+    "false_alarms_per_hour": 0.4737187325392134,
+    "interictal_hours": 137.2122222222222,
+    "mean_detection_delay_sec": 16.727272727272727,
+    "median_detection_delay_sec": 13.0,
+    "policy_name": "6_of_12",
+    "positive_windows": 6,
+    "threshold": 0.9900000000000001,
+    "total_events": 20
+  },
+  "selection_rule": "maximize_sensitivity_subject_to_observed_calibration_far_at_or_below_target",
+  "selection_split": "calibration",
+  "temporal_evaluation": {
+    "alarm_timestamp_mode": "window_end_causal",
+    "decision_window_windows": 12,
+    "detected_events": 15,
+    "event_sensitivity": 0.6521739130434783,
+    "false_alarms": 434,
+    "false_alarms_per_hour": 3.0978855701663943,
+    "interictal_hours": 140.09555555555556,
+    "mean_detection_delay_sec": 24.0,
+    "median_detection_delay_sec": 16.0,
+    "policy_name": "6_of_12",
+    "positive_windows": 6,
+    "threshold": 0.9900000000000001,
+    "total_events": 23
+  },
+  "temporal_evaluation_recordings": 97,
+  "temporal_uncertainty": {
+    "event_sensitivity_cluster_bootstrap_95ci": {
+      "estimable": true,
+      "lower": 0.3103448275862069,
+      "mean_difference": 0.6521739130434783,
+      "replicates": 10000,
+      "upper": 0.9130434782608695
+    },
+    "far_per_hour_cluster_bootstrap_95ci": {
+      "lower": 0.5954121303694658,
+      "mean_difference": 3.0978855701663948,
+      "replicates": 10000,
+      "upper": 6.187586582439931
+    },
+    "far_per_hour_poisson_exact_95ci": {
+      "denominator": 140.09555555555553,
+      "estimate": 3.0978855701663948,
+      "lower": 2.813251060027807,
+      "numerator": 434,
+      "upper": 3.4035130033379626
+    },
+    "independent_patient_groups": 23,
+    "per_patient_group": {
+      "subject_01_21": {
+        "detected_events": 0,
+        "false_alarms": 1,
+        "interictal_hours": 9.996666666666666,
+        "total_events": 1
+      },
+      "subject_02": {
+        "detected_events": 0,
+        "false_alarms": 10,
+        "interictal_hours": 5.0,
+        "total_events": 0
+      },
+      "subject_03": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 5.0,
+        "total_events": 0
+      },
+      "subject_04": {
+        "detected_events": 0,
+        "false_alarms": 312,
+        "interictal_hours": 23.826388888888886,
+        "total_events": 0
+      },
+      "subject_05": {
+        "detected_events": 3,
+        "false_alarms": 2,
+        "interictal_hours": 5.9094444444444445,
+        "total_events": 3
+      },
+      "subject_06": {
+        "detected_events": 0,
+        "false_alarms": 21,
+        "interictal_hours": 8.0,
+        "total_events": 0
+      },
+      "subject_07": {
+        "detected_events": 0,
+        "false_alarms": 21,
+        "interictal_hours": 10.661111111111111,
+        "total_events": 0
+      },
+      "subject_08": {
+        "detected_events": 1,
+        "false_alarms": 2,
+        "interictal_hours": 2.9555555555555557,
+        "total_events": 1
+      },
+      "subject_09": {
+        "detected_events": 1,
+        "false_alarms": 24,
+        "interictal_hours": 7.981944444444444,
+        "total_events": 1
+      },
+      "subject_10": {
+        "detected_events": 0,
+        "false_alarms": 3,
+        "interictal_hours": 7.990277777777778,
+        "total_events": 1
+      },
+      "subject_11": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 5.0,
+        "total_events": 0
+      },
+      "subject_12": {
+        "detected_events": 3,
+        "false_alarms": 24,
+        "interictal_hours": 2.939722222222222,
+        "total_events": 3
+      },
+      "subject_13": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 5.0,
+        "total_events": 0
+      },
+      "subject_14": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 3.9944444444444445,
+        "total_events": 1
+      },
+      "subject_15": {
+        "detected_events": 1,
+        "false_alarms": 2,
+        "interictal_hours": 5.946666666666666,
+        "total_events": 2
+      },
+      "subject_16": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 3.0,
+        "total_events": 0
+      },
+      "subject_17": {
+        "detected_events": 0,
+        "false_alarms": 8,
+        "interictal_hours": 3.0,
+        "total_events": 0
+      },
+      "subject_18": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 5.0,
+        "total_events": 0
+      },
+      "subject_19": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 4.0,
+        "total_events": 0
+      },
+      "subject_20": {
+        "detected_events": 0,
+        "false_alarms": 0,
+        "interictal_hours": 3.9622222222222225,
+        "total_events": 4
+      },
+      "subject_22": {
+        "detected_events": 0,
+        "false_alarms": 2,
+        "interictal_hours": 4.003055555555555,
+        "total_events": 0
+      },
+      "subject_23": {
+        "detected_events": 4,
+        "false_alarms": 2,
+        "interictal_hours": 3.9394444444444443,
+        "total_events": 4
+      },
+      "subject_24": {
+        "detected_events": 2,
+        "false_alarms": 0,
+        "interictal_hours": 2.988611111111111,
+        "total_events": 2
+      }
+    },
+    "seizure_contributing_patient_groups": 11
+  }
+}

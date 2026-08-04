@@ -1,0 +1,127 @@
+{
+  "architecture": "paper_a_multiscale_residual_1dcnn",
+  "model_config": {
+    "architecture": "paper_a_multiscale_residual_1dcnn",
+    "dilated_hierarchical_separable_1dcnn": {
+      "dilation_one": 4,
+      "dilation_two": 8,
+      "dropout": 0.25,
+      "second_kernel": 7,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31,
+      "third_kernel": 3
+    },
+    "hierarchical_separable_1dcnn": {
+      "dropout": 0.25,
+      "second_kernel": 7,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31,
+      "third_kernel": 3,
+      "third_pointwise": false
+    },
+    "input_channels": 17,
+    "input_length": 1280,
+    "multiscale_separable_1dcnn": {
+      "dropout": 0.25,
+      "long_kernel": 63,
+      "refinement_kernel": 15,
+      "short_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_branch": 1
+    },
+    "num_classes": 2,
+    "paper_a_multiscale_residual_1dcnn": {
+      "dropout": 0.25,
+      "long_kernel": 47,
+      "max_parameters": 100000,
+      "short_kernel": 15,
+      "stage_one_filters": 64,
+      "stage_one_kernel": 7,
+      "stage_three_dilation": 4,
+      "stage_three_filters": 128,
+      "stage_three_kernel": 3,
+      "stage_two_dilation": 2,
+      "stage_two_filters": 96,
+      "stage_two_kernel": 5,
+      "temporal_filters_per_branch": 2
+    },
+    "parallel_multikernel_1dcnn": {
+      "branch_filters": 16,
+      "dropout": 0.25,
+      "long_kernel": 31,
+      "refinement_filters": 32,
+      "refinement_kernel": 5,
+      "short_kernel": 15
+    },
+    "residual_hierarchical_separable_1dcnn": {
+      "dropout": 0.25,
+      "second_kernel": 7,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 3,
+      "temporal_kernel": 31,
+      "third_kernel": 3
+    },
+    "separable_1dcnn": {
+      "dropout": 0.25,
+      "refinement_kernel": 15,
+      "spatial_filters": 32,
+      "temporal_filters_per_channel": 2,
+      "temporal_kernel": 31
+    },
+    "v2_bandpower_linear": {
+      "bands_hz": [
+        [
+          0.5,
+          4.0
+        ],
+        [
+          4.0,
+          8.0
+        ],
+        [
+          8.0,
+          13.0
+        ],
+        [
+          13.0,
+          30.0
+        ],
+        [
+          30.0,
+          45.0
+        ]
+      ]
+    },
+    "v2_deep_matched_1dcnn": {
+      "channels": [
+        12,
+        16,
+        20,
+        24
+      ],
+      "dropout": 0.25,
+      "kernels": [
+        7,
+        5,
+        5,
+        3
+      ]
+    },
+    "v2_vanilla_1dcnn": {
+      "channels": [
+        16,
+        24,
+        32
+      ],
+      "dropout": 0.25,
+      "kernels": [
+        7,
+        5,
+        3
+      ]
+    }
+  },
+  "parameter_count": 57446
+}
