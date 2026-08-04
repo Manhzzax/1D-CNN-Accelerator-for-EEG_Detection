@@ -1,0 +1,17 @@
+{
+  "candidate_id": "B2_deep_matched_1dcnn",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2.json",
+  "candidate_registry_sha256": "ce4d48051dbc975568d6d8a80bae4b0de5d64489bdcf45db3efce25b9e46b1d6",
+  "checkpoint_path": "outputs/v21_f02_b2_deep_s42/best_model.pth",
+  "checkpoint_sha256": "25e82731e977b8dc89e811516c33b757a66d2d4932f97ca0c9438ea555d73e0c",
+  "commit_hash": "9590eca9471b34e0cacb285c54d2c6f8ca1df67e",
+  "config_path": "research_v2/configs/protocol_v2_1.json",
+  "config_sha256": "d9c32d62e9021d0ab13df9e3789fb6eef99ace715dc00cb95696ff9808dde8e6",
+  "created_at_utc": "2026-08-04T03:37:44.283671+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "13eb9721c18adb25c4d06c584cc07b812e35ca7d1e8b1d44e4317f4f46e91724",
+  "split_path": "research_v2/manifests/temporal_v21/confirmation_f02_manifest.csv",
+  "split_sha256": "9ddd30ab87f1fcb3408aa883c7f56d7d1646cf35779b1f22aeb1c0bf672a5d0b",
+  "training_seed": 42
+}
