@@ -107,6 +107,13 @@ The completed capacity decision is recorded in
 was not promoted because the calibration-selected FAR target transferred only
 in F01, not F00 or F02. This does not authorize final-holdout access.
 
+The completed V2.5 patient-group GroupDRO decision is recorded in
+[`reports/v25_groupdro_decision.md`](reports/v25_groupdro_decision.md): G1
+kept the 57,446-parameter C1 inference graph but did not make temporal FAR
+transfer stable across F00--F02. It is a reported training-only ablation and
+must not be used for final validation, INT16 calibration, tensor export, or
+KV260 synthesis.
+
 ## V2.1 Patient-Group Protocol
 
 V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It
