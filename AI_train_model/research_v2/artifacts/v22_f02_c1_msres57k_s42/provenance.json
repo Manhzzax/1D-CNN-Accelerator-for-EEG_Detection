@@ -1,0 +1,17 @@
+{
+  "candidate_id": "C1_multiscale_residual_57k",
+  "candidate_registry_path": "research_v2/configs/candidate_registry_v2_2.json",
+  "candidate_registry_sha256": "e8e3778548698f02e2bf6e3fcb188fad07e6434df346d410ed3b1cf7e4f341b0",
+  "checkpoint_path": "outputs/v22_f02_c1_msres57k_s42/best_model.pth",
+  "checkpoint_sha256": "50a2f07a8a0ee9ec8a5802e736adb36a8cf512df195528dff2a6e9dd3c550b71",
+  "commit_hash": "161a2e2b8f4c5a4d115197913b662f289b9a5dbd",
+  "config_path": "research_v2/configs/protocol_v2_2.json",
+  "config_sha256": "06a5e322e2c829b5631f1fb55f89df51a9128a63b396dbfafc7e3a39558b4db5",
+  "created_at_utc": "2026-08-04T17:50:31.740205+00:00",
+  "dataset_sampling_seed": 20260802,
+  "precision": "amp_fp16_train_fp32_evaluate",
+  "provenance_hash": "105c9689fb38e528660db5bb717ba79ff4cf26f909731d210a5ff96b1753cefe",
+  "split_path": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/research_v2/manifests/temporal_v21/confirmation_f02_manifest.csv",
+  "split_sha256": "9ddd30ab87f1fcb3408aa883c7f56d7d1646cf35779b1f22aeb1c0bf672a5d0b",
+  "training_seed": 42
+}
