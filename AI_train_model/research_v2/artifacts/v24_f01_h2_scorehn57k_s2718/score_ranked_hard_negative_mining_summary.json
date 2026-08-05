@@ -1,0 +1,73 @@
+{
+  "cache_reused": false,
+  "candidate_limited": false,
+  "candidate_rule": "all_clean_interictal_train_endpoints_excluding_source_sampled_normals_ranked_by_source_score",
+  "clean_context_rule": "causal_endpoint_clean_interictal_outside_30s_guard",
+  "fold_index": "01",
+  "fold_manifest": "research_v2/manifests/temporal_v21/confirmation_f01_manifest.csv",
+  "fold_manifest_sha256": "0376446fd962b3e4fc5634c8f562c8e0b853d288fbed86894ebf2dce5f39ec23",
+  "frozen_scaler": {
+    "mean_sha256": "520d621a27cd372fa20fa209eefc3262b77b6d7eac26813b8cd582d702188eed",
+    "source_mean_sha256": "d421f41cf6744935db30dc4bcf3d2cae75a7582dea97a926f15805ebc7836310",
+    "source_scale_sha256": "332258cf543b3a064be8f72e7a04213f5206513081f43bfb8532432a74052cb0"
+  },
+  "hard_negative_normal_draw_fraction": 0.23076923076923078,
+  "hard_negative_to_positive_ratio": 0.1,
+  "hard_negative_windows": 249,
+  "positive_windows": 2490,
+  "protocol": "research_v2_4_score_ranked_hard_negative",
+  "protocol_hash": "17135d75c7346004513f198ecb2b4453db31ec2ff9da57cbcc5e9004df6b7692",
+  "raw_clean_score_ranked_candidates": 982000,
+  "requested_hard_negative_windows": 249,
+  "sampling_multiplier": 3.0,
+  "selected_patient_group_counts": {
+    "subject_01_21": 11,
+    "subject_02": 11,
+    "subject_03": 11,
+    "subject_04": 11,
+    "subject_05": 11,
+    "subject_06": 11,
+    "subject_07": 11,
+    "subject_08": 11,
+    "subject_09": 11,
+    "subject_10": 11,
+    "subject_11": 11,
+    "subject_12": 11,
+    "subject_13": 11,
+    "subject_14": 11,
+    "subject_15": 11,
+    "subject_16": 11,
+    "subject_17": 11,
+    "subject_18": 11,
+    "subject_19": 11,
+    "subject_20": 10,
+    "subject_22": 10,
+    "subject_23": 10,
+    "subject_24": 10
+  },
+  "selected_source_score": {
+    "maximum": 0.9999905824661255,
+    "median": 0.9934136271476746,
+    "minimum": 0.8966736793518066
+  },
+  "selection_rule": "patient_group_round_robin_descending_source_score",
+  "separated_clean_score_ranked_candidates": 24979,
+  "source_artifact_dir": "/home/ubuntu/Manh/1D-CNN-Accelerator-for-EEG_Detection/AI_train_model/research_v2/artifacts/v22_f01_c1_msres57k_s42",
+  "source_checkpoint_sha256": "4a605c77616766c1480d70e1b97327dd4880017e55097f0d78d42e3f82c3a79b",
+  "source_normal_windows": 2490,
+  "source_preparation_sha256": "fbec7c94cf15a6f5730b9830d175aa757beee5d5b8abd2650a3fd97d641acc20",
+  "source_prepared_dir": "research_v2/generated_v21/f01_confirmation",
+  "source_score_diagnostics": {
+    "clean_interictal_candidates": 982000,
+    "excluded_source_sampled_normals": 2490
+  },
+  "source_score_origin": {
+    "mode": "reused_v23_train_scores",
+    "source_cache_dir": "research_v2/generated_v23/f01_policy_hardneg",
+    "source_cache_summary_sha256": "808af464ae256478d2f280dd08e7f8fb1c2dac91f1defcd3663bb0f70d7090d1",
+    "source_train_score_records_sha256": "451e086df6d8bb420d47cd4d66673903254e66556e70e305cc4f2edf34ab0b45",
+    "source_train_scores_sha256": "7626a0aa32d534add65b0ee5b7919f00eead1668e61c1fa10604279742476a95"
+  },
+  "source_train_score_records_sha256": "451e086df6d8bb420d47cd4d66673903254e66556e70e305cc4f2edf34ab0b45",
+  "source_train_scores_sha256": "7626a0aa32d534add65b0ee5b7919f00eead1668e61c1fa10604279742476a95"
+}

@@ -1,0 +1,201 @@
+{
+  "best_epoch": 2,
+  "best_patience_validation_loss": 0.43735620089045213,
+  "best_validation_loss": 0.43735620089045213,
+  "early_stopping": {
+    "enabled": true,
+    "min_delta": 0.001,
+    "min_epochs": 12,
+    "monitor": "val_loss",
+    "patience": 12
+  },
+  "epochs_completed": 14,
+  "epochs_requested": 50,
+  "group_dro_weights_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "history": {
+    "learning_rate": [
+      0.0003,
+      0.0003,
+      0.0003,
+      0.0003,
+      0.0003,
+      0.00015,
+      0.00015,
+      0.00015,
+      0.00015,
+      7.5e-05,
+      7.5e-05,
+      7.5e-05,
+      7.5e-05,
+      3.75e-05
+    ],
+    "train_accuracy": [
+      68.2348441384586,
+      80.22566456301396,
+      86.42187798814305,
+      87.99005545993498,
+      91.03078982597054,
+      92.52247083572385,
+      94.22451711608338,
+      94.79824058137311,
+      95.21897112258559,
+      95.60145343277874,
+      96.53853509275196,
+      97.22700325109963,
+      97.09313444253203,
+      96.90189328743546
+    ],
+    "train_loss": [
+      0.583754925819947,
+      0.4325442147154634,
+      0.3187638477992774,
+      0.29568406017338666,
+      0.24297895761971539,
+      0.20117344879515883,
+      0.16419584035366164,
+      0.1466767445369076,
+      0.1350807448570166,
+      0.13116499616040123,
+      0.1096016808269949,
+      0.0954988292607392,
+      0.09598745361075936,
+      0.0946416041207692
+    ],
+    "validation_accuracy": [
+      80.61506565307533,
+      81.16793365583966,
+      79.61299239806496,
+      80.02764340013822,
+      78.05805114029026,
+      83.48306841741534,
+      82.82653766413269,
+      80.99516240497582,
+      81.23704215618521,
+      82.89564616447824,
+      81.68624740843124,
+      79.37111264685556,
+      79.37111264685556,
+      83.69039391845197
+    ],
+    "validation_loss": [
+      0.48446885838785414,
+      0.43735620089045213,
+      0.5256665979654277,
+      0.5629672636718855,
+      0.5798668211381355,
+      0.5252652380824007,
+      0.5067877762879515,
+      0.6448470731397785,
+      0.6568890800950604,
+      0.5470676174144046,
+      0.6451696416140427,
+      0.9105806001400898,
+      0.7587705431267897,
+      0.5182460885090752
+    ]
+  },
+  "hyperparameters": {
+    "batch_size": 128,
+    "class_balanced_batches": true,
+    "epochs": 50,
+    "group_dro": {
+      "enabled": false,
+      "eta": null,
+      "train_patient_groups": null,
+      "training_only_objective": false
+    },
+    "learning_rate": 0.0003,
+    "lr_scheduler": {
+      "factor": 0.5,
+      "name": "ReduceLROnPlateau",
+      "patience": 3
+    },
+    "mild_eeg_augmentation": {
+      "enabled": false,
+      "inference_parameter_delta": 0,
+      "shared_gain_delta": null,
+      "training_only_transform": false,
+      "zscore_noise_std": null
+    },
+    "optimizer": "adam",
+    "patient_group_balanced_batches": false,
+    "patient_group_sampling": {
+      "strata": null,
+      "strategy": null
+    },
+    "subject_adversarial": {
+      "enabled": false,
+      "gradient_reversal_coefficient": null,
+      "hidden_features": null,
+      "train_patient_groups": null,
+      "training_only_head": false
+    },
+    "supervised_contrastive": {
+      "coefficient": null,
+      "enabled": false,
+      "inference_parameter_delta": 0,
+      "temperature": null,
+      "training_only_objective": false
+    },
+    "training_seed": 7,
+    "weight_decay": 0.0005
+  },
+  "stopped_early": true,
+  "subject_adversarial_domain_loss_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "supervised_contrastive_loss_per_epoch": [
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null,
+    null
+  ],
+  "window_validation_metrics": {
+    "accuracy": 0.8120248790601244,
+    "auroc": 0.8902770023435759,
+    "average_precision": 0.9075155060687071,
+    "balanced_accuracy": 0.8120248790601244,
+    "f1": 0.797317436661699,
+    "precision": 0.8649959579628133,
+    "sensitivity": 0.7394609536973048,
+    "threshold": 0.5
+  }
+}
