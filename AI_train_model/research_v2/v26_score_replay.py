@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+import time
 from pathlib import Path
 from statistics import mean, stdev
 from typing import Any
@@ -321,16 +322,30 @@ def _metric(scores: dict[str, Any], policy: dict[str, Any], config: dict[str, An
     )
 
 
-def _temporal_oracle(scores: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
+def _temporal_oracle(scores: dict[str, Any], config: dict[str, Any], run_id: str | None = None) -> dict[str, Any]:
     target = float(config["evaluation"]["primary_far_per_hour"])
-    sweep = [_metric(scores, policy, config) for policy in _policy_grid(config)]
+    started = time.perf_counter()
+    policies = _policy_grid(config)
+    policies_per_temporal_rule = len(config["evaluation"]["temporal_policies"])
+    sweep = []
+    for index, policy in enumerate(policies, start=1):
+        if run_id and (index - 1) % 150 == 0:
+            rule_index = (index - 1) // 150 + 1
+            print(
+                f"  V2.6 temporal oracle {run_id}: policy {rule_index}/{policies_per_temporal_rule} "
+                f"({policy['policy_name']})",
+                flush=True,
+            )
+        sweep.append(_metric(scores, policy, config))
     eligible = [metric for metric in sweep if metric["false_alarms_per_hour"] <= target]
     minimum_far = min(sweep, key=lambda metric: (metric["false_alarms_per_hour"], -metric["event_sensitivity"]))
+    runtime_seconds = round(time.perf_counter() - started, 3)
     if not eligible:
         return {
             "target_feasible": False,
             "best_sensitivity_at_target": None,
             "minimum_far_policy": minimum_far,
+            "oracle_sweep_runtime_sec": runtime_seconds,
         }
     best = max(eligible, key=lambda metric: (
         metric["event_sensitivity"],
@@ -341,6 +356,7 @@ def _temporal_oracle(scores: dict[str, Any], config: dict[str, Any]) -> dict[str
         "target_feasible": True,
         "best_sensitivity_at_target": best,
         "minimum_far_policy": minimum_far,
+        "oracle_sweep_runtime_sec": runtime_seconds,
     }
 
 
@@ -403,6 +419,7 @@ def _write_csv(output_dir: Path, records: list[dict[str, Any]]) -> None:
         "selected_temporal_sensitivity", "selected_temporal_far_per_hour", "oracle_target_feasible",
         "oracle_policy", "oracle_threshold", "oracle_temporal_sensitivity", "oracle_temporal_far_per_hour",
         "minimum_far_policy", "minimum_far_threshold", "minimum_temporal_far_per_hour",
+        "oracle_sweep_runtime_sec",
     ]
     with (output_dir / "v26_score_replay_runs.csv").open("w", newline="", encoding="utf-8") as target:
         writer = csv.DictWriter(target, fieldnames=fields)
@@ -424,6 +441,7 @@ def _write_csv(output_dir: Path, records: list[dict[str, Any]]) -> None:
                 "oracle_temporal_far_per_hour": None if best is None else best["false_alarms_per_hour"],
                 "minimum_far_policy": minimum["policy_name"], "minimum_far_threshold": minimum["threshold"],
                 "minimum_temporal_far_per_hour": minimum["false_alarms_per_hour"],
+                "oracle_sweep_runtime_sec": oracle["oracle_sweep_runtime_sec"],
             })
 
 
@@ -514,7 +532,7 @@ def build_score_replay_atlas(
         _expected_records(calibration, _consumed_rows(manifest_root / f"confirmation_f{record['fold']}_manifest.csv", "val"), "Calibration")
         _expected_records(temporal, _consumed_rows(manifest_root / f"confirmation_f{record['fold']}_manifest.csv", "temporal_eval"), "Temporal")
         record["selected_replay"] = _assert_selected_replay_matches_artifact(record, temporal, replay_config)
-        record["temporal_oracle"] = _temporal_oracle(temporal, replay_config)
+        record["temporal_oracle"] = _temporal_oracle(temporal, replay_config, record["artifact"])
         record["score_source"] = source
         record.pop("artifact_confirmation")
         scored.append(record)
