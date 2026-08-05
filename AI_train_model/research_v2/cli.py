@@ -145,6 +145,7 @@ def _v24_mine_score_ranked_hard_negatives(args: argparse.Namespace) -> None:
         fold_manifest=args.fold_manifest,
         source_prepared_dir=args.source_prepared_dir,
         output_dir=args.output,
+        source_score_cache_dir=args.source_score_cache,
     )
     print(
         f"V2.4 F{args.fold} score-ranked hard-negative cache: "
@@ -250,6 +251,7 @@ def main() -> None:
     v24_mine.add_argument("--fold-manifest", required=True)
     v24_mine.add_argument("--source-prepared-dir", required=True)
     v24_mine.add_argument("--output", required=True)
+    v24_mine.add_argument("--source-score-cache", help="Optional validated V2.3 train-only source-score cache")
     v24_mine.set_defaults(handler=_v24_mine_score_ranked_hard_negatives)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")

@@ -19,6 +19,7 @@ registry="research_v2/configs/candidate_registry_v2_4.json"
 manifest="research_v2/manifests/temporal_v21/confirmation_f${fold}_manifest.csv"
 source_prepared="research_v2/generated_v21/f${fold}_confirmation"
 output="research_v2/generated_v24/f${fold}_score_hardneg"
+source_scores="research_v2/generated_v23/f${fold}_policy_hardneg"
 
 python -m research_v2 validate --protocol "$protocol" --registry "$registry"
 [[ -f "$manifest" ]] || { echo "Missing locked V2.1 fold manifest: $manifest" >&2; exit 1; }
@@ -32,8 +33,13 @@ python -m research_v2 validate --protocol "$protocol" --registry "$registry"
   echo "Refusing a V2.4 cache containing sealed-test artifacts" >&2; exit 1;
 }
 
+reuse_args=()
+if [[ -f "$source_scores/source_train_scores.npz" && -f "$source_scores/source_train_scores.records.json" && -f "$source_scores/policy_hard_negative_mining_summary.json" ]]; then
+  reuse_args=(--source-score-cache "$source_scores")
+fi
+
 python -m research_v2 v24-mine-score-ranked-hard-negatives \
   --project-root "$repo_root" --protocol "$protocol" --registry "$registry" --fold "$fold" \
-  --fold-manifest "$manifest" --source-prepared-dir "$source_prepared" --output "$output"
+  --fold-manifest "$manifest" --source-prepared-dir "$source_prepared" --output "$output" "${reuse_args[@]}"
 
 echo "V2.4 F${fold} cache is ready. Re-running this command verifies/reuses it without re-scoring train EEG."

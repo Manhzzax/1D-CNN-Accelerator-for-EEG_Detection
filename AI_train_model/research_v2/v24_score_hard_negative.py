@@ -11,7 +11,7 @@ from pathlib import Path
 import numpy as np
 
 from src.chbmit_preparation import extract_canonical_bipolar_data, filter_eeg
-from src.event_evaluation import save_scores, score_continuous_recordings
+from src.event_evaluation import load_scores, save_scores, score_continuous_recordings
 
 from .protocol import canonical_json_hash, causal_window_index, file_sha256, save_json
 
@@ -222,6 +222,50 @@ def _validate_existing_output(output_dir: Path, config: dict, manifest_path: str
     return summary
 
 
+def _load_reusable_v23_train_scores(
+    source_score_cache_dir: Path,
+    source_contract: dict,
+    fold_index: str,
+    manifest_path: str | Path,
+    expected_recordings: list[str],
+) -> tuple[dict, dict]:
+    """Accept only a V2.3 train score stream with the identical frozen source contract."""
+    summary_path = source_score_cache_dir / "policy_hard_negative_mining_summary.json"
+    score_path = source_score_cache_dir / "source_train_scores.npz"
+    records_path = score_path.with_suffix(".records.json")
+    required = (summary_path, score_path, records_path)
+    if any(not path.is_file() for path in required):
+        raise FileNotFoundError(f"V2.3 reusable score cache is incomplete: {source_score_cache_dir}")
+    if (source_score_cache_dir / "chbmit_test.npz").exists() or (source_score_cache_dir / "continuous_test_recordings.csv").exists():
+        raise ValueError("V2.4 refuses a V2.3 source cache containing sealed-test artifacts")
+    with summary_path.open("r", encoding="utf-8") as input_file:
+        summary = json.load(input_file)
+    if summary.get("protocol") != "research_v2_3_policy_aligned_hard_negative":
+        raise ValueError("V2.4 score reuse requires a V2.3 policy-hard-negative cache")
+    if str(summary.get("fold_index")) != str(fold_index) or summary.get("fold_manifest_sha256") != file_sha256(manifest_path):
+        raise ValueError("V2.3 reusable scores do not match the locked V2.4 fold")
+    if summary.get("source_checkpoint_sha256") != source_contract["checkpoint_sha256"]:
+        raise ValueError("V2.3 reusable scores use a different source checkpoint")
+    frozen = summary.get("frozen_scaler", {})
+    if frozen.get("source_mean_sha256") != source_contract["scaler_mean_sha256"] or frozen.get("source_scale_sha256") != source_contract["scaler_scale_sha256"]:
+        raise ValueError("V2.3 reusable scores use a different source scaler")
+    if summary.get("source_train_scores_sha256") != file_sha256(score_path):
+        raise ValueError("V2.3 reusable score stream hash differs")
+    if summary.get("source_train_score_records_sha256") != file_sha256(records_path):
+        raise ValueError("V2.3 reusable score-record hash differs")
+    scores = load_scores(score_path)
+    observed_recordings = [record["recording_id"] for record in scores["records"]]
+    if observed_recordings != expected_recordings:
+        raise ValueError("V2.3 reusable train scores do not match the locked recording order")
+    return scores, {
+        "mode": "reused_v23_train_scores",
+        "source_cache_dir": str(source_score_cache_dir),
+        "source_cache_summary_sha256": file_sha256(summary_path),
+        "source_train_scores_sha256": file_sha256(score_path),
+        "source_train_score_records_sha256": file_sha256(records_path),
+    }
+
+
 def build_score_ranked_hard_negative_cache(
     *,
     project_root: str | Path,
@@ -230,6 +274,7 @@ def build_score_ranked_hard_negative_cache(
     fold_manifest: str | Path,
     source_prepared_dir: str | Path,
     output_dir: str | Path,
+    source_score_cache_dir: str | Path | None = None,
 ) -> dict:
     """Write a derived V2.4 train cache without reading temporal-evaluation EEG."""
     project_root = Path(project_root)
@@ -252,22 +297,37 @@ def build_score_ranked_hard_negative_cache(
 
     output_dir.mkdir(parents=True, exist_ok=False)
     try:
-        import torch
-        from src.model import build_model_from_run
-
-        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        model = build_model_from_run(source_dir).to(device)
-        model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True))
-        scores = score_continuous_recordings(
-            model, device, train_rows, preprocessing, batch_size=128, use_amp=False,
-            scaler_mean=mean, scaler_std=scale, normalization_mode="train_channel_zscore",
-        )
         expected_recordings = [row["recording_id"] for row in train_rows]
-        observed_recordings = [record["recording_id"] for record in scores["records"]]
-        if observed_recordings != expected_recordings:
-            raise ValueError("Source train scores do not match the locked V2.4 training manifest")
         score_path = output_dir / "source_train_scores.npz"
-        save_scores(score_path, scores)
+        if source_score_cache_dir is not None:
+            reusable_dir = Path(source_score_cache_dir)
+            scores, score_origin = _load_reusable_v23_train_scores(
+                reusable_dir, source_contract, fold_index, fold_manifest, expected_recordings,
+            )
+            shutil.copy2(reusable_dir / "source_train_scores.npz", score_path)
+            shutil.copy2(reusable_dir / "source_train_scores.records.json", score_path.with_suffix(".records.json"))
+        else:
+            import torch
+            from src.model import build_model_from_run
+
+            device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            model = build_model_from_run(source_dir).to(device)
+            model.load_state_dict(torch.load(checkpoint_path, map_location=device, weights_only=True))
+            scores = score_continuous_recordings(
+                model, device, train_rows, preprocessing, batch_size=128, use_amp=False,
+                scaler_mean=mean, scaler_std=scale, normalization_mode="train_channel_zscore",
+            )
+            observed_recordings = [record["recording_id"] for record in scores["records"]]
+            if observed_recordings != expected_recordings:
+                raise ValueError("Source train scores do not match the locked V2.4 training manifest")
+            save_scores(score_path, scores)
+            score_origin = {
+                "mode": "scored_v24_train_only",
+                "source_cache_dir": None,
+                "source_cache_summary_sha256": None,
+                "source_train_scores_sha256": file_sha256(score_path),
+                "source_train_score_records_sha256": file_sha256(score_path.with_suffix(".records.json")),
+            }
 
         source_normal_keys = {
             (recording_id, int(start))
@@ -345,6 +405,7 @@ def build_score_ranked_hard_negative_cache(
             "source_checkpoint_sha256": file_sha256(checkpoint_path),
             "source_train_scores_sha256": file_sha256(score_path),
             "source_train_score_records_sha256": file_sha256(score_path.with_suffix(".records.json")),
+            "source_score_origin": score_origin,
             "frozen_scaler": {"mean_sha256": file_sha256(output_dir / "frozen_train_scaler.npz"), "source_mean_sha256": source_contract["scaler_mean_sha256"], "source_scale_sha256": source_contract["scaler_scale_sha256"]},
             "positive_windows": positive_count,
             "source_normal_windows": int((source_y == 0).sum()),
