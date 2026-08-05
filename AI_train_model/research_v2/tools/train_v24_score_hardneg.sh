@@ -12,6 +12,10 @@ repo_root="$(git rev-parse --show-toplevel)"
 root="$repo_root/AI_train_model"
 branch="$(git -C "$repo_root" symbolic-ref --quiet --short HEAD)" || exit 1
 [[ "$branch" == "research/v2.4-score-ranked-hardneg" ]] || { echo "Wrong branch: $branch" >&2; exit 1; }
+[[ ! -f "$root/research_v2/reports/v24_score_ranked_hardneg_decision.md" ]] || {
+  echo "V2.4 is closed by reports/v24_score_ranked_hardneg_decision.md; training is not authorized." >&2
+  exit 1
+}
 prepared_dir="$root/research_v2/generated_v24/f${fold}_score_hardneg"
 manifest="$root/research_v2/manifests/temporal_v21/confirmation_f${fold}_manifest.csv"
 [[ -f "$prepared_dir/chbmit_train.npz" && -f "$prepared_dir/chbmit_val.npz" && -f "$prepared_dir/chbmit_temporal_eval.npz" ]] || {

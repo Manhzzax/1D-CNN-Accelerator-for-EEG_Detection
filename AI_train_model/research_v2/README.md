@@ -1,13 +1,13 @@
 # Research V2
 
-## V2.4 Score-Ranked Hard Negatives
+## V2.4 Score-Ranked Hard Negatives (Closed)
 
-The active branch `research/v2.4-score-ranked-hardneg` contains the next
-development-only intervention after the closed V2.3 feasibility study. It
-keeps C1's 57,446-parameter raw causal 1D-CNN and every training/evaluation
-setting fixed. It adds exactly 0.10 unique, score-ranked clean interictal
-train-only windows per ictal window, with 30-second separation and
-patient-group round-robin selection. The V2.2 source scaler remains frozen.
+The branch `research/v2.4-score-ranked-hardneg` evaluated one development-only
+intervention after the closed V2.3 feasibility study. It kept C1's
+57,446-parameter raw causal 1D-CNN and every training/evaluation setting
+fixed, adding exactly 0.10 score-ranked clean interictal train-only windows
+per ictal window with 30-second separation and patient-group round-robin
+selection. The V2.2 source scaler remained frozen.
 
 Build and audit the cache before running any H2 seed:
 
@@ -15,12 +15,16 @@ Build and audit the cache before running any H2 seed:
 bash research_v2/tools/prepare_v24_score_hardneg_cache.sh 00
 ```
 
-If and only if all F00--F02 cache summaries meet their exact quotas, run the
-five fixed seeds for that fold using `train_v24_score_hardneg.sh`. The formal
-contract is in [`docs/v24_execution_plan.md`](docs/v24_execution_plan.md) and
-[`reports/v24_preregistration.md`](reports/v24_preregistration.md). The
-completed cache audit and authorization are in
-[`reports/v24_cache_audit.md`](reports/v24_cache_audit.md).
+All three caches met their exact quota and all 15 preregistered seed runs were
+completed. The result is closed: H2 did not transfer `FAR <= 0.5/h`
+consistently across F00--F02, so it is not promoted. See the formal contract
+in [`docs/v24_execution_plan.md`](docs/v24_execution_plan.md), the frozen
+protocol in [`reports/v24_preregistration.md`](reports/v24_preregistration.md),
+the cache audit in [`reports/v24_cache_audit.md`](reports/v24_cache_audit.md),
+and the final decision in
+[`reports/v24_score_ranked_hardneg_decision.md`](reports/v24_score_ranked_hardneg_decision.md).
+The training script now refuses further V2.4 runs; this preserves the
+preregistration rather than deleting any evidence.
 
 ## V2.3 Policy-Aligned Hard Negatives
 
