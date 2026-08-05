@@ -1,5 +1,27 @@
 # Research V2
 
+## V2.3 Policy-Aligned Hard Negatives
+
+The active branch `research/v2.3-policy-hardneg` contains one new
+development-only intervention after the completed V2.2-A capacity decision.
+It keeps C1's raw causal 1D-CNN inference graph at 57,446 parameters, but
+adds at most 0.10 unique train-only hard negatives per ictal window. A hard
+negative must be a high-score member of a fully clean false-alarm context under
+the frozen V2.2 seed-42 calibration policy for that fold. The V2.1 source
+scaler is reused, so the intervention does not alter z-score statistics.
+
+Run one cache build and then the five fixed training seeds for a fold:
+
+```bash
+bash research_v2/tools/prepare_v23_policy_hardneg_cache.sh 00
+bash research_v2/tools/train_v23_policy_hardneg.sh 00
+```
+
+Each cache is independent, validates the immutable source artifact hashes,
+and contains no test tensor. The formal contract is in
+[`docs/v23_execution_plan.md`](docs/v23_execution_plan.md) and
+[`reports/v23_preregistration.md`](reports/v23_preregistration.md).
+
 ## V2.2-A Capacity Study
 
 The active branch `research/v2.2-far-robustness` contains the V2.2-A

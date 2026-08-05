@@ -105,6 +105,23 @@ def _scale_split(x, mean, std):
     return (x - mean[None, :, None]) / std[None, :, None]
 
 
+def _load_frozen_train_scaler(prepared_dir, expected_channels):
+    """Load an optional train-only reference scaler for a derived training cache."""
+    path = os.path.join(prepared_dir, "frozen_train_scaler.npz")
+    if not os.path.isfile(path):
+        return None
+    with np.load(path, allow_pickle=False) as source:
+        if {"mean", "scale"} - set(source.files):
+            raise ValueError(f"Frozen train scaler is missing mean/scale: {path}")
+        mean = np.asarray(source["mean"], dtype=np.float32)
+        std = np.asarray(source["scale"], dtype=np.float32)
+    if mean.shape != (expected_channels,) or std.shape != (expected_channels,):
+        raise ValueError(f"Frozen train scaler has unexpected shape: {path}")
+    if not np.all(np.isfinite(mean)) or not np.all(np.isfinite(std)) or np.any(std <= 0):
+        raise ValueError(f"Frozen train scaler contains invalid values: {path}")
+    return mean, std, path
+
+
 def _scale_per_recording(x, recording_ids):
     """Normalize each recording independently without using seizure labels."""
     scaled = np.empty_like(x, dtype=np.float32)
@@ -193,10 +210,16 @@ def get_train_val_test_datasets(include_test=True):
         raise ValueError("Recording leakage detected between prepared splits")
 
     normalization_mode = get_normalization_mode(config)
+    normalization_reference = "derived_train_windows"
     if normalization_mode == "train_channel_zscore":
-        mean = train_x.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
-        std = train_x.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
-        std = np.maximum(std, np.finfo(np.float32).eps)
+        frozen_scaler = _load_frozen_train_scaler(prepared_dir, expected_channels)
+        if frozen_scaler is None:
+            mean = train_x.mean(axis=(0, 2), dtype=np.float64).astype(np.float32)
+            std = train_x.std(axis=(0, 2), dtype=np.float64).astype(np.float32)
+            std = np.maximum(std, np.finfo(np.float32).eps)
+        else:
+            mean, std, frozen_scaler_path = frozen_scaler
+            normalization_reference = f"frozen_source_train_scaler:{frozen_scaler_path}"
         train_x = _scale_split(train_x, mean, std).astype(np.float32, copy=False)
         val_x = _scale_split(val_x, mean, std).astype(np.float32, copy=False)
         if include_test:
@@ -232,6 +255,7 @@ def get_train_val_test_datasets(include_test=True):
                 "per_recording_zscore": "per_recording_unlabeled",
                 "window_channel_zscore": "within_current_input_window",
             }[normalization_mode],
+            "reference": normalization_reference,
         }, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
     if normalization_mode == "per_recording_zscore":
@@ -241,6 +265,7 @@ def get_train_val_test_datasets(include_test=True):
     split_summary = {
         "prepared_output_dir": prepared_dir,
         "normalization_mode": normalization_mode,
+        "normalization_reference": normalization_reference,
         "feature_representation": feature_spec,
         "channels": channels.tolist(),
         "train": {"samples": len(train_y), "ictal": int(train_y.sum()), "recordings": len(train_record_set)},

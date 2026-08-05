@@ -1,0 +1,124 @@
+{
+  "version": "v2.3.0",
+  "claim_scope": "shared_model_within_patient_forward_chaining_development_only",
+  "dataset": {
+    "name": "CHB-MIT Scalp EEG Database v1.0.0",
+    "sample_rate_hz": 256,
+    "canonical_channels": 17,
+    "case_ids": 24,
+    "patient_groups": 23
+  },
+  "preprocessing": {
+    "filter_mode": "causal_iir",
+    "bandpass_hz": [0.5, 45.0],
+    "notch_hz": 60.0,
+    "normalization": "train_channel_zscore",
+    "window_sec": 5.0,
+    "stride_sec": 1.0,
+    "interictal_guard_sec": 30.0
+  },
+  "labels": {
+    "rule": "causal_window_endpoint",
+    "interval_convention": "half_open_samples",
+    "classifier_guard_policy": "exclude_nonictal_endpoints_within_guard",
+    "continuous_event_replay": "all_windows_no_guard_removal"
+  },
+  "window_sampling": {
+    "normal_to_positive_ratio": {"train": 1.0, "val": 1.0, "temporal_eval": 1.0}
+  },
+  "split": {
+    "strategy": "patient_group_cumulative_duration_forward_chaining",
+    "base_block_count": 7,
+    "development_folds": 3,
+    "development_layout": "F00=train_0_calibration_1_evaluation_2;F01=train_0_1_calibration_2_evaluation_3;F02=train_0_1_2_calibration_3_evaluation_4",
+    "future_final_layout": "train_0_to_4_calibration_5_sealed_test_6",
+    "final_test_status": "sealed_v23_development_only",
+    "patient_grouping": {
+      "case_to_patient_group": {"chb01": "subject_01_21", "chb21": "subject_01_21"},
+      "session_order": {"subject_01_21": ["chb21", "chb01"]},
+      "session_order_evidence": "Verified EDF acquisition timestamps: chb21 2055-08-10 to 2055-08-13, then chb01 2076-11-06 to 2076-11-08; recording_order_in_case within each session"
+    }
+  },
+  "hard_negative_mining": {
+    "source_candidate": "C1_multiscale_residual_57k",
+    "source_seed": 42,
+    "source_protocol": "v2.2.0",
+    "source_artifact_root": "research_v2/artifacts",
+    "hard_negative_to_positive_ratio": 0.10,
+    "sampling_multiplier": 3.0,
+    "minimum_separation_sec": 30.0,
+    "clean_context_rule": "all_policy_context_endpoints_clean_interictal_outside_30s_guard",
+    "candidate_rule": "one_highest_scoring_threshold_hit_per_clean_false_alarm_context_excluding_source_sampled_normals",
+    "selection_rule": "patient_group_round_robin_descending_source_score",
+    "candidate_shortage_policy": "retain_all_eligible_then_report_candidate_limited; fail_if_zero",
+    "source_runs": {
+      "00": {
+        "artifact_dir": "v22_f00_c1_msres57k_s42",
+        "checkpoint_sha256": "aeb8345ada86a9f01c6938742c3123cd2a843add1e6afe553fb424fc77778222",
+        "scaler_mean_sha256": "d1b6289f462db62da55cf95413fac16ea41eea71ff4b87a8043f51143f2c1139",
+        "scaler_scale_sha256": "bd610f532378276a8726ed970535605a399dda2f3b1f2e1d5c221508a46ddfb4",
+        "calibration_policy": {"policy_name": "7_of_14", "positive_windows": 7, "decision_window_windows": 14, "threshold": 0.9950000000000001}
+      },
+      "01": {
+        "artifact_dir": "v22_f01_c1_msres57k_s42",
+        "checkpoint_sha256": "4a605c77616766c1480d70e1b97327dd4880017e55097f0d78d42e3f82c3a79b",
+        "scaler_mean_sha256": "d421f41cf6744935db30dc4bcf3d2cae75a7582dea97a926f15805ebc7836310",
+        "scaler_scale_sha256": "332258cf543b3a064be8f72e7a04213f5206513081f43bfb8532432a74052cb0",
+        "calibration_policy": {"policy_name": "5_of_10", "positive_windows": 5, "decision_window_windows": 10, "threshold": 0.9920000000000001}
+      },
+      "02": {
+        "artifact_dir": "v22_f02_c1_msres57k_s42",
+        "checkpoint_sha256": "50a2f07a8a0ee9ec8a5802e736adb36a8cf512df195528dff2a6e9dd3c550b71",
+        "scaler_mean_sha256": "2fd9bfe1d9553e3748c36025d8eab70c571a0f8bc5026926a5bb9b876ee4d7f6",
+        "scaler_scale_sha256": "7131913daed7f1723c9390ef98572fe556ca14b4564230e71d71904a21dc9ec2",
+        "calibration_policy": {"policy_name": "7_of_14", "positive_windows": 7, "decision_window_windows": 14, "threshold": 0.9790000000000001}
+      }
+    }
+  },
+  "training": {
+    "training_seeds": [7, 42, 123, 314, 2718],
+    "deployment_export_seed": 42,
+    "dataset_sampling_seed": 20260802,
+    "precision": "amp_fp16_train_fp32_evaluate",
+    "max_epochs": 50,
+    "min_epochs": 12,
+    "early_stopping_patience": 12,
+    "early_stopping_min_delta": 0.001,
+    "frozen_candidates": {
+      "H1_c1_policy_hardneg_57k": {
+        "architecture": "paper_a_multiscale_residual_1dcnn",
+        "learning_rate": 0.0003,
+        "weight_decay": 0.0005,
+        "seeds": [7, 42, 123, 314, 2718],
+        "expected_parameter_count": 57446,
+        "role": "policy_aligned_hard_negative_candidate"
+      }
+    }
+  },
+  "evaluation": {
+    "window_primary_metrics": ["balanced_accuracy", "auroc"],
+    "report_accuracy_on": "explicitly_balanced_1_to_1_windows_only",
+    "primary_far_per_hour": 0.5,
+    "report_far_per_hour": [0.1, 0.5, 1.0],
+    "refractory_sec": 30,
+    "threshold_grid": {"minimum": 0.85, "maximum": 0.999, "step": 0.001},
+    "temporal_policies": [[3, 6], [4, 8], [5, 10], [6, 12], [7, 14], [8, 16], [9, 18], [10, 20]],
+    "calibration_rule": "maximize_sensitivity_subject_to_observed_calibration_far_at_or_below_target",
+    "confidence_interval": "patient_group_cluster_bootstrap_10000_and_poisson_exact_far",
+    "selection_rule": "development_only_clinical_first_event_sensitivity_with_fold_consistency_then_pareto"
+  },
+  "hardware": {
+    "quantization_primary": "symmetric_int16_weights_activations_int32_bias_accumulator",
+    "activation_scale_calibration": "prohibited_until_a_post_development_final_protocol_is_frozen",
+    "input_layout": "NCT",
+    "input_shape": [1, 17, 1280],
+    "hardware_implementation_after_model_freeze": true
+  },
+  "development": {
+    "source_evidence": "research_v2/reports/v22_capacity_decision.md",
+    "v21_temporal_folds_are_consumed_development_evidence": true,
+    "cache_policy": "reuse_read_only_v21_confirmation_caches_then_write_separate_v23_train_augmented_cache",
+    "prohibited_actions": ["open_block_5", "open_block_6", "final_training", "quantization_calibration", "fpga_performance_claim", "source_temporal_evaluation_for_mining_or_selection"],
+    "next_amendment_required_for": ["hard_negative_ratio_change", "sampling_multiplier_change", "source_model_change", "loss_change", "additional_architecture", "threshold_policy_change"]
+  }
+}

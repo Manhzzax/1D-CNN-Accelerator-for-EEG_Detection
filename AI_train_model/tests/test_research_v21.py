@@ -154,6 +154,48 @@ class V21ProtocolTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
 
+    def test_v23_is_development_only_and_has_a_frozen_mining_contract(self):
+        protocol_path = Path(__file__).resolve().parents[1] / "research_v2" / "configs" / "protocol_v2_3.json"
+        config = json.loads(protocol_path.read_text(encoding="utf-8"))
+        validate_protocol_config(config)
+        mining = config["hard_negative_mining"]
+        self.assertEqual(config["split"]["final_test_status"], "sealed_v23_development_only")
+        self.assertEqual(mining["hard_negative_to_positive_ratio"], 0.10)
+        self.assertEqual(mining["sampling_multiplier"], 3.0)
+        self.assertEqual(set(mining["source_runs"]), {"00", "01", "02"})
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            decision, manifest = root / "decision.json", root / "final.csv"
+            decision.write_text("{}", encoding="utf-8")
+            manifest.write_text("recording_id\nexample\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
+    def test_v23_miner_requires_full_clean_alarm_context_and_new_window(self):
+        import numpy as np
+        from research_v2.v23_hard_negative import select_policy_aligned_candidates
+
+        starts = np.arange(7, dtype=np.int64)
+        probabilities = np.asarray([0.1, 0.96, 0.96, 0.1, 0.1, 0.1, 0.1])
+        candidates, diagnostics = select_policy_aligned_candidates(
+            starts, probabilities, set(starts.tolist()), set(), "r", "subject_01", 1,
+            0.95, 2, 3, 3,
+        )
+        self.assertEqual(diagnostics["clean_false_alarm_contexts"], 1)
+        self.assertEqual(len(candidates), 1)
+        self.assertEqual(candidates[0]["start_sample"], 1)
+        guarded, _ = select_policy_aligned_candidates(
+            starts, probabilities, {0, 2, 3, 4, 5, 6}, set(), "r", "subject_01", 1,
+            0.95, 2, 3, 3,
+        )
+        self.assertEqual(guarded, [])
+        duplicate, _ = select_policy_aligned_candidates(
+            starts, probabilities, set(starts.tolist()), {("r", 1), ("r", 2)}, "r", "subject_01", 1,
+            0.95, 2, 3, 3,
+        )
+        self.assertEqual(duplicate, [])
+
 
 if __name__ == "__main__":
     unittest.main()

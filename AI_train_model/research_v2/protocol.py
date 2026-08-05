@@ -110,6 +110,9 @@ def validate_protocol_config(config: dict) -> None:
     elif version == "v2.2.0":
         _validate_v22_split(split, config["dataset"])
         _validate_v21_hardware(config["hardware"])
+    elif version == "v2.3.0":
+        _validate_v23_split_and_mining(split, config["dataset"], config["hard_negative_mining"])
+        _validate_v21_hardware(config["hardware"])
     elif int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
         raise ValueError("V2 requires a five-fold feasibility audit with three-fold fallback")
     if float(evaluation["primary_far_per_hour"]) != 0.5:
@@ -159,6 +162,45 @@ def _validate_v22_split(split: dict, dataset: dict) -> None:
         raise ValueError("V2.2 requires EDF-verified chb21 then chb01 session order")
     if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
         raise ValueError("V2.2 must report 24 case IDs and 23 patient groups")
+
+
+def _validate_v23_split_and_mining(split: dict, dataset: dict, mining: dict) -> None:
+    """Validate the sealed V2.3 policy-aligned hard-negative amendment."""
+    if split.get("strategy") != "patient_group_cumulative_duration_forward_chaining":
+        raise ValueError("V2.3 requires patient-group cumulative-duration forward chaining")
+    if int(split.get("base_block_count", 0)) != 7 or int(split.get("development_folds", 0)) != 3:
+        raise ValueError("V2.3 requires seven base blocks and three development folds")
+    if split.get("final_test_status") != "sealed_v23_development_only":
+        raise ValueError("V2.3 must keep blocks 5 and 6 sealed during development")
+    grouping = split.get("patient_grouping", {})
+    mapping = grouping.get("case_to_patient_group", {})
+    if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
+        raise ValueError("V2.3 must merge chb01 and chb21 into subject_01_21")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb21", "chb01"]:
+        raise ValueError("V2.3 requires EDF-verified chb21 then chb01 session order")
+    if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
+        raise ValueError("V2.3 must report 24 case IDs and 23 patient groups")
+    if mining.get("source_candidate") != "C1_multiscale_residual_57k" or int(mining.get("source_seed", -1)) != 42:
+        raise ValueError("V2.3 must use the frozen V2.2 C1 seed-42 source model")
+    if float(mining.get("hard_negative_to_positive_ratio", 0.0)) != 0.10:
+        raise ValueError("V2.3 fixes the hard-negative ratio at 0.10")
+    if float(mining.get("sampling_multiplier", 0.0)) != 3.0:
+        raise ValueError("V2.3 fixes the hard-negative sampling multiplier at 3.0")
+    if float(mining.get("minimum_separation_sec", 0.0)) != 30.0:
+        raise ValueError("V2.3 requires 30-second hard-negative separation")
+    if mining.get("clean_context_rule") != "all_policy_context_endpoints_clean_interictal_outside_30s_guard":
+        raise ValueError("V2.3 requires a fully clean policy context")
+    source_runs = mining.get("source_runs", {})
+    if set(source_runs) != {"00", "01", "02"}:
+        raise ValueError("V2.3 must predeclare one source run for each development fold")
+    for fold, source in source_runs.items():
+        if not isinstance(source.get("checkpoint_sha256"), str) or len(source["checkpoint_sha256"]) != 64:
+            raise ValueError(f"V2.3 source checkpoint hash is invalid for F{fold}")
+        policy = source.get("calibration_policy", {})
+        if not 1 <= int(policy.get("positive_windows", 0)) <= int(policy.get("decision_window_windows", 0)):
+            raise ValueError(f"V2.3 source policy is invalid for F{fold}")
+        if not 0.85 <= float(policy.get("threshold", 0.0)) <= 0.999:
+            raise ValueError(f"V2.3 source threshold is invalid for F{fold}")
 
 
 def _validate_v21_hardware(hardware: dict) -> None:
