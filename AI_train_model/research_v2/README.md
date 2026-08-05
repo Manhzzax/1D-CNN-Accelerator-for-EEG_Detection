@@ -10,11 +10,16 @@ negative must be a high-score member of a fully clean false-alarm context under
 the frozen V2.2 seed-42 calibration policy for that fold. The V2.1 source
 scaler is reused, so the intervention does not alter z-score statistics.
 
-Run one cache build and then the five fixed training seeds for a fold:
+V2.3 was closed at its cache feasibility gate.  The fully clean,
+policy-aligned candidate pool was candidate-limited in F00--F02 (8/146,
+41/249, and 106/394 retained windows), so H1 seed training was not run.  See
+[`reports/v23_feasibility_decision.md`](reports/v23_feasibility_decision.md).
+
+The cache command remains available only to verify the immutable negative
+feasibility evidence:
 
 ```bash
 bash research_v2/tools/prepare_v23_policy_hardneg_cache.sh 00
-bash research_v2/tools/train_v23_policy_hardneg.sh 00
 ```
 
 Each cache is independent, validates the immutable source artifact hashes,

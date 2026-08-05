@@ -56,3 +56,13 @@ temporal FAR <= 0.5/h, supported by balanced-window accuracy and AUROC. H1 is
 not promotable unless the FAR target transfers consistently across F00--F02;
 no final holdout, INT16 calibration, or FPGA claim follows from development
 results alone.
+
+## Execution Closure
+
+The three predeclared cache builds were completed before H1 training.  Their
+fully clean, policy-aligned hard-negative yields were 8/146 in F00, 41/249 in
+F01, and 106/394 in F02.  Because every fold was candidate-limited and the
+effective weighted augmentation ranged only from 1.62% to 7.47% of normal
+draws, H1 was closed without seed training.  The decision and calculation are
+recorded in `reports/v23_feasibility_decision.md`; V2.3's protocol is not
+retrospectively modified.

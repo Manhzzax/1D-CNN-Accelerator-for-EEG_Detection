@@ -2,6 +2,10 @@
 # Train the frozen five-seed V2.3 hard-negative candidate for one development fold.
 set -euo pipefail
 
+echo "V2.3 H1 is closed: policy-aligned hard-negative caches were candidate-limited in every development fold."
+echo "See research_v2/reports/v23_feasibility_decision.md. Start a new protocol branch for any future intervention."
+exit 3
+
 if [[ $# -ne 1 || ! "$1" =~ ^(00|01|02)$ ]]; then
   echo "Usage: $0 <fold_index:00|01|02>" >&2
   exit 2
