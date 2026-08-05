@@ -280,14 +280,13 @@ def _write_csv(output_dir: Path, records: list[dict[str, Any]]) -> None:
             })
 
 
-def build_operating_point_atlas(config_path: str | Path, artifact_root: str | Path, output_dir: str | Path) -> dict[str, Any]:
-    """Validate compact artifacts and summarize operating-point transfer."""
-    config_path, artifact_root, output_dir = Path(config_path), Path(artifact_root), Path(output_dir)
+def collect_v26_artifact_records(config_path: str | Path, artifact_root: str | Path) -> tuple[dict[str, Any], list[dict[str, Any]], dict[str, str]]:
+    """Load the immutable C1/H2/G1 artifact set and verify common folds."""
+    config_path, artifact_root = Path(config_path), Path(artifact_root)
     config = load_json(config_path)
     validate_v26_diagnostic_config(config)
     if not artifact_root.is_dir():
         raise FileNotFoundError(f"V2.6 artifact root does not exist: {artifact_root}")
-    output_dir.mkdir(parents=True, exist_ok=True)
     records = []
     manifest_hashes: dict[str, set[str]] = defaultdict(set)
     for candidate in config["candidates"]:
@@ -300,6 +299,14 @@ def build_operating_point_atlas(config_path: str | Path, artifact_root: str | Pa
     for fold, hashes in manifest_hashes.items():
         if len(hashes) != 1:
             raise ValueError(f"V2.6 candidates disagree on the consumed F{fold} manifest hash")
+    return config, records, {fold: next(iter(hashes)) for fold, hashes in sorted(manifest_hashes.items())}
+
+
+def build_operating_point_atlas(config_path: str | Path, artifact_root: str | Path, output_dir: str | Path) -> dict[str, Any]:
+    """Validate compact artifacts and summarize operating-point transfer."""
+    config_path, artifact_root, output_dir = Path(config_path), Path(artifact_root), Path(output_dir)
+    config, records, manifest_hashes = collect_v26_artifact_records(config_path, artifact_root)
+    output_dir.mkdir(parents=True, exist_ok=True)
     target_far = float(config["event_endpoint"]["primary_far_per_hour"])
     top_count = int(config["reporting"]["top_patient_groups"])
     summaries = {
@@ -322,7 +329,7 @@ def build_operating_point_atlas(config_path: str | Path, artifact_root: str | Pa
             "sealed_temporal_blocks": config["sealed_temporal_blocks"],
             "prohibited_actions": config["prohibited_actions"],
         },
-        "manifest_sha256_by_fold": {fold: next(iter(hashes)) for fold, hashes in sorted(manifest_hashes.items())},
+        "manifest_sha256_by_fold": manifest_hashes,
         "runs": records,
         "candidate_fold_summaries": summaries,
         "interpretation_limit": config["reporting"]["diagnostic_limit"],

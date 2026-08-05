@@ -166,6 +166,35 @@ def _v26_audit_artifacts(args: argparse.Namespace) -> None:
     )
 
 
+def _v26_audit_score_replays(args: argparse.Namespace) -> None:
+    """Run a diagnostic-only policy sweep over existing consumed score streams."""
+    from .v26_score_replay import build_score_replay_atlas
+
+    result = build_score_replay_atlas(
+        args.artifact_config, args.score_replay_config, args.artifact_root,
+        args.run_root, args.manifest_root, args.score_cache, args.output,
+        rescore_missing=args.rescore_missing, artifact_ids=args.artifact,
+    )
+    print(
+        "V2.6 score-replay atlas: "
+        f"{len(result['runs'])} runs | output: {Path(args.output)}"
+    )
+
+
+def _v26_inspect_score_replays(args: argparse.Namespace) -> None:
+    """Check score-stream provenance without loading scores or opening EEG."""
+    from .v26_score_replay import inspect_score_replay_inventory
+
+    result = inspect_score_replay_inventory(
+        args.artifact_config, args.score_replay_config, args.artifact_root,
+        args.run_root, args.manifest_root, args.output,
+    )
+    print(
+        "V2.6 score-replay inventory: "
+        f"{result['ready_runs']}/{len(result['runs'])} verified score pairs | output: {Path(args.output)}"
+    )
+
+
 def _inventory(args: argparse.Namespace) -> None:
     result = write_inventory(args.output, args.roots)
     print(f"Legacy inventory: {result['entry_count']} artifact directories. Output: {args.output}")
@@ -270,6 +299,27 @@ def main() -> None:
     v26_audit.add_argument("--artifact-root", required=True)
     v26_audit.add_argument("--output", required=True)
     v26_audit.set_defaults(handler=_v26_audit_artifacts)
+
+    v26_scores = subparsers.add_parser("v26-audit-score-replays", help="Diagnostic-only counterfactual sweep on consumed continuous score streams")
+    v26_scores.add_argument("--artifact-config", required=True)
+    v26_scores.add_argument("--score-replay-config", required=True)
+    v26_scores.add_argument("--artifact-root", required=True)
+    v26_scores.add_argument("--run-root", required=True)
+    v26_scores.add_argument("--manifest-root", required=True)
+    v26_scores.add_argument("--score-cache", required=True)
+    v26_scores.add_argument("--output", required=True)
+    v26_scores.add_argument("--rescore-missing", action="store_true")
+    v26_scores.add_argument("--artifact", action="append", default=[], help="Optional frozen artifact ID; repeated only for bounded diagnostic scope")
+    v26_scores.set_defaults(handler=_v26_audit_score_replays)
+
+    v26_inventory = subparsers.add_parser("v26-inspect-score-replays", help="Verify V2.6 score-pair availability and sidecar provenance without loading arrays")
+    v26_inventory.add_argument("--artifact-config", required=True)
+    v26_inventory.add_argument("--score-replay-config", required=True)
+    v26_inventory.add_argument("--artifact-root", required=True)
+    v26_inventory.add_argument("--run-root", required=True)
+    v26_inventory.add_argument("--manifest-root", required=True)
+    v26_inventory.add_argument("--output", required=True)
+    v26_inventory.set_defaults(handler=_v26_inspect_score_replays)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")
     inventory.add_argument("--roots", required=True, nargs="+")

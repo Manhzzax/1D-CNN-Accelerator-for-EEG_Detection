@@ -132,6 +132,15 @@ bash research_v2/tools/run_v26_operating_point_atlas.sh
 The resulting report is evidence for a later written intervention hypothesis;
 it is not itself a model-selection procedure.
 
+The follow-on branch `research/v2.6-score-replay-diagnostics` may replay only
+the continuous score streams already generated for C1, H2, and G1 on F00--F02.
+It verifies the run-sidecar hashes against the packaged artifact and performs a
+counterfactual temporal-policy sweep solely to characterize whether the fixed
+score stream has an operating point at the declared FAR target. It cannot
+retroactively select a threshold, policy, or candidate. Its default is to reuse
+verified local score files; re-scoring is explicit and writes only ignored
+diagnostic cache files.
+
 ## V2.1 Patient-Group Protocol
 
 V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It
@@ -247,3 +256,22 @@ five fixed seed IDs for a single push.
 Generated manifests, prepared EEG data, continuous scores, and model outputs
 must not be committed. Commit only configs, source, concise reports, and the
 packaged reproducibility artifact for a frozen result.
+
+## V2.6 diagnostic-only replay
+
+`research/v2.6-score-replay-diagnostics` first performs a lightweight
+inventory of the 45 already-consumed C1/H2/G1 score-pair locations, manifests,
+and sidecars. It does not load scores, EEG, checkpoints, or any sealed block:
+
+```bash
+bash research_v2/tools/inspect_v26_score_replay_cache.sh
+```
+
+Only after this inventory reports verified pairs may
+`tools/run_v26_score_replay_atlas.sh` replay the calibration-selected operating
+point and calculate a counterfactual temporal oracle. The oracle is a diagnostic
+of already consumed score separability, never a retrospective policy or
+candidate-selection rule. Passing an artifact ID limits the command to a
+separate pilot report directory, for example
+`...atlas.sh v22_f00_c1_msres57k_s7`.
+Blocks 5 and 6 remain sealed in both commands.

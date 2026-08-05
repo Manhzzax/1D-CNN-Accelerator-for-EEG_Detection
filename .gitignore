@@ -234,6 +234,7 @@ AI_train_model/research_v2/generated_v23/
 AI_train_model/research_v2/generated_v24/
 AI_train_model/research_v2/manifests/temporal_v2/
 AI_train_model/research_v2/manifests/temporal_v21/
+AI_train_model/research_v2/diagnostic_cache_v26/
 
 # Generated LaTeX files for the TBioCAS manuscript; source remains versioned.
 AI_train_model/paper/tbiocas_kv260/*.aux

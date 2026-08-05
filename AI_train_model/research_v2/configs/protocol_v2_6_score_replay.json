@@ -1,0 +1,48 @@
+{
+  "version": "v2.6.1-score-replay-diagnostic-only",
+  "purpose": "Counterfactual temporal-policy characterization on continuous score streams from already consumed F00-F02 replays. No training, policy selection, candidate selection, final validation, or block-5/block-6 access is permitted.",
+  "artifact_diagnostic_config": "research_v2/configs/protocol_v2_6_diagnostics.json",
+  "candidate_score_subdirectories": {
+    "C1": "v22_development",
+    "H2": "v24_development",
+    "G1": "v25_development"
+  },
+  "allowed_folds": ["00", "01", "02"],
+  "sealed_temporal_blocks": [5, 6],
+  "preprocessing": {
+    "sample_rate_hz": 256,
+    "window_sec": 5.0,
+    "stride_sec": 1.0,
+    "bandpass_low_hz": 0.5,
+    "bandpass_high_hz": 45.0,
+    "notch_hz": 60.0,
+    "filter_mode": "causal_iir",
+    "normalization": "train_channel_zscore"
+  },
+  "evaluation": {
+    "primary_far_per_hour": 0.5,
+    "refractory_sec": 30,
+    "threshold_grid": {"minimum": 0.85, "maximum": 0.999, "step": 0.001},
+    "temporal_policies": [[3, 6], [4, 8], [5, 10], [6, 12], [7, 14], [8, 16], [9, 18], [10, 20]],
+    "oracle_definition": "Diagnostic-only maximum event sensitivity among policies that satisfy FAR <= 0.5/h on the already consumed temporal partition. This uses future labels only to characterize the deployed score stream and must not select a future policy or candidate."
+  },
+  "score_cache": {
+    "default_mode": "reuse_verified_existing_run_scores_only",
+    "rescore_missing_requires_explicit_flag": true,
+    "batch_size": 128,
+    "precision": "amp_fp16_inference_if_cuda_available"
+  },
+  "prohibited_actions": [
+    "model_training",
+    "hyperparameter_selection",
+    "threshold_selection",
+    "temporal_policy_selection",
+    "candidate_selection",
+    "block_5_access",
+    "block_6_access",
+    "final_training",
+    "quantization_calibration",
+    "tensor_export",
+    "fpga_performance_claim"
+  ]
+}
