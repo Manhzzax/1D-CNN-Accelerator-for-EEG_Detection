@@ -18,7 +18,9 @@ bash research_v2/tools/prepare_v24_score_hardneg_cache.sh 00
 If and only if all F00--F02 cache summaries meet their exact quotas, run the
 five fixed seeds for that fold using `train_v24_score_hardneg.sh`. The formal
 contract is in [`docs/v24_execution_plan.md`](docs/v24_execution_plan.md) and
-[`reports/v24_preregistration.md`](reports/v24_preregistration.md).
+[`reports/v24_preregistration.md`](reports/v24_preregistration.md). The
+completed cache audit and authorization are in
+[`reports/v24_cache_audit.md`](reports/v24_cache_audit.md).
 
 ## V2.3 Policy-Aligned Hard Negatives
 
