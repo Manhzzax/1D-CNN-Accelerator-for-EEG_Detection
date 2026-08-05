@@ -22,6 +22,11 @@ artifacts include the checkpoint, architecture/hyperparameter contract, and
 training-only normalization tensors, but exclude derived EEG/cache and
 continuous-score data.
 
+The completed capacity decision is recorded in
+[`reports/v22_capacity_decision.md`](reports/v22_capacity_decision.md): C1
+was not promoted because the calibration-selected FAR target transferred only
+in F01, not F00 or F02. This does not authorize final-holdout access.
+
 ## V2.1 Patient-Group Protocol
 
 V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It
