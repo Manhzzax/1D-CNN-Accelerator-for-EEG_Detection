@@ -171,6 +171,22 @@ class V21ProtocolTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
 
+    def test_v24_is_development_only_and_requires_an_exact_score_ranked_quota(self):
+        protocol_path = Path(__file__).resolve().parents[1] / "research_v2" / "configs" / "protocol_v2_4.json"
+        config = json.loads(protocol_path.read_text(encoding="utf-8"))
+        validate_protocol_config(config)
+        mining = config["hard_negative_mining"]
+        self.assertEqual(config["split"]["final_test_status"], "sealed_v24_development_only")
+        self.assertEqual(mining["mining_strategy"], "score_ranked_clean_interictal_train_only")
+        self.assertEqual(mining["candidate_shortage_policy"], "fail_if_fewer_than_requested")
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            decision, manifest = root / "decision.json", root / "final.csv"
+            decision.write_text("{}", encoding="utf-8")
+            manifest.write_text("recording_id\nexample\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
+
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
     def test_v23_miner_requires_full_clean_alarm_context_and_new_window(self):
         import numpy as np
@@ -195,6 +211,20 @@ class V21ProtocolTests(unittest.TestCase):
             0.95, 2, 3, 3,
         )
         self.assertEqual(duplicate, [])
+
+    @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
+    def test_v24_miner_uses_only_clean_unsampled_endpoints(self):
+        import numpy as np
+        from research_v2.v24_score_hard_negative import select_score_ranked_candidates
+
+        starts = np.asarray([0, 1, 2, 3], dtype=np.int64)
+        probabilities = np.asarray([0.1, 0.99, 0.98, 0.97])
+        candidates, diagnostics = select_score_ranked_candidates(
+            starts, probabilities, {0, 1, 3}, {("r", 0)}, "r", "subject_01",
+        )
+        self.assertEqual([item["start_sample"] for item in candidates], [1, 3])
+        self.assertEqual(diagnostics["clean_interictal_candidates"], 2)
+        self.assertEqual(diagnostics["excluded_source_sampled_normals"], 1)
 
 
 if __name__ == "__main__":

@@ -1,5 +1,25 @@
 # Research V2
 
+## V2.4 Score-Ranked Hard Negatives
+
+The active branch `research/v2.4-score-ranked-hardneg` contains the next
+development-only intervention after the closed V2.3 feasibility study. It
+keeps C1's 57,446-parameter raw causal 1D-CNN and every training/evaluation
+setting fixed. It adds exactly 0.10 unique, score-ranked clean interictal
+train-only windows per ictal window, with 30-second separation and
+patient-group round-robin selection. The V2.2 source scaler remains frozen.
+
+Build and audit the cache before running any H2 seed:
+
+```bash
+bash research_v2/tools/prepare_v24_score_hardneg_cache.sh 00
+```
+
+If and only if all F00--F02 cache summaries meet their exact quotas, run the
+five fixed seeds for that fold using `train_v24_score_hardneg.sh`. The formal
+contract is in [`docs/v24_execution_plan.md`](docs/v24_execution_plan.md) and
+[`reports/v24_preregistration.md`](reports/v24_preregistration.md).
+
 ## V2.3 Policy-Aligned Hard Negatives
 
 The active branch `research/v2.3-policy-hardneg` contains one new

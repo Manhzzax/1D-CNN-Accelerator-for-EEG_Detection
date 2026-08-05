@@ -129,6 +129,31 @@ def _v23_mine_policy_hard_negatives(args: argparse.Namespace) -> None:
     )
 
 
+def _v24_mine_score_ranked_hard_negatives(args: argparse.Namespace) -> None:
+    """Materialize only the V2.4 train-derived score-ranked hard-negative cache."""
+    from .v24_score_hard_negative import build_score_ranked_hard_negative_cache
+
+    config = load_json(args.protocol)
+    validate_protocol_config(config)
+    registry = load_candidate_registry(args.registry)
+    if registry["candidates"][0]["candidate_id"] != "H2_c1_score_ranked_hardneg_57k":
+        raise ValueError("V2.4 requires the frozen H2 candidate registry")
+    summary = build_score_ranked_hard_negative_cache(
+        project_root=args.project_root,
+        config=config,
+        fold_index=args.fold,
+        fold_manifest=args.fold_manifest,
+        source_prepared_dir=args.source_prepared_dir,
+        output_dir=args.output,
+    )
+    print(
+        f"V2.4 F{args.fold} score-ranked hard-negative cache: "
+        f"{summary['positive_windows']} ictal + {summary['source_normal_windows']} source normals + "
+        f"{summary['hard_negative_windows']} hard negatives "
+        f"(requested {summary['requested_hard_negative_windows']}; reused={summary['cache_reused']})"
+    )
+
+
 def _inventory(args: argparse.Namespace) -> None:
     result = write_inventory(args.output, args.roots)
     print(f"Legacy inventory: {result['entry_count']} artifact directories. Output: {args.output}")
@@ -216,6 +241,16 @@ def main() -> None:
     v23_mine.add_argument("--source-prepared-dir", required=True)
     v23_mine.add_argument("--output", required=True)
     v23_mine.set_defaults(handler=_v23_mine_policy_hard_negatives)
+
+    v24_mine = subparsers.add_parser("v24-mine-score-ranked-hard-negatives", help="Build a train-only V2.4 score-ranked hard-negative cache")
+    v24_mine.add_argument("--project-root", required=True)
+    v24_mine.add_argument("--protocol", required=True)
+    v24_mine.add_argument("--registry", required=True)
+    v24_mine.add_argument("--fold", required=True, choices=("00", "01", "02"))
+    v24_mine.add_argument("--fold-manifest", required=True)
+    v24_mine.add_argument("--source-prepared-dir", required=True)
+    v24_mine.add_argument("--output", required=True)
+    v24_mine.set_defaults(handler=_v24_mine_score_ranked_hard_negatives)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")
     inventory.add_argument("--roots", required=True, nargs="+")

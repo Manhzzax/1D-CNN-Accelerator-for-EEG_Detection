@@ -113,6 +113,9 @@ def validate_protocol_config(config: dict) -> None:
     elif version == "v2.3.0":
         _validate_v23_split_and_mining(split, config["dataset"], config["hard_negative_mining"])
         _validate_v21_hardware(config["hardware"])
+    elif version == "v2.4.0":
+        _validate_v24_split_and_mining(split, config["dataset"], config["hard_negative_mining"])
+        _validate_v21_hardware(config["hardware"])
     elif int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
         raise ValueError("V2 requires a five-fold feasibility audit with three-fold fallback")
     if float(evaluation["primary_far_per_hour"]) != 0.5:
@@ -201,6 +204,49 @@ def _validate_v23_split_and_mining(split: dict, dataset: dict, mining: dict) -> 
             raise ValueError(f"V2.3 source policy is invalid for F{fold}")
         if not 0.85 <= float(policy.get("threshold", 0.0)) <= 0.999:
             raise ValueError(f"V2.3 source threshold is invalid for F{fold}")
+
+
+def _validate_v24_split_and_mining(split: dict, dataset: dict, mining: dict) -> None:
+    """Validate the V2.4 score-ranked train-only hard-negative amendment."""
+    if split.get("strategy") != "patient_group_cumulative_duration_forward_chaining":
+        raise ValueError("V2.4 requires patient-group cumulative-duration forward chaining")
+    if int(split.get("base_block_count", 0)) != 7 or int(split.get("development_folds", 0)) != 3:
+        raise ValueError("V2.4 requires seven base blocks and three development folds")
+    if split.get("final_test_status") != "sealed_v24_development_only":
+        raise ValueError("V2.4 must keep blocks 5 and 6 sealed during development")
+    grouping = split.get("patient_grouping", {})
+    mapping = grouping.get("case_to_patient_group", {})
+    if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
+        raise ValueError("V2.4 must merge chb01 and chb21 into subject_01_21")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb21", "chb01"]:
+        raise ValueError("V2.4 requires EDF-verified chb21 then chb01 session order")
+    if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
+        raise ValueError("V2.4 must report 24 case IDs and 23 patient groups")
+    if mining.get("source_candidate") != "C1_multiscale_residual_57k" or int(mining.get("source_seed", -1)) != 42:
+        raise ValueError("V2.4 must use the frozen V2.2 C1 seed-42 source model")
+    if mining.get("mining_strategy") != "score_ranked_clean_interictal_train_only":
+        raise ValueError("V2.4 requires score-ranked clean-interictal train-only mining")
+    if float(mining.get("hard_negative_to_positive_ratio", 0.0)) != 0.10:
+        raise ValueError("V2.4 fixes the hard-negative ratio at 0.10")
+    if float(mining.get("sampling_multiplier", 0.0)) != 3.0:
+        raise ValueError("V2.4 fixes the hard-negative sampling multiplier at 3.0")
+    if float(mining.get("minimum_separation_sec", 0.0)) != 30.0:
+        raise ValueError("V2.4 requires 30-second hard-negative separation")
+    if mining.get("clean_context_rule") != "causal_endpoint_clean_interictal_outside_30s_guard":
+        raise ValueError("V2.4 requires a clean causal interictal endpoint")
+    if mining.get("candidate_rule") != "all_clean_interictal_train_endpoints_excluding_source_sampled_normals_ranked_by_source_score":
+        raise ValueError("V2.4 candidate ranking contract differs")
+    if mining.get("selection_rule") != "patient_group_round_robin_descending_source_score":
+        raise ValueError("V2.4 requires patient-group round-robin selection")
+    if mining.get("candidate_shortage_policy") != "fail_if_fewer_than_requested":
+        raise ValueError("V2.4 must fail instead of changing a candidate-limited intervention")
+    source_runs = mining.get("source_runs", {})
+    if set(source_runs) != {"00", "01", "02"}:
+        raise ValueError("V2.4 must predeclare one source run for each development fold")
+    for fold, source in source_runs.items():
+        for field in ("checkpoint_sha256", "scaler_mean_sha256", "scaler_scale_sha256"):
+            if not isinstance(source.get(field), str) or len(source[field]) != 64:
+                raise ValueError(f"V2.4 source {field} is invalid for F{fold}")
 
 
 def _validate_v21_hardware(hardware: dict) -> None:
