@@ -282,7 +282,7 @@ def get_train_val_test_datasets(include_test=True):
 
     print("Loaded locked prepared splits:")
     for split_name, split in split_summary.items():
-        if split_name in {"channels", "prepared_output_dir", "normalization_mode", "feature_representation"}:
+        if not isinstance(split, dict):
             continue
         if split.get("loaded") is False:
             print("  test: not loaded (test evaluation skipped)")
