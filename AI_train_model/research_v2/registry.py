@@ -22,7 +22,9 @@ def load_candidate_registry(path: str | Path) -> dict:
         raise ValueError("V2.3 must contain exactly one predeclared hard-negative candidate")
     if version == "v2.4.0" and len(candidates) != 1:
         raise ValueError("V2.4 must contain exactly one predeclared hard-negative candidate")
-    if version not in {None, "v2.0.0", "v2.1.0", "v2.2.0", "v2.3.0", "v2.4.0"}:
+    if version == "v2.5.0" and len(candidates) != 1:
+        raise ValueError("V2.5 must contain exactly one predeclared group-robust candidate")
+    if version not in {None, "v2.0.0", "v2.1.0", "v2.2.0", "v2.3.0", "v2.4.0", "v2.5.0"}:
         raise ValueError(f"Unsupported V2 candidate registry version: {version}")
     seen = set()
     for candidate in candidates:

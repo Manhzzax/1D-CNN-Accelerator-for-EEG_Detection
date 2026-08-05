@@ -1,0 +1,19 @@
+{
+  "version": "v2.5.0",
+  "selection_rule": "One development-only intervention: equal observed class/patient-group sampling plus low-eta source-patient GroupDRO. The C1 inference graph, optimizer, seeds, calibration grid, and temporal replay are fixed.",
+  "promotion_rule": "A post-development final protocol is required before blocks 5 or 6 may be opened. G1 requires fold consistency, five-seed variation, temporal event sensitivity, FAR, worst-patient diagnostics, parameter count, INT16 degradation, and hardware feasibility.",
+  "candidates": [
+    {
+      "candidate_id": "G1_c1_groupdro_balanced_57k",
+      "role": "patient_group_robust_training_candidate",
+      "family": "raw_multiscale_residual_depthwise_separable_1dcnn",
+      "implementation": "Same C1 inference graph: 15/47 multiscale depthwise input branches, 1x1 mixing, residual depthwise-separable 7/5/3 refinement with dilations 1/2/4. Only train-sampler and loss aggregation change.",
+      "parameter_budget": "25k_100k",
+      "expected_parameter_count": 57446,
+      "inference_contract": "raw causal 17x1280 EEG; Conv1D, depthwise Conv1D, pointwise Conv1D, BatchNorm, ReLU, AvgPool, residual add, global average pool, linear classifier",
+      "training_contract": "Equal probability over observed (class, source patient group) strata with replacement; GroupDRO exponentiated-gradient source-group loss, eta 0.01; source patient identifiers are training-only and are not inputs or inference operators.",
+      "optimizer": {"learning_rate": 0.0003, "weight_decay": 0.0005},
+      "seeds": [7, 42, 123, 314, 2718]
+    }
+  ]
+}

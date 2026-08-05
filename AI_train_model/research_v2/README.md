@@ -1,5 +1,32 @@
 # Research V2
 
+## V2.5 Patient-Group Robust Training
+
+The active branch `research/v2.5-patient-group-robustness` contains one new
+development-only intervention after the closed V2.4 score-ranked hard-negative
+study. G1 keeps the raw C1 1D-CNN and its 57,446 parameters exactly fixed. It
+uses equal observed `(class, source patient group)` sampling and a low-eta
+source-patient GroupDRO objective during training only; patient metadata is not
+an inference input, parameter, or FPGA tensor.
+
+The protocol reuses the read-only V2.1 F00--F02 causal caches and never opens
+blocks 5 or 6. The rationale, confound exclusions, and literature basis are in
+[`reports/v25_design_review.md`](reports/v25_design_review.md); the frozen
+execution and decision rules are in
+[`docs/v25_execution_plan.md`](docs/v25_execution_plan.md) and
+[`reports/v25_preregistration.md`](reports/v25_preregistration.md).
+
+Before the first run, verify the cache contract once:
+
+```bash
+bash research_v2/tools/prepare_v25_group_robust_caches.sh
+```
+
+Then train exactly one completed fold at a time using
+`train_v25_group_robust.sh`; it runs the five fixed seeds and prints the single
+package command. Do not add hard-negative mining, MixStyle, contrastive loss,
+or target-patient adaptation to this protocol.
+
 ## V2.4 Score-Ranked Hard Negatives (Closed)
 
 The branch `research/v2.4-score-ranked-hardneg` evaluated one development-only

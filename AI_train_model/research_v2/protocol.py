@@ -116,6 +116,9 @@ def validate_protocol_config(config: dict) -> None:
     elif version == "v2.4.0":
         _validate_v24_split_and_mining(split, config["dataset"], config["hard_negative_mining"])
         _validate_v21_hardware(config["hardware"])
+    elif version == "v2.5.0":
+        _validate_v25_split_and_group_robustness(split, config["dataset"], training)
+        _validate_v21_hardware(config["hardware"])
     elif int(split["requested_outer_folds"]) != 5 or int(split["fallback_outer_folds"]) != 3:
         raise ValueError("V2 requires a five-fold feasibility audit with three-fold fallback")
     if float(evaluation["primary_far_per_hour"]) != 0.5:
@@ -247,6 +250,37 @@ def _validate_v24_split_and_mining(split: dict, dataset: dict, mining: dict) -> 
         for field in ("checkpoint_sha256", "scaler_mean_sha256", "scaler_scale_sha256"):
             if not isinstance(source.get(field), str) or len(source[field]) != 64:
                 raise ValueError(f"V2.4 source {field} is invalid for F{fold}")
+
+
+def _validate_v25_split_and_group_robustness(split: dict, dataset: dict, training: dict) -> None:
+    """Validate the sealed V2.5 patient-group robust-training amendment."""
+    if split.get("strategy") != "patient_group_cumulative_duration_forward_chaining":
+        raise ValueError("V2.5 requires patient-group cumulative-duration forward chaining")
+    if int(split.get("base_block_count", 0)) != 7 or int(split.get("development_folds", 0)) != 3:
+        raise ValueError("V2.5 requires seven base blocks and three development folds")
+    if split.get("final_test_status") != "sealed_v25_development_only":
+        raise ValueError("V2.5 must keep blocks 5 and 6 sealed during development")
+    grouping = split.get("patient_grouping", {})
+    mapping = grouping.get("case_to_patient_group", {})
+    if mapping.get("chb01") != "subject_01_21" or mapping.get("chb21") != "subject_01_21":
+        raise ValueError("V2.5 must merge chb01 and chb21 into subject_01_21")
+    if grouping.get("session_order", {}).get("subject_01_21") != ["chb21", "chb01"]:
+        raise ValueError("V2.5 requires EDF-verified chb21 then chb01 session order")
+    if int(dataset.get("case_ids", 0)) != 24 or int(dataset.get("patient_groups", 0)) != 23:
+        raise ValueError("V2.5 must report 24 case IDs and 23 patient groups")
+    robust = training.get("group_robustness", {})
+    if robust.get("sampler") != "equal_observed_class_patient_group_strata":
+        raise ValueError("V2.5 requires equal observed class/patient-group strata sampling")
+    if robust.get("objective") != "exponentiated_gradient_groupdro_source_patient_groups":
+        raise ValueError("V2.5 requires the declared source-patient GroupDRO objective")
+    if float(robust.get("eta", 0.0)) != 0.01:
+        raise ValueError("V2.5 fixes GroupDRO eta at 0.01")
+    if robust.get("inference_graph_change") is not False:
+        raise ValueError("V2.5 GroupDRO must not modify the inference graph")
+    candidates = training.get("frozen_candidates", {})
+    candidate = candidates.get("G1_c1_groupdro_balanced_57k")
+    if candidate is None or int(candidate.get("expected_parameter_count", -1)) != 57446:
+        raise ValueError("V2.5 requires the fixed 57,446-parameter G1 candidate")
 
 
 def _validate_v21_hardware(hardware: dict) -> None:

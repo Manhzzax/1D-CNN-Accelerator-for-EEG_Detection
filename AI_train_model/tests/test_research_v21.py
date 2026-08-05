@@ -187,6 +187,23 @@ class V21ProtocolTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
 
+    def test_v25_is_development_only_and_keeps_the_inference_graph_fixed(self):
+        protocol_path = Path(__file__).resolve().parents[1] / "research_v2" / "configs" / "protocol_v2_5.json"
+        config = json.loads(protocol_path.read_text(encoding="utf-8"))
+        validate_protocol_config(config)
+        robust = config["training"]["group_robustness"]
+        self.assertEqual(config["split"]["final_test_status"], "sealed_v25_development_only")
+        self.assertEqual(robust["sampler"], "equal_observed_class_patient_group_strata")
+        self.assertEqual(robust["eta"], 0.01)
+        self.assertFalse(robust["inference_graph_change"])
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            decision, manifest = root / "decision.json", root / "final.csv"
+            decision.write_text("{}", encoding="utf-8")
+            manifest.write_text("recording_id\nexample\n", encoding="utf-8")
+            with self.assertRaises(ValueError):
+                create_final_freeze(protocol_path, manifest, decision, root / "freeze.json")
+
     @unittest.skipUnless(importlib.util.find_spec("numpy"), "requires numpy")
     def test_v23_miner_requires_full_clean_alarm_context_and_new_window(self):
         import numpy as np
