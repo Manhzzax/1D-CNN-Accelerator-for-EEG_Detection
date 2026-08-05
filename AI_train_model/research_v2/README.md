@@ -114,6 +114,24 @@ transfer stable across F00--F02. It is a reported training-only ablation and
 must not be used for final validation, INT16 calibration, tensor export, or
 KV260 synthesis.
 
+## V2.6 Diagnostic-Only Branch
+
+Branch `research/v2.6-operating-point-diagnostics` starts with no new model
+training. It validates the already packaged C1, H2, and G1 artifacts and
+creates an operating-point atlas for F00--F02. The atlas reports
+calibration-to-temporal FAR drift, selected policies, balanced-window metrics,
+and patient-group false-alarm concentration. It cannot open raw EEG, create a
+score stream, select a replacement threshold, or access blocks 5 and 6.
+
+Run the reproducible artifact-only report with:
+
+```bash
+bash research_v2/tools/run_v26_operating_point_atlas.sh
+```
+
+The resulting report is evidence for a later written intervention hypothesis;
+it is not itself a model-selection procedure.
+
 ## V2.1 Patient-Group Protocol
 
 V2.1 is the active protocol on branch `research/v2.1-patient-forward`. It

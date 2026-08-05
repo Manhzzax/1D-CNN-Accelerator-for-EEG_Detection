@@ -1,0 +1,61 @@
+{
+  "version": "v2.6.0-diagnostic-only",
+  "purpose": "Post-hoc characterization of already consumed V2.1 development replays. This protocol creates no model, threshold, policy, prepared EEG tensor, score stream, quantization tensor, or hardware result.",
+  "consumed_development_folds": ["00", "01", "02"],
+  "sealed_temporal_blocks": [5, 6],
+  "training_seeds": [7, 42, 123, 314, 2718],
+  "event_endpoint": {
+    "primary_far_per_hour": 0.5,
+    "selection_split": "calibration",
+    "evaluation_split": "temporal_eval",
+    "interpretation": "A temporal FAR above the target after calibration selected a feasible policy is evidence of operating-point transfer failure."
+  },
+  "artifact_contract": {
+    "required_files": [
+      "model_spec.json",
+      "provenance.json",
+      "training_summary.json",
+      "validation_window_metrics.json",
+      "temporal_confirmation.json",
+      "calibration_policy_sweep.json"
+    ],
+    "expected_parameter_count": 57446,
+    "expected_precision": "amp_fp16_train_fp32_evaluate"
+  },
+  "candidates": [
+    {
+      "id": "C1",
+      "candidate_id": "C1_multiscale_residual_57k",
+      "artifact_template": "v22_f{fold}_c1_msres57k_s{seed}",
+      "role": "raw_causal_c1_reference"
+    },
+    {
+      "id": "H2",
+      "candidate_id": "H2_c1_score_ranked_hardneg_57k",
+      "artifact_template": "v24_f{fold}_h2_scorehn57k_s{seed}",
+      "role": "train_only_score_ranked_hard_negative_ablation"
+    },
+    {
+      "id": "G1",
+      "candidate_id": "G1_c1_groupdro_balanced_57k",
+      "artifact_template": "v25_f{fold}_g1_groupdro57k_s{seed}",
+      "role": "train_only_patient_group_robustness_ablation"
+    }
+  ],
+  "reporting": {
+    "top_patient_groups": 3,
+    "diagnostic_limit": "Artifact-only analysis can quantify calibration-to-temporal FAR transfer and false-alarm concentration, but cannot infer an oracle temporal policy or a signal-level artifact label. Those require a separately declared replay-only audit of already consumed score streams."
+  },
+  "prohibited_actions": [
+    "model_training",
+    "hyperparameter_selection",
+    "threshold_selection",
+    "temporal_policy_selection",
+    "block_5_access",
+    "block_6_access",
+    "final_training",
+    "quantization_calibration",
+    "tensor_export",
+    "fpga_performance_claim"
+  ]
+}

@@ -155,6 +155,17 @@ def _v24_mine_score_ranked_hard_negatives(args: argparse.Namespace) -> None:
     )
 
 
+def _v26_audit_artifacts(args: argparse.Namespace) -> None:
+    """Create an artifact-only operating-point atlas over consumed folds."""
+    from .v26_diagnostics import build_operating_point_atlas
+
+    result = build_operating_point_atlas(args.config, args.artifact_root, args.output)
+    print(
+        "V2.6 artifact-only operating-point atlas: "
+        f"{len(result['runs'])} runs | output: {Path(args.output)}"
+    )
+
+
 def _inventory(args: argparse.Namespace) -> None:
     result = write_inventory(args.output, args.roots)
     print(f"Legacy inventory: {result['entry_count']} artifact directories. Output: {args.output}")
@@ -253,6 +264,12 @@ def main() -> None:
     v24_mine.add_argument("--output", required=True)
     v24_mine.add_argument("--source-score-cache", help="Optional validated V2.3 train-only source-score cache")
     v24_mine.set_defaults(handler=_v24_mine_score_ranked_hard_negatives)
+
+    v26_audit = subparsers.add_parser("v26-audit-artifacts", help="Summarize consumed V2.1 artifact-only operating-point evidence")
+    v26_audit.add_argument("--config", required=True)
+    v26_audit.add_argument("--artifact-root", required=True)
+    v26_audit.add_argument("--output", required=True)
+    v26_audit.set_defaults(handler=_v26_audit_artifacts)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")
     inventory.add_argument("--roots", required=True, nargs="+")
