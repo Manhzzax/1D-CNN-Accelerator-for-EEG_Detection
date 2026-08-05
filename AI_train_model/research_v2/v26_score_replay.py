@@ -312,7 +312,7 @@ def _filter_records(records: list[dict[str, Any]], artifact_ids: list[str] | Non
 def _metric(scores: dict[str, Any], policy: dict[str, Any], config: dict[str, Any]) -> dict[str, Any]:
     from src.event_evaluation import event_metrics
 
-    preprocessing = _score_preprocessing(config)
+    preprocessing = config["preprocessing"]
     evaluation = config["evaluation"]
     return event_metrics(
         scores, float(policy["threshold"]), int(preprocessing["sample_rate_hz"]), float(preprocessing["window_sec"]),
