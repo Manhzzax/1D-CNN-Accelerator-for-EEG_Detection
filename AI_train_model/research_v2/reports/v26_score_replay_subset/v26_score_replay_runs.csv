@@ -1,0 +1,2 @@
+candidate,fold,seed,artifact,score_source,selected_policy,selected_threshold,selected_temporal_sensitivity,selected_temporal_far_per_hour,oracle_target_feasible,oracle_policy,oracle_threshold,oracle_temporal_sensitivity,oracle_temporal_far_per_hour,minimum_far_policy,minimum_far_threshold,minimum_temporal_far_per_hour,oracle_sweep_runtime_sec
+C1,00,7,v22_f00_c1_msres57k_s7,verified_existing_run_scores,8_of_16,0.9720000000000001,0.5652173913043478,2.4126389924337355,False,,,,,10_of_20,0.9990000000000001,0.7494884443950953,325.608
