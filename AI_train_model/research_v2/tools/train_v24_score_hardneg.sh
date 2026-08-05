@@ -27,6 +27,12 @@ manifest="$root/research_v2/manifests/temporal_v21/confirmation_f${fold}_manifes
 cd "$root"
 for seed in 7 42 123 314 2718; do
   run="v24_f${fold}_h2_scorehn57k_s${seed}"
+  run_dir="$root/outputs/$run"
+  [[ ! -e "$run_dir" ]] || {
+    echo "Refusing to overwrite an existing V2.4 run directory: $run_dir" >&2
+    echo "Inspect and remove only an incomplete directory before re-running this immutable run ID." >&2
+    exit 1
+  }
   CHBMIT_V2_MODEL_ARCHITECTURE=paper_a_multiscale_residual_1dcnn \
   CHBMIT_TRAIN_LEARNING_RATE=3e-4 \
   CHBMIT_TRAIN_WEIGHT_DECAY=5e-4 \
