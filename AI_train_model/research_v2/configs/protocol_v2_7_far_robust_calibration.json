@@ -1,0 +1,36 @@
+{
+  "version": "v2.7.0-far-robust-calibration-diagnostic-only",
+  "purpose": "Development-only evaluation of a conservative calibration rule after V2.6 showed calibration-to-temporal operating-point transfer failure. This is not candidate promotion or a final performance claim.",
+  "source_artifact_config": "research_v2/configs/protocol_v2_6_diagnostics.json",
+  "candidate_comparators": ["C1", "H2"],
+  "allowed_folds": ["00", "01", "02"],
+  "sealed_temporal_blocks": [5, 6],
+  "candidate_score_subdirectories": {
+    "C1": "v22_development",
+    "H2": "v24_development"
+  },
+  "evaluation": {
+    "primary_far_per_hour": 0.5,
+    "refractory_sec": 30,
+    "window_sec": 5.0,
+    "sample_rate_hz": 256,
+    "declared_operating_point_count": 1200,
+    "family_wise_confidence": 0.95,
+    "multiplicity_control": "bonferroni_over_all_predeclared_threshold_policy_pairs",
+    "calibration_rule": "maximize_sensitivity_subject_to_one_sided_exact_garwood_far_upper_bound_at_or_below_target",
+    "tie_breakers": ["lower_median_detection_delay", "lower_far_upper_bound", "lower_observed_far"],
+    "temporal_evaluation": "apply_selected_calibration_policy_once_to_already_consumed_next_block_only"
+  },
+  "prohibited_actions": [
+    "model_training",
+    "hyperparameter_selection",
+    "candidate_selection",
+    "retrospective_temporal_policy_selection",
+    "block_5_access",
+    "block_6_access",
+    "final_training",
+    "quantization_calibration",
+    "tensor_export",
+    "fpga_performance_claim"
+  ]
+}

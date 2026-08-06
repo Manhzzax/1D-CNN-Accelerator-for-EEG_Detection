@@ -195,6 +195,20 @@ def _v26_inspect_score_replays(args: argparse.Namespace) -> None:
     )
 
 
+def _v27_far_robust_calibration(args: argparse.Namespace) -> None:
+    """Apply the V2.7 simultaneous-UCB calibration rule to existing score streams."""
+    from .v27_far_robust import build_far_robust_calibration_report
+
+    result = build_far_robust_calibration_report(
+        args.config, args.artifact_config, args.artifact_root, args.run_root,
+        args.manifest_root, args.output,
+    )
+    print(
+        "V2.7 FAR-robust calibration diagnostic: "
+        f"{len(result['runs'])} runs | output: {Path(args.output)}"
+    )
+
+
 def _inventory(args: argparse.Namespace) -> None:
     result = write_inventory(args.output, args.roots)
     print(f"Legacy inventory: {result['entry_count']} artifact directories. Output: {args.output}")
@@ -320,6 +334,15 @@ def main() -> None:
     v26_inventory.add_argument("--manifest-root", required=True)
     v26_inventory.add_argument("--output", required=True)
     v26_inventory.set_defaults(handler=_v26_inspect_score_replays)
+
+    v27_robust = subparsers.add_parser("v27-far-robust-calibration", help="Diagnostic-only simultaneous-UCB calibration replay for frozen C1/H2 artifacts")
+    v27_robust.add_argument("--config", required=True)
+    v27_robust.add_argument("--artifact-config", required=True)
+    v27_robust.add_argument("--artifact-root", required=True)
+    v27_robust.add_argument("--run-root", required=True)
+    v27_robust.add_argument("--manifest-root", required=True)
+    v27_robust.add_argument("--output", required=True)
+    v27_robust.set_defaults(handler=_v27_far_robust_calibration)
 
     inventory = subparsers.add_parser("inventory", help="Hash legacy artifacts without moving them")
     inventory.add_argument("--roots", required=True, nargs="+")

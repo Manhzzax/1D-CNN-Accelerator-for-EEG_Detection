@@ -275,3 +275,13 @@ candidate-selection rule. Passing an artifact ID limits the command to a
 separate pilot report directory, for example
 `...atlas.sh v22_f00_c1_msres57k_s7`.
 Blocks 5 and 6 remain sealed in both commands.
+
+## V2.7 FAR-Robust Calibration Diagnostic
+
+`research/v2.7-far-robust-calibration` is a separate, development-only
+follow-up to V2.6. It compares the frozen C1 and H2 score streams using a
+calibration-only, one-sided exact Garwood FAR upper bound with Bonferroni
+control across the 1,200 predeclared operating points. A temporal score stream
+is opened only after that simultaneous calibration criterion passes. This is
+still a post-V2.6 diagnostic, not a final policy, candidate promotion, or a
+block-5/block-6 evaluation.

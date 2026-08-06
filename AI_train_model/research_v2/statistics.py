@@ -113,3 +113,21 @@ def poisson_exact_far_interval(false_alarms: int, nonictal_hours: float, confide
         estimate=float(false_alarms / nonictal_hours), lower=float(lower_count / nonictal_hours),
         upper=float(upper_count / nonictal_hours), numerator=int(false_alarms), denominator=float(nonictal_hours),
     )
+
+
+def poisson_one_sided_upper_far(false_alarms: int, nonictal_hours: float, confidence: float = 0.95) -> RateInterval:
+    """Return a one-sided exact Garwood upper confidence bound for FAR/h.
+
+    The caller is responsible for any multiplicity correction when this bound
+    is used to choose among several operating points.
+    """
+    from scipy.stats import chi2
+
+    if false_alarms < 0 or nonictal_hours <= 0.0 or not 0.0 < confidence < 1.0:
+        raise ValueError("Invalid one-sided Poisson FAR bound inputs")
+    alpha = 1.0 - confidence
+    upper_count = 0.5 * chi2.ppf(1.0 - alpha, 2 * (false_alarms + 1))
+    return RateInterval(
+        estimate=float(false_alarms / nonictal_hours), lower=0.0,
+        upper=float(upper_count / nonictal_hours), numerator=int(false_alarms), denominator=float(nonictal_hours),
+    )
