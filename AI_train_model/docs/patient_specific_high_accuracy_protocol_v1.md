@@ -48,10 +48,10 @@ clean-slate shared A0.
 
 | Step | Change | When |
 |---|---|---|
-| A1.0 | R2 31/7/3, threshold 0.5 | Always first — **done: mean test bal 90.719%** |
-| **A1.0b** | **Val-selected threshold** (max val balanced acc, grid 0.05–0.95 step 0.01), apply once to sealed test | Next after A1.0; no weight retrain |
-| A1.0c | Secondary report: mean over cases with ≥20 test ictal windows | Diagnostic only; primary remains all eligible cases |
-| A1.1 | Multiscale / MSR ≤25k | If mean test bal @ A1.0b still < 95% |
+| A1.0 | R2 31/7/3, threshold 0.5 | **Done: mean test bal 90.719%** (primary baseline) |
+| A1.0b | Val-selected threshold | **Done: mean 89.918% — rejected** (worse than 0.5) |
+| A1.0c | Secondary: cases with ≥20 test ictal | Diagnostic only |
+| **A1.1** | **Compact MSR `paper_a_multiscale_residual_1dcnn` ≤25k**, thr 0.5 | **Next** — reuse same prepared per-case NPZs |
 | A1.2 | Train-only SupCon or mild aug | If A1.1 still short |
 | A1.3 | DWT frontend (no LSTM) | Only if A1.0–A1.2 fail and hardware story may change |
 
@@ -60,6 +60,15 @@ clean-slate shared A0.
 - Threshold is chosen **only on validation** labels/scores.
 - Test is scored **once** with the frozen threshold.
 - Architecture, split, and checkpoints are unchanged from A1.0.
+- **Result:** mean test balanced **fell** vs thr 0.5 → keep thr **0.5** as primary.
+
+### A1.1 contract
+
+- Architecture: multiscale short/long depthwise + residual stages, `max_parameters: 25000`.
+- Same Path A splits/prepared data as A1.0 (`chbmit_prepared_ps_a1_v1/{case}`).
+- Train seed 42, skip test; sealed test thr 0.5 via `checkpoint_eval`.
+- Run ids: `ps_a11_{case}_s42` / `ps_a11_test_ps_a11_{case}_s42`.
+- Promote only if cohort mean test balanced **> A1.0 (90.719%)** and preferably ≥95%.
 
 
 ## Explicit non-goals for Path A

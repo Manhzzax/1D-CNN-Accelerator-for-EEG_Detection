@@ -67,10 +67,11 @@ model:
     refinement_kernel: 15
     dropout: 0.25
   paper_a_multiscale_residual_1dcnn:
-    temporal_filters_per_branch: 2
-    stage_one_filters: 64
-    stage_two_filters: 96
-    stage_three_filters: 128
+    # A1.1 compact multiscale residual (hard cap 25k).
+    temporal_filters_per_branch: 1
+    stage_one_filters: 32
+    stage_two_filters: 48
+    stage_three_filters: 64
     short_kernel: 15
     long_kernel: 47
     stage_one_kernel: 7
@@ -79,7 +80,7 @@ model:
     stage_two_dilation: 2
     stage_three_dilation: 4
     dropout: 0.25
-    max_parameters: 100000
+    max_parameters: 25000
   parallel_multikernel_1dcnn:
     branch_filters: 16
     short_kernel: 15
@@ -228,6 +229,9 @@ path_a:
   selection_metric: "validation_cross_entropy"
   test_policy: "sealed_until_case_model_freeze"
   architecture_baseline: "hierarchical_separable_1dcnn_31_7_3"
+  architecture_a1_1: "paper_a_multiscale_residual_1dcnn_compact_25k"
   max_parameters: 25000
+  a1_0_mean_test_balanced: 0.90719
+  a1_0b_val_threshold_rejected: true
   report_shared_clean_slate_separately: true
 
