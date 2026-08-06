@@ -1,0 +1,90 @@
+{
+  "balanced_test_at_0_5": {
+    "accuracy": 0.9948453608247423,
+    "auroc": 1.0,
+    "average_precision": 1.0,
+    "balanced_accuracy": 0.9948453608247423,
+    "f1": 0.9948186528497409,
+    "precision": 1.0,
+    "sensitivity": 0.9896907216494846,
+    "threshold": 0.5
+  },
+  "balanced_test_diagnostic": {
+    "metrics": {
+      "accuracy": 0.9896907216494846,
+      "auroc": 1.0,
+      "average_precision": 1.0,
+      "balanced_accuracy": 0.9896907216494846,
+      "f1": 0.9895833333333334,
+      "precision": 1.0,
+      "sensitivity": 0.979381443298969,
+      "threshold": 0.8
+    },
+    "negative_windows": 97,
+    "positive_windows": 97,
+    "seed": 42
+  },
+  "case_id": "chb01",
+  "checkpoint_sha256": "1597599b05cb2f28cb02dfeda6fa13093f9d0166a9cbd6bf7aae33f5fb3d4737",
+  "evaluation_kind": "patient_specific_val_selected_threshold_then_sealed_test",
+  "selection_rule": "Threshold maximizes validation balanced accuracy on the full validation windows using grid 0.05:0.01:0.95. Test is evaluated once and never used for selection.",
+  "source_run_id": "ps_a1_chb01_s42",
+  "test_prevalence_metrics_at_0_5": {
+    "accuracy": 0.979381443298969,
+    "auroc": 0.9943670953342544,
+    "average_precision": 0.8453446758375187,
+    "balanced_accuracy": 0.9840206185567011,
+    "f1": 0.897196261682243,
+    "precision": 0.8205128205128205,
+    "sensitivity": 0.9896907216494846,
+    "threshold": 0.5
+  },
+  "test_prevalence_metrics_at_selected_threshold": {
+    "accuracy": 0.9878163074039362,
+    "auroc": 0.9943670953342544,
+    "average_precision": 0.8453446758375187,
+    "balanced_accuracy": 0.9840206185567011,
+    "f1": 0.9359605911330049,
+    "precision": 0.8962264150943396,
+    "sensitivity": 0.979381443298969,
+    "threshold": 0.8
+  },
+  "test_window_counts": {
+    "negative": 970,
+    "positive": 97,
+    "total": 1067
+  },
+  "threshold_selection": {
+    "grid_max": 0.95,
+    "grid_min": 0.05,
+    "grid_step": 0.009999999999999995,
+    "objective": "max_validation_balanced_accuracy",
+    "threshold": 0.8,
+    "validation_balanced_accuracy": 1.0
+  },
+  "val_window_counts": {
+    "negative": 89,
+    "positive": 89,
+    "total": 178
+  },
+  "validation_balanced_metrics_at_selected_threshold": {
+    "accuracy": 1.0,
+    "auroc": 1.0,
+    "average_precision": 1.0,
+    "balanced_accuracy": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "sensitivity": 1.0,
+    "threshold": 0.8
+  },
+  "validation_full_metrics_at_selected_threshold": {
+    "accuracy": 1.0,
+    "auroc": 1.0,
+    "average_precision": 1.0,
+    "balanced_accuracy": 1.0,
+    "f1": 1.0,
+    "precision": 1.0,
+    "sensitivity": 1.0,
+    "threshold": 0.8
+  }
+}
