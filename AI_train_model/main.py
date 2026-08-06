@@ -18,6 +18,8 @@ from scripts import (
     run_temporal_policy_sweep,
     run_plan,
     run_plan_patient_heldout,
+    run_plan_patient_specific,
+    run_prepare_patient_specific,
     run_preprocess,
     run_temporal_score_tcn,
     run_eda,
@@ -30,7 +32,7 @@ def main():
     parser = argparse.ArgumentParser(description="EEG Seizure Detection 1D-CNN Accelerator Pipeline")
     parser.add_argument(
         "--mode", 
-        choices=["audit", "checkpoint_eval", "plan", "plan_patient_heldout", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "hyperparameter_sweep", "temporal_policy_sweep", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "export_fpga", "all"],
+        choices=["audit", "checkpoint_eval", "plan", "plan_patient_heldout", "plan_patient_specific", "prepare_patient_specific", "preprocess", "mine_hard_negatives", "mine_temporal_hard_negatives", "hyperparameter_sweep", "temporal_policy_sweep", "temporal_score_tcn", "eda", "train", "event_eval", "reconcile_event_metrics", "event_diagnostics", "quantize", "export_fpga", "all"],
         default="all",
         help="Pipeline phase to run: 'audit' (EDF metadata), 'plan' (grouped split), 'preprocess' (EDF slicing), 'eda' (Analysis), 'train' (Training), 'event_eval' (continuous metrics), 'quantize' (Quantize & export), or 'all' (Run all)."
     )
@@ -45,6 +47,10 @@ def main():
         run_plan.main()
     elif args.mode == "plan_patient_heldout":
         run_plan_patient_heldout.main()
+    elif args.mode == "plan_patient_specific":
+        run_plan_patient_specific.main()
+    elif args.mode == "prepare_patient_specific":
+        run_prepare_patient_specific.main()
     elif args.mode == "preprocess":
         run_preprocess.main()
     elif args.mode == "mine_hard_negatives":
