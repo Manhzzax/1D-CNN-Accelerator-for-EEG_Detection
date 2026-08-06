@@ -1,0 +1,206 @@
+{
+  "n_cases": 24,
+  "mean_test_balanced_accuracy_val_threshold": 0.899181728500066,
+  "sd_test_balanced_accuracy_val_threshold": 0.12330003400145227,
+  "mean_test_balanced_accuracy_threshold_0_5": 0.9071853608224304,
+  "primary_success_threshold": 0.95,
+  "passed": false,
+  "secondary_min_test_ictal_windows": 20,
+  "secondary_n_cases": 21,
+  "secondary_mean_test_balanced_accuracy": 0.8927156262222976,
+  "secondary_sd_test_balanced_accuracy": 0.12730357102512144,
+  "per_case": [
+    {
+      "case_id": "chb01",
+      "selected_threshold": 0.8,
+      "test_balanced_accuracy": 0.9896907216494846,
+      "test_balanced_accuracy_at_0_5": 0.9948453608247423,
+      "test_sensitivity": 0.979381443298969,
+      "test_ictal_windows": 97
+    },
+    {
+      "case_id": "chb02",
+      "selected_threshold": 0.76,
+      "test_balanced_accuracy": 1.0,
+      "test_balanced_accuracy_at_0_5": 1.0,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 5
+    },
+    {
+      "case_id": "chb03",
+      "selected_threshold": 0.81,
+      "test_balanced_accuracy": 0.944954128440367,
+      "test_balanced_accuracy_at_0_5": 0.9908256880733946,
+      "test_sensitivity": 0.8899082568807339,
+      "test_ictal_windows": 109
+    },
+    {
+      "case_id": "chb04",
+      "selected_threshold": 0.72,
+      "test_balanced_accuracy": 0.6523809523809524,
+      "test_balanced_accuracy_at_0_5": 0.9095238095238095,
+      "test_sensitivity": 0.36666666666666664,
+      "test_ictal_windows": 210
+    },
+    {
+      "case_id": "chb05",
+      "selected_threshold": 0.92,
+      "test_balanced_accuracy": 0.9601769911504425,
+      "test_balanced_accuracy_at_0_5": 0.9734513274336283,
+      "test_sensitivity": 0.9203539823008849,
+      "test_ictal_windows": 113
+    },
+    {
+      "case_id": "chb06",
+      "selected_threshold": 0.82,
+      "test_balanced_accuracy": 0.95,
+      "test_balanced_accuracy_at_0_5": 0.95,
+      "test_sensitivity": 0.95,
+      "test_ictal_windows": 20
+    },
+    {
+      "case_id": "chb07",
+      "selected_threshold": 0.36,
+      "test_balanced_accuracy": 0.9244604316546763,
+      "test_balanced_accuracy_at_0_5": 0.8992805755395683,
+      "test_sensitivity": 0.8489208633093526,
+      "test_ictal_windows": 139
+    },
+    {
+      "case_id": "chb08",
+      "selected_threshold": 0.52,
+      "test_balanced_accuracy": 0.9230769230769231,
+      "test_balanced_accuracy_at_0_5": 0.9230769230769231,
+      "test_sensitivity": 0.85,
+      "test_ictal_windows": 260
+    },
+    {
+      "case_id": "chb09",
+      "selected_threshold": 0.55,
+      "test_balanced_accuracy": 0.9568965517241379,
+      "test_balanced_accuracy_at_0_5": 0.9655172413793103,
+      "test_sensitivity": 0.9137931034482759,
+      "test_ictal_windows": 58
+    },
+    {
+      "case_id": "chb10",
+      "selected_threshold": 0.59,
+      "test_balanced_accuracy": 0.9482758620689655,
+      "test_balanced_accuracy_at_0_5": 0.9636015325670498,
+      "test_sensitivity": 0.9042145593869731,
+      "test_ictal_windows": 261
+    },
+    {
+      "case_id": "chb11",
+      "selected_threshold": 0.66,
+      "test_balanced_accuracy": 0.9391711229946524,
+      "test_balanced_accuracy_at_0_5": 0.9164438502673797,
+      "test_sensitivity": 0.9719251336898396,
+      "test_ictal_windows": 748
+    },
+    {
+      "case_id": "chb12",
+      "selected_threshold": 0.54,
+      "test_balanced_accuracy": 0.9558823529411764,
+      "test_balanced_accuracy_at_0_5": 0.9522058823529411,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 136
+    },
+    {
+      "case_id": "chb13",
+      "selected_threshold": 0.28,
+      "test_balanced_accuracy": 0.9337121212121212,
+      "test_balanced_accuracy_at_0_5": 0.8787878787878788,
+      "test_sensitivity": 0.9393939393939394,
+      "test_ictal_windows": 264
+    },
+    {
+      "case_id": "chb14",
+      "selected_threshold": 0.77,
+      "test_balanced_accuracy": 0.8333333333333333,
+      "test_balanced_accuracy_at_0_5": 0.9583333333333333,
+      "test_sensitivity": 0.6666666666666666,
+      "test_ictal_windows": 12
+    },
+    {
+      "case_id": "chb15",
+      "selected_threshold": 0.5,
+      "test_balanced_accuracy": 0.9587073608617595,
+      "test_balanced_accuracy_at_0_5": 0.9587073608617595,
+      "test_sensitivity": 0.9353680430879713,
+      "test_ictal_windows": 557
+    },
+    {
+      "case_id": "chb16",
+      "selected_threshold": 0.43,
+      "test_balanced_accuracy": 0.7045454545454546,
+      "test_balanced_accuracy_at_0_5": 0.75,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 22
+    },
+    {
+      "case_id": "chb17",
+      "selected_threshold": 0.57,
+      "test_balanced_accuracy": 0.9404761904761905,
+      "test_balanced_accuracy_at_0_5": 0.9226190476190477,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 84
+    },
+    {
+      "case_id": "chb18",
+      "selected_threshold": 0.56,
+      "test_balanced_accuracy": 0.660377358490566,
+      "test_balanced_accuracy_at_0_5": 0.5,
+      "test_sensitivity": 0.330188679245283,
+      "test_ictal_windows": 106
+    },
+    {
+      "case_id": "chb19",
+      "selected_threshold": 0.36,
+      "test_balanced_accuracy": 0.987012987012987,
+      "test_balanced_accuracy_at_0_5": 0.974025974025974,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 77
+    },
+    {
+      "case_id": "chb20",
+      "selected_threshold": 0.79,
+      "test_balanced_accuracy": 0.9285714285714286,
+      "test_balanced_accuracy_at_0_5": 0.9285714285714286,
+      "test_sensitivity": 0.8857142857142857,
+      "test_ictal_windows": 35
+    },
+    {
+      "case_id": "chb21",
+      "selected_threshold": 0.49,
+      "test_balanced_accuracy": 1.0,
+      "test_balanced_accuracy_at_0_5": 1.0,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 8
+    },
+    {
+      "case_id": "chb22",
+      "selected_threshold": 0.39,
+      "test_balanced_accuracy": 0.9852941176470589,
+      "test_balanced_accuracy_at_0_5": 0.9558823529411765,
+      "test_sensitivity": 1.0,
+      "test_ictal_windows": 68
+    },
+    {
+      "case_id": "chb23",
+      "selected_threshold": 0.62,
+      "test_balanced_accuracy": 0.9451754385964912,
+      "test_balanced_accuracy_at_0_5": 0.9539473684210527,
+      "test_sensitivity": 0.956140350877193,
+      "test_ictal_windows": 228
+    },
+    {
+      "case_id": "chb24",
+      "selected_threshold": 0.59,
+      "test_balanced_accuracy": 0.5581896551724138,
+      "test_balanced_accuracy_at_0_5": 0.552801724137931,
+      "test_sensitivity": 0.13577586206896552,
+      "test_ictal_windows": 464
+    }
+  ]
+}
