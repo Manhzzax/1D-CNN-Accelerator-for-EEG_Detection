@@ -52,8 +52,11 @@ clean-slate shared A0.
 | A1.0b | Val-selected threshold | **Done: mean 89.918% — rejected** (worse than 0.5) |
 | A1.0c | Secondary: cases with ≥20 test ictal | Diagnostic only |
 | A1.1 | Compact MSR ≤25k, thr 0.5 | **Done: mean 88.12% (Δ−2.6 pp vs A1.0) — rejected** |
-| **A1.2** | **A1.0 backbone + train-only SupCon (0.05, T=0.1)** | **Next** — same prepared NPZs, thr 0.5 |
-| A1.3 | Mild aug only (if SupCon fails) or DWT (last resort) | After A1.2 |
+| A1.2 | A1.0 backbone + train-only SupCon (0.05, T=0.1) | **Done: mean 91.096% (Δ +0.38 pp) — best Path A** |
+| A1.3+ | Optional (100E / hard cases / aug / DWT) | **Not required** for results freeze v1 |
+
+**Results freeze:** see `research_v2/reports/path_a/PATH_A_RESULTS_FREEZE_v1.md`.  
+**Data/train setup:** see `docs/path_a_data_and_training_setup.md`.
 
 ### A1.0b integrity
 
@@ -77,6 +80,7 @@ clean-slate shared A0.
 - Training only: `CE + 0.05 * SupCon`, temperature `0.1` (no extra inference ops).
 - Run ids: `ps_a12_{case}_s42` / `ps_a12_test_ps_a12_{case}_s42`.
 - Promote only if mean test balanced **> 90.719%**; success if ≥95%.
+- **Result:** mean **91.096% ± 12.68%** (Δ **+0.378 pp** vs A1.0) → **promoted as best Path A mean**; cohort **≥95% still not met**.
 
 
 ## Explicit non-goals for Path A
