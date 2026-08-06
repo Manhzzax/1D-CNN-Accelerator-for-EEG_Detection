@@ -51,9 +51,9 @@ clean-slate shared A0.
 | A1.0 | R2 31/7/3, threshold 0.5 | **Done: mean test bal 90.719%** (primary baseline) |
 | A1.0b | Val-selected threshold | **Done: mean 89.918% — rejected** (worse than 0.5) |
 | A1.0c | Secondary: cases with ≥20 test ictal | Diagnostic only |
-| **A1.1** | **Compact MSR `paper_a_multiscale_residual_1dcnn` ≤25k**, thr 0.5 | **Next** — reuse same prepared per-case NPZs |
-| A1.2 | Train-only SupCon or mild aug | If A1.1 still short |
-| A1.3 | DWT frontend (no LSTM) | Only if A1.0–A1.2 fail and hardware story may change |
+| A1.1 | Compact MSR ≤25k, thr 0.5 | **Done: mean 88.12% (Δ−2.6 pp vs A1.0) — rejected** |
+| **A1.2** | **A1.0 backbone + train-only SupCon (0.05, T=0.1)** | **Next** — same prepared NPZs, thr 0.5 |
+| A1.3 | Mild aug only (if SupCon fails) or DWT (last resort) | After A1.2 |
 
 ### A1.0b integrity
 
@@ -69,6 +69,14 @@ clean-slate shared A0.
 - Train seed 42, skip test; sealed test thr 0.5 via `checkpoint_eval`.
 - Run ids: `ps_a11_{case}_s42` / `ps_a11_test_ps_a11_{case}_s42`.
 - Promote only if cohort mean test balanced **> A1.0 (90.719%)** and preferably ≥95%.
+- **Result:** mean **88.120%** (Δ **−2.599 pp**) → **not promoted**.
+
+### A1.2 contract
+
+- Inference graph: **identical** A1.0 hierarchical 31/7/3 (~4,917 params).
+- Training only: `CE + 0.05 * SupCon`, temperature `0.1` (no extra inference ops).
+- Run ids: `ps_a12_{case}_s42` / `ps_a12_test_ps_a12_{case}_s42`.
+- Promote only if mean test balanced **> 90.719%**; success if ≥95%.
 
 
 ## Explicit non-goals for Path A

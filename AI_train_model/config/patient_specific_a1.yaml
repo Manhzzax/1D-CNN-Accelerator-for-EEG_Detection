@@ -233,5 +233,9 @@ path_a:
   max_parameters: 25000
   a1_0_mean_test_balanced: 0.90719
   a1_0b_val_threshold_rejected: true
+  a1_1_mean_test_balanced: 0.88120
+  a1_1_rejected: true
+  a1_2_supcon_coefficient: 0.05
+  a1_2_supcon_temperature: 0.1
   report_shared_clean_slate_separately: true
 
