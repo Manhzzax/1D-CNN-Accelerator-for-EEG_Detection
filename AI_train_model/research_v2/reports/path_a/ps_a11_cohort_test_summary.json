@@ -1,0 +1,180 @@
+{
+  "protocol": "path_a_a1_1_multiscale_residual_compact_25k",
+  "n_cases": 24,
+  "mean_test_balanced_accuracy": 0.8811974053481298,
+  "sd_test_balanced_accuracy": 0.151905394563015,
+  "a1_0_mean_test_balanced_accuracy": 0.9071853608224304,
+  "delta_vs_a1_0_pp": -2.598795547430055,
+  "primary_success_threshold": 0.95,
+  "passed": false,
+  "per_case": [
+    {
+      "case_id": "chb01",
+      "test_balanced_accuracy": 1.0,
+      "test_raw_accuracy": 0.9756326148078726,
+      "test_sensitivity": 1.0,
+      "test_auroc": 1.0
+    },
+    {
+      "case_id": "chb02",
+      "test_balanced_accuracy": 1.0,
+      "test_raw_accuracy": 0.9454545454545454,
+      "test_sensitivity": 1.0,
+      "test_auroc": 1.0
+    },
+    {
+      "case_id": "chb03",
+      "test_balanced_accuracy": 0.9724770642201835,
+      "test_raw_accuracy": 0.9824854045037531,
+      "test_sensitivity": 0.9541284403669725,
+      "test_auroc": 0.9984008080127936
+    },
+    {
+      "case_id": "chb04",
+      "test_balanced_accuracy": 0.6619047619047619,
+      "test_raw_accuracy": 0.8722943722943723,
+      "test_sensitivity": 0.3904761904761905,
+      "test_auroc": 0.821360544217687
+    },
+    {
+      "case_id": "chb05",
+      "test_balanced_accuracy": 0.9778761061946902,
+      "test_raw_accuracy": 0.9887369267900241,
+      "test_sensitivity": 0.9646017699115044,
+      "test_auroc": 0.9990602239799515
+    },
+    {
+      "case_id": "chb06",
+      "test_balanced_accuracy": 1.0,
+      "test_raw_accuracy": 1.0,
+      "test_sensitivity": 1.0,
+      "test_auroc": 1.0
+    },
+    {
+      "case_id": "chb07",
+      "test_balanced_accuracy": 0.7877697841726619,
+      "test_raw_accuracy": 0.960758665794637,
+      "test_sensitivity": 0.5755395683453237,
+      "test_auroc": 0.9685834066559702
+    },
+    {
+      "case_id": "chb08",
+      "test_balanced_accuracy": 0.9192307692307693,
+      "test_raw_accuracy": 0.9622377622377623,
+      "test_sensitivity": 0.8769230769230769,
+      "test_auroc": 0.9749260355029586
+    },
+    {
+      "case_id": "chb09",
+      "test_balanced_accuracy": 0.9741379310344828,
+      "test_raw_accuracy": 0.9811912225705329,
+      "test_sensitivity": 0.9482758620689655,
+      "test_auroc": 0.995243757431629
+    },
+    {
+      "case_id": "chb10",
+      "test_balanced_accuracy": 0.9501915708812261,
+      "test_raw_accuracy": 0.9902473005921282,
+      "test_sensitivity": 0.9042145593869731,
+      "test_auroc": 0.997489760866693
+    },
+    {
+      "case_id": "chb11",
+      "test_balanced_accuracy": 0.9538770053475936,
+      "test_raw_accuracy": 0.9422317904556872,
+      "test_sensitivity": 0.9705882352941176,
+      "test_auroc": 0.9925433955789413
+    },
+    {
+      "case_id": "chb12",
+      "test_balanced_accuracy": 0.9522058823529411,
+      "test_raw_accuracy": 0.9338235294117647,
+      "test_sensitivity": 1.0,
+      "test_auroc": 0.9923767301038062
+    },
+    {
+      "case_id": "chb13",
+      "test_balanced_accuracy": 0.8731060606060606,
+      "test_raw_accuracy": 0.9418044077134986,
+      "test_sensitivity": 0.7803030303030303,
+      "test_auroc": 0.9465249081726356
+    },
+    {
+      "case_id": "chb14",
+      "test_balanced_accuracy": 0.9166666666666667,
+      "test_raw_accuracy": 0.9772727272727273,
+      "test_sensitivity": 0.8333333333333334,
+      "test_auroc": 1.0
+    },
+    {
+      "case_id": "chb15",
+      "test_balanced_accuracy": 0.9614003590664273,
+      "test_raw_accuracy": 0.9673575975191774,
+      "test_sensitivity": 0.9461400359066428,
+      "test_auroc": 0.9869234066830191
+    },
+    {
+      "case_id": "chb16",
+      "test_balanced_accuracy": 0.8181818181818181,
+      "test_raw_accuracy": 0.71900826446281,
+      "test_sensitivity": 1.0,
+      "test_auroc": 0.762396694214876
+    },
+    {
+      "case_id": "chb17",
+      "test_balanced_accuracy": 0.9464285714285714,
+      "test_raw_accuracy": 0.7813852813852814,
+      "test_sensitivity": 1.0,
+      "test_auroc": 0.9375
+    },
+    {
+      "case_id": "chb18",
+      "test_balanced_accuracy": 0.5754716981132075,
+      "test_raw_accuracy": 0.9159519725557461,
+      "test_sensitivity": 0.16037735849056603,
+      "test_auroc": 0.9676931292274831
+    },
+    {
+      "case_id": "chb19",
+      "test_balanced_accuracy": 0.935064935064935,
+      "test_raw_accuracy": 0.9067296340023613,
+      "test_sensitivity": 1.0,
+      "test_auroc": 0.988024962050936
+    },
+    {
+      "case_id": "chb20",
+      "test_balanced_accuracy": 0.5,
+      "test_raw_accuracy": 0.9090909090909091,
+      "test_sensitivity": 0.0,
+      "test_auroc": 0.8220408163265306
+    },
+    {
+      "case_id": "chb21",
+      "test_balanced_accuracy": 1.0,
+      "test_raw_accuracy": 0.9886363636363636,
+      "test_sensitivity": 1.0,
+      "test_auroc": 1.0
+    },
+    {
+      "case_id": "chb22",
+      "test_balanced_accuracy": 0.9485294117647058,
+      "test_raw_accuracy": 0.982620320855615,
+      "test_sensitivity": 0.8970588235294118,
+      "test_auroc": 0.9965397923875432
+    },
+    {
+      "case_id": "chb23",
+      "test_balanced_accuracy": 0.9671052631578947,
+      "test_raw_accuracy": 0.9457735247208932,
+      "test_sensitivity": 0.9956140350877193,
+      "test_auroc": 0.994363650353955
+    },
+    {
+      "case_id": "chb24",
+      "test_balanced_accuracy": 0.5571120689655172,
+      "test_raw_accuracy": 0.8963557993730408,
+      "test_sensitivity": 0.13793103448275862,
+      "test_auroc": 0.30440881391200947
+    }
+  ]
+}
