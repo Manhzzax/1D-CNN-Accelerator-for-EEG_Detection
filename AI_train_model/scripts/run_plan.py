@@ -6,13 +6,13 @@ project_dir = os.path.dirname(script_dir)
 sys.path.append(project_dir)
 
 from src.chbmit_split import create_chronological_split_plan
-from src.data_loader import load_config
+from src.data_loader import get_protocol_output_dir_name, load_config
 
 
 def main():
     config = load_config()
     audit_dir_name = config["data"].get("audit_output_dir", "chbmit_audit")
-    protocol_dir_name = config["data"].get("protocol_output_dir", "chbmit_protocol")
+    protocol_dir_name = get_protocol_output_dir_name(config)
     audit_dir = os.path.join(project_dir, "data", audit_dir_name)
     output_dir = os.path.join(project_dir, "data", protocol_dir_name)
     ratios_config = config["data"]["split_ratios"]
@@ -21,6 +21,10 @@ def main():
     print("=" * 60)
     print("PLANNING CHB-MIT CASE-WISE CHRONOLOGICAL SPLIT")
     print("=" * 60)
+    print(
+        f"Protocol dir: {protocol_dir_name} | ratios: "
+        f"train={split_ratios[0]:.2f}, val={split_ratios[1]:.2f}, test={split_ratios[2]:.2f}"
+    )
     plan, manifest_path = create_chronological_split_plan(audit_dir, output_dir, split_ratios)
     aggregate = plan["aggregate"]
     print(f"Split manifest: {manifest_path}")

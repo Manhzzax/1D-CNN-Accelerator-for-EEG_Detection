@@ -1,0 +1,229 @@
+# Clean-slate v1 protocol (research/clean-slate-1dcnn-v1)
+# Within-case chronological 60/20/20, raw 5 s hierarchical separable 1D-CNN.
+# Primary success: final TEST balanced window accuracy (after freeze), not val.
+# Do not mix with historical prepared sets (raw_5s_v1, run_60+ metrics).
+
+data:
+  raw_dir: "/home/ubuntu/Manh/datasets/CHB-MIT/1.0.0"
+  preprocessed_filename: "chbmit_preprocessed.npz"
+  audit_output_dir: "chbmit_audit"
+  protocol_output_dir: "chbmit_protocol_clean_slate_v1"
+  patient_heldout_protocol_output_dir: "chbmit_protocol_patient_holdout_v1"
+  patient_heldout_split_ratios:
+    train: 0.60
+    val: 0.20
+    test: 0.20
+  prepared_output_dir: "chbmit_prepared_raw_5s_clean_v1"
+  hard_negative_output_dir: "chbmit_prepared_mixed_hardneg_v1"
+  split_ratios:
+    train: 0.60
+    val: 0.20
+    test: 0.20
+  seed: 42
+
+model:
+  architecture: "hierarchical_separable_1dcnn"
+  num_classes: 2
+  input_channels: 17
+  input_length: 1280
+  hierarchical_separable_1dcnn:
+    temporal_filters_per_channel: 3
+    spatial_filters: 32
+    temporal_kernel: 31
+    second_kernel: 7
+    third_kernel: 3
+    third_pointwise: false
+    dropout: 0.25
+  # Retained for code paths that read sibling architecture blocks.
+  separable_1dcnn:
+    temporal_filters_per_channel: 2
+    spatial_filters: 32
+    temporal_kernel: 31
+    refinement_kernel: 15
+    dropout: 0.25
+  dilated_hierarchical_separable_1dcnn:
+    temporal_filters_per_channel: 3
+    spatial_filters: 32
+    temporal_kernel: 31
+    second_kernel: 7
+    third_kernel: 3
+    dilation_one: 4
+    dilation_two: 8
+    dropout: 0.25
+  residual_hierarchical_separable_1dcnn:
+    temporal_filters_per_channel: 3
+    spatial_filters: 32
+    temporal_kernel: 31
+    second_kernel: 7
+    third_kernel: 3
+    dropout: 0.25
+  multiscale_separable_1dcnn:
+    temporal_filters_per_branch: 1
+    spatial_filters: 32
+    short_kernel: 15
+    long_kernel: 63
+    refinement_kernel: 15
+    dropout: 0.25
+  paper_a_multiscale_residual_1dcnn:
+    temporal_filters_per_branch: 2
+    stage_one_filters: 64
+    stage_two_filters: 96
+    stage_three_filters: 128
+    short_kernel: 15
+    long_kernel: 47
+    stage_one_kernel: 7
+    stage_two_kernel: 5
+    stage_three_kernel: 3
+    stage_two_dilation: 2
+    stage_three_dilation: 4
+    dropout: 0.25
+    max_parameters: 100000
+  parallel_multikernel_1dcnn:
+    branch_filters: 16
+    short_kernel: 15
+    long_kernel: 31
+    refinement_filters: 32
+    refinement_kernel: 5
+    dropout: 0.25
+  v2_bandpower_linear:
+    bands_hz: [[0.5, 4.0], [4.0, 8.0], [8.0, 13.0], [13.0, 30.0], [30.0, 45.0]]
+  v2_vanilla_1dcnn:
+    channels: [16, 24, 32]
+    kernels: [7, 5, 3]
+    dropout: 0.25
+  v2_deep_matched_1dcnn:
+    channels: [12, 16, 20, 24]
+    kernels: [7, 5, 5, 3]
+    dropout: 0.25
+
+preprocessing:
+  normalization_mode: "train_channel_zscore"
+  feature_representation: "raw"
+  dwt:
+    wavelet: "db4"
+    level: 3
+    mode: "periodization"
+  feature_transform_batch_size: 512
+  sample_rate_hz: 256
+  # Clean-slate default is deploy-aligned causal filtering.
+  filter_mode: "causal_iir"
+  window_sec: 5
+  stride_sec: 1
+  interictal_guard_sec: 30
+  bandpass_low_hz: 0.5
+  bandpass_high_hz: 45.0
+  notch_hz: 60.0
+  normal_to_seizure_ratio:
+    train: 1.0
+    val: 1.0
+    test: 10.0
+
+evaluation:
+  source_model_run_id: ""
+  reuse_source_continuous_scores: true
+  continuous_batch_size: 512
+  threshold_min: 0.05
+  threshold_max: 0.99
+  threshold_step: 0.01
+  refractory_sec: 30
+  target_false_alarms_per_hour: 0.5
+  temporal_policies:
+    - name: "single_window"
+      positive_windows: 1
+      decision_window_windows: 1
+    - name: "2_of_3"
+      positive_windows: 2
+      decision_window_windows: 3
+    - name: "3_of_5"
+      positive_windows: 3
+      decision_window_windows: 5
+    - name: "5_of_10"
+      positive_windows: 5
+      decision_window_windows: 10
+    - name: "10_of_20"
+      positive_windows: 10
+      decision_window_windows: 20
+
+hard_negative_mining:
+  source_run_id: ""
+  hard_negative_to_seizure_ratio: 2.0
+  candidate_batch_size: 512
+
+temporal_hard_negative_mining:
+  source_run_id: "run_03_mixed_hardneg"
+  score_cache_run_id: "run_04_score_tcn"
+  output_dir: "chbmit_prepared_temporal_hardneg_v1"
+  hard_negative_to_seizure_ratio: 1.0
+  candidate_batch_size: 512
+  threshold: 0.91
+  decision_window_windows: 10
+  min_hits_in_context: 3
+  min_separation_sec: 10
+  allow_fewer_than_target: true
+  hard_negative_sampling_multiplier: 2.0
+
+temporal_score_tcn:
+  source_model_run_id: "run_03_mixed_hardneg"
+  context_windows: 10
+  hidden_channels: 8
+  dropout: 0.1
+  epochs: 30
+  batch_size: 512
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  random_normal_to_seizure_ratio: 1.0
+  hard_normal_to_seizure_ratio: 2.0
+  early_stopping:
+    min_epochs: 8
+    patience: 6
+    min_delta: 0.001
+
+training:
+  epochs: 50
+  batch_size: 128
+  learning_rate: 0.001
+  weight_decay: 0.0001
+  lr_patience: 3
+  lr_factor: 0.5
+  num_workers: 4
+  pin_memory: true
+  use_amp: true
+  num_threads: 4
+  class_balanced_batches: true
+  patient_group_balanced_batches: false
+  subject_adversarial:
+    enabled: false
+    coefficient: 0.05
+    hidden_features: 16
+  group_dro:
+    enabled: false
+    eta: 0.01
+  supervised_contrastive:
+    enabled: false
+    coefficient: 0.05
+    temperature: 0.1
+  mild_eeg_augmentation:
+    enabled: false
+    gain_delta: 0.1
+    noise_std: 0.02
+  early_stopping:
+    enabled: true
+    monitor: "val_loss"
+    min_epochs: 8
+    patience: 6
+    min_delta: 0.001
+
+quantization:
+  q_scale_bits: 15
+  clamp_min: -32768
+  clamp_max: 32767
+
+clean_slate:
+  protocol_id: "clean_slate_v1"
+  claim_scope: "within_case_chronological_shared_model"
+  primary_success_metric: "test_balanced_window_accuracy"
+  primary_success_threshold: 0.95
+  selection_metric: "validation_cross_entropy"
+  test_policy: "sealed_until_config_freeze"
+  architecture_baseline: "hierarchical_separable_1dcnn_31_7_3"
+  historical_runs_are_not_selection_evidence: true

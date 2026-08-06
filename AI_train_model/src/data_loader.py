@@ -22,7 +22,14 @@ config_path = os.path.join(project_dir, "config", "config.yaml")
 
 
 def load_config():
-    with open(config_path, "r", encoding="utf-8") as config_file:
+    """Load YAML config; optional CHBMIT_CONFIG_PATH selects an alternate file."""
+    explicit_config = os.environ.get("CHBMIT_CONFIG_PATH")
+    resolved_path = (
+        os.path.abspath(explicit_config) if explicit_config else config_path
+    )
+    if not os.path.isfile(resolved_path):
+        raise FileNotFoundError(f"Config file is missing: {resolved_path}")
+    with open(resolved_path, "r", encoding="utf-8") as config_file:
         return apply_runtime_overrides(yaml.safe_load(config_file))
 
 

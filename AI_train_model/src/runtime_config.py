@@ -4,8 +4,29 @@ import math
 import os
 
 
+def _apply_split_ratio_overrides(config):
+    """Optional CHBMIT_SPLIT_RATIOS=train,val,test (e.g. 0.6,0.2,0.2)."""
+    raw = os.environ.get("CHBMIT_SPLIT_RATIOS")
+    if raw is None:
+        return
+    parts = [part.strip() for part in raw.split(",")]
+    if len(parts) != 3:
+        raise ValueError("CHBMIT_SPLIT_RATIOS must be train,val,test (three comma-separated values)")
+    ratios = [float(part) for part in parts]
+    if any(not math.isfinite(ratio) or ratio <= 0.0 for ratio in ratios):
+        raise ValueError("CHBMIT_SPLIT_RATIOS values must be positive finite numbers")
+    if abs(sum(ratios) - 1.0) > 1e-9:
+        raise ValueError("CHBMIT_SPLIT_RATIOS must sum to 1.0")
+    config["data"]["split_ratios"] = {
+        "train": ratios[0],
+        "val": ratios[1],
+        "test": ratios[2],
+    }
+
+
 def apply_runtime_overrides(config):
     """Apply explicit controlled-experiment overrides to a loaded YAML config."""
+    _apply_split_ratio_overrides(config)
     filter_mode = os.environ.get("CHBMIT_FILTER_MODE")
     if filter_mode is not None:
         if filter_mode not in {"zero_phase", "causal_iir"}:

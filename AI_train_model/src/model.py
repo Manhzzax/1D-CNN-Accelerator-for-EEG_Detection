@@ -14,7 +14,10 @@ project_dir = os.path.dirname(src_dir)
 config_path = os.path.join(project_dir, "config", "config.yaml")
 
 def load_config():
-    with open(config_path, "r") as f:
+    """Load model config; honor CHBMIT_CONFIG_PATH like src.data_loader.load_config."""
+    explicit = os.environ.get("CHBMIT_CONFIG_PATH")
+    path = os.path.abspath(explicit) if explicit else config_path
+    with open(path, "r", encoding="utf-8") as f:
         config = apply_runtime_overrides(yaml.safe_load(f))
     return config
 
