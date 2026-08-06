@@ -13,7 +13,7 @@ from .chbmit_patient_split import patient_group_for_case
 from .feature_representation import load_feature_spec, save_feature_spec
 from .normalization import window_channel_zscore
 from .runtime_config import apply_runtime_overrides
-from .utils import outputs_dir
+from .utils import get_outputs_dir
 
 
 src_dir = os.path.dirname(os.path.abspath(__file__))
@@ -250,11 +250,12 @@ def get_train_val_test_datasets(include_test=True):
         mean = np.zeros(expected_channels, dtype=np.float32)
         std = np.ones(expected_channels, dtype=np.float32)
 
-    os.makedirs(outputs_dir, exist_ok=True)
-    save_feature_spec(outputs_dir, feature_spec)
-    np.save(os.path.join(outputs_dir, "scaler_mean.npy"), mean)
-    np.save(os.path.join(outputs_dir, "scaler_scale.npy"), std)
-    with open(os.path.join(outputs_dir, "normalization_spec.json"), "w", encoding="utf-8") as output_file:
+    run_outputs_dir = get_outputs_dir()
+    os.makedirs(run_outputs_dir, exist_ok=True)
+    save_feature_spec(run_outputs_dir, feature_spec)
+    np.save(os.path.join(run_outputs_dir, "scaler_mean.npy"), mean)
+    np.save(os.path.join(run_outputs_dir, "scaler_scale.npy"), std)
+    with open(os.path.join(run_outputs_dir, "normalization_spec.json"), "w", encoding="utf-8") as output_file:
         json.dump({
             "mode": normalization_mode,
             "scope": {
@@ -266,7 +267,7 @@ def get_train_val_test_datasets(include_test=True):
         }, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
     if normalization_mode == "per_recording_zscore":
-        with open(os.path.join(outputs_dir, "recording_normalization.json"), "w", encoding="utf-8") as output_file:
+        with open(os.path.join(run_outputs_dir, "recording_normalization.json"), "w", encoding="utf-8") as output_file:
             json.dump(recording_stats, output_file, sort_keys=True)
             output_file.write("\n")
     split_summary = {
@@ -283,7 +284,7 @@ def get_train_val_test_datasets(include_test=True):
             else {"loaded": False, "reason": "test_evaluation_skipped"}
         ),
     }
-    with open(os.path.join(outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
+    with open(os.path.join(run_outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
         json.dump(split_summary, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
 
@@ -304,7 +305,7 @@ def get_train_val_test_datasets(include_test=True):
         "count": len(train_domain_mapping),
         "mapping": train_domain_mapping,
     }
-    with open(os.path.join(outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
+    with open(os.path.join(run_outputs_dir, "data_split_summary.json"), "w", encoding="utf-8") as output_file:
         json.dump(split_summary, output_file, indent=2, sort_keys=True)
         output_file.write("\n")
 

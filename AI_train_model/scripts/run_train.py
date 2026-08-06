@@ -60,18 +60,26 @@ def _training_seed(config):
     return seed
 
 
-def _window_metrics(targets, probabilities):
-    predictions = (probabilities >= 0.5).astype(np.int64)
-    return {
+def _window_metrics(targets, probabilities, threshold=0.5):
+    predictions = (probabilities >= float(threshold)).astype(np.int64)
+    metrics = {
         "accuracy": float(np.mean(predictions == targets)),
         "balanced_accuracy": float(balanced_accuracy_score(targets, predictions)),
         "sensitivity": float(recall_score(targets, predictions, zero_division=0)),
         "precision": float(precision_score(targets, predictions, zero_division=0)),
         "f1": float(f1_score(targets, predictions, zero_division=0)),
-        "auroc": float(roc_auc_score(targets, probabilities)),
-        "average_precision": float(average_precision_score(targets, probabilities)),
-        "threshold": 0.5,
+        "threshold": float(threshold),
     }
+    # AUROC/AP need both classes in targets; keep previous behavior when possible.
+    try:
+        metrics["auroc"] = float(roc_auc_score(targets, probabilities))
+    except ValueError:
+        metrics["auroc"] = float("nan")
+    try:
+        metrics["average_precision"] = float(average_precision_score(targets, probabilities))
+    except ValueError:
+        metrics["average_precision"] = float("nan")
+    return metrics
 
 
 def _score_window_loader(model, loader, device, use_amp):

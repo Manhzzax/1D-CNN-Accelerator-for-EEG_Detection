@@ -48,10 +48,19 @@ clean-slate shared A0.
 
 | Step | Change | When |
 |---|---|---|
-| A1.0 | R2 31/7/3 | Always first |
-| A1.1 | Multiscale / MSR ≤25k | If mean test bal < 95% |
+| A1.0 | R2 31/7/3, threshold 0.5 | Always first — **done: mean test bal 90.719%** |
+| **A1.0b** | **Val-selected threshold** (max val balanced acc, grid 0.05–0.95 step 0.01), apply once to sealed test | Next after A1.0; no weight retrain |
+| A1.0c | Secondary report: mean over cases with ≥20 test ictal windows | Diagnostic only; primary remains all eligible cases |
+| A1.1 | Multiscale / MSR ≤25k | If mean test bal @ A1.0b still < 95% |
 | A1.2 | Train-only SupCon or mild aug | If A1.1 still short |
 | A1.3 | DWT frontend (no LSTM) | Only if A1.0–A1.2 fail and hardware story may change |
+
+### A1.0b integrity
+
+- Threshold is chosen **only on validation** labels/scores.
+- Test is scored **once** with the frozen threshold.
+- Architecture, split, and checkpoints are unchanged from A1.0.
+
 
 ## Explicit non-goals for Path A
 
