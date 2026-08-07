@@ -52,6 +52,7 @@ work and must not be implied by a successful core benchmark.
 arithmetic_contract.md       Exact M1a/M1b arithmetic obligations
 measurement_contract.md      PPA, latency, power, and energy definitions
 implementation_plan.md       Ordered gates W1--W8 and server/board commands
+literature_architecture_decision.md  Literature-grounded accelerator choice
 tools/generate_hls_headers.py  Regenerates constants from the frozen package
 hls/include/                Generated model constants; do not hand edit
 hls/src/                    Host C golden source (M1a)
@@ -74,3 +75,6 @@ RTL, FPGA, or board evidence.
 See [arithmetic_contract.md](arithmetic_contract.md) and
 [measurement_contract.md](measurement_contract.md) before changing a pragma
 or adding an AXI interface.
+
+The chosen accelerator architecture and the evidence that supports it are in
+[literature_architecture_decision.md](literature_architecture_decision.md).
