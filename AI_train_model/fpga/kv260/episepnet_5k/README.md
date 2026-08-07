@@ -53,7 +53,7 @@ arithmetic_contract.md       Exact M1a/M1b arithmetic obligations
 measurement_contract.md      PPA, latency, power, and energy definitions
 implementation_plan.md       Ordered gates W1--W8 and server/board commands
 literature_architecture_decision.md  Literature-grounded accelerator choice
-tools/generate_hls_headers.py  Regenerates constants from the frozen package
+tools/                       Header generator and KV260/build-host preflight
 hls/include/                Generated model constants; do not hand edit
 hls/src/                    Host C golden source (M1a)
 hls/tb/                     Self-checking golden-vector testbench

@@ -10,6 +10,29 @@
 - No clinical, streaming, or end-to-end EEG claim while the boundary remains
   after zero-phase filtering and z-score normalisation.
 
+## W0 - Board and build-host preflight
+
+**Deliverable:** one captured preflight directory from the x86 build host and
+one from the KV260 target. The two machines have different roles: Vitis HLS
+and Vivado normally run on the x86 build host; XRT, the FPGA image, DMA, and
+power measurement run on the KV260 target.
+
+Run on each machine from its checkout of this hardware branch:
+
+```bash
+cd AI_train_model && bash fpga/kv260/episepnet_5k/tools/kv260_preflight.sh fpga/kv260/episepnet_5k/runs/preflight_$(hostname -s)
+```
+
+The script captures architecture, OS, relevant Xilinx/XRT tools, device nodes,
+XRT inspection output, and the H0 package SHA ledger without collecting
+credentials or arbitrary environment variables.
+
+**Gate:** the build host has a recorded Vitis HLS/Vivado build path, the
+target has a recorded `aarch64` runtime plus XRT/device status, and the H0
+package ledger is identical on both checkouts. A missing HLS installation on
+the target is expected; a missing target runtime or missing build-host toolchain
+is a blocker to record, not something to hide.
+
 ## W1 - Freeze and inspect the package
 
 **Deliverable:** SHA-256 ledger for manifest, normalisation, tensors, test
