@@ -3,6 +3,15 @@
 This directory is reserved for **measured** KV260 artifacts. Do not place
 estimated or copied numbers here.
 
+## Active implementation track
+
+The frozen H0 implementation is now specified in
+[`episepnet_5k/`](episepnet_5k/). It contains the model identity, M1a C golden
+implementation, integer arithmetic contract, measurement definitions, and the
+ordered HLS-to-board plan. It is based only on
+`../reference_run_21_int16/`; it must not be replaced by an active
+patient-specific or five-second accuracy candidate.
+
 ## Input and correctness contract
 
 - Source package: `../reference_run_21_int16/`.
@@ -25,5 +34,6 @@ Create `runs/<implementation_id>/` and retain:
 - command log describing power and latency collection.
 
 Use [measurement_template.csv](measurement_template.csv) for one row per
-implementation. The `measurement_boundary` must be `kernel_only` or
-`host_dma_kernel`; do not merge the two without separate rows.
+implementation and boundary. The `measurement_boundary` must be
+`kernel_only`, `dma_kernel`, or `host_dma_kernel`; do not merge them into one
+latency number.
