@@ -5,6 +5,12 @@
 **Best configuration:** **A1.2** (hierarchical 31/7/3 + train-only SupCon 0.05 / T=0.1)  
 **Primary metric:** Unweighted mean of per-case **sealed test balanced window accuracy** (threshold 0.5)
 
+> **Post-freeze interpretation:** A1.2 was promoted after comparing model
+> variants on test probes from the same cohort. Its 91.096% result is retained
+> as an exploratory Path A result, not an independent final-test claim.
+> `docs/path_a_final_evaluation_protocol_v1.md` defines the current
+> patient-group-aware reporting and final-evaluation requirements.
+
 Machine-readable cohort tables:
 
 | File | Content |

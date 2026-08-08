@@ -169,6 +169,7 @@ def event_metrics(
     positive_windows=1,
     decision_window_windows=1,
     policy_name="single_window",
+    include_detection_delays=False,
 ):
     """Compute seizure-event sensitivity, false alarms/hour, and detection delay."""
     window_samples = int(window_sec * sample_rate)
@@ -213,7 +214,7 @@ def event_metrics(
             if not any(start <= alarm < end for start, end in intervals):
                 false_alarms += 1
 
-    return {
+    result = {
         "policy_name": policy_name,
         "alarm_timestamp_mode": "window_end_causal",
         "positive_windows": int(positive_windows),
@@ -228,6 +229,11 @@ def event_metrics(
         "mean_detection_delay_sec": float(np.mean(delays)) if delays else None,
         "interictal_hours": float(interictal_seconds / 3600.0),
     }
+    if include_detection_delays:
+        # Retain individual delays only in explicitly requested research
+        # artifacts so patient-group aggregation can calculate a real median.
+        result["detection_delays_sec"] = [float(delay) for delay in delays]
+    return result
 
 
 def _temporal_policies(evaluation):

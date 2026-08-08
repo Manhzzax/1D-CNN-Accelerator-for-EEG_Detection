@@ -17,6 +17,17 @@ shared model for all patients.
 > that patient with high sealed-test balanced accuracy. Results are reported as
 > mean ± SD across eligible cases.
 
+### Post-hoc evaluation status
+
+The original test partitions were sealed during each individual training run,
+but the same cohort was later inspected for the A1.0, A1.0b, A1.1 and A1.2
+comparison. Therefore the promoted A1.2 91.096% result is now an
+**exploratory reproducibility result**, rather than an independent final-test
+claim. The split and leakage controls remain valid; the issue is model
+selection after observing the same test cohort. See
+`docs/path_a_final_evaluation_protocol_v1.md` for the required final-report
+contract and the separate continuous EEG replay.
+
 This is **not** patient-independent / LOSO and **not** interchangeable with
 clean-slate shared A0.
 
