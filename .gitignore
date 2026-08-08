@@ -5,11 +5,13 @@ __pycache__/
 .ruff_cache/
 .coverage*
 data/
-artifacts/
+artifacts/*
+!artifacts/g1/
+!artifacts/g1/**
 results/
 *.pt
 *.npz
 *.edf
 *.csv
+!artifacts/g1/**/*.csv
 !configs/*.csv
-

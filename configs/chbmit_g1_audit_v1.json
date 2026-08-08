@@ -1,0 +1,8 @@
+{
+  "protocol_id": "chbmit_g1_audit_v1",
+  "dataset": "chbmit",
+  "dataset_version": "1.0.0",
+  "annotation_tolerance_seconds": 0.001,
+  "documented_duplicate_sha256_exceptions": [],
+  "known_metadata_discrepancy": "Current PhysioNet file manifests observed on 2026-08-08 contain 686 RECORDS and 142 RECORDS-WITH-SEIZURES, while older descriptive CHB-MIT text/publications may state 664 and 129. This audit derives all counts from verified snapshot manifests and never enforces prose counts."
+}
