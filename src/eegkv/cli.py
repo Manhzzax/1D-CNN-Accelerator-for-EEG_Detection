@@ -6,7 +6,7 @@ import argparse
 import json
 from pathlib import Path
 
-from .audit import AuditError, run_g1_audit
+from .audit import AuditError, run_g1_audit, run_g1_preflight
 
 
 def _print_summary(value: dict) -> None:
@@ -21,10 +21,20 @@ def main(argv: list[str] | None = None) -> None:
     audit = commands.add_parser("audit-g1", help="run the read-only CHB-MIT G1 audit")
     audit.add_argument("--output-root", type=Path, default=Path("artifacts/g1"))
     audit.add_argument("--replace", action="store_true", help="replace existing G1 audit artifacts")
-    audit.add_argument("--skip-checksum-verification", action="store_true", help="fixture-only debugging; never use for the server audit")
+    commands.add_parser("preflight-g1", help="read-only SERVER-02 snapshot preflight; prints JSON and writes nothing")
     args = parser.parse_args(argv)
+    if args.command == "preflight-g1":
+        try:
+            result = run_g1_preflight()
+        except AuditError as error:
+            print(json.dumps({"preflight_status": "failed", "error": str(error)}, sort_keys=True))
+            raise SystemExit(1)
+        print(json.dumps(result, sort_keys=True))
+        if result["preflight_status"] != "passed":
+            raise SystemExit(1)
+        return
     try:
-        summary = run_g1_audit(args.output_root, replace=args.replace, verify_checksums=not args.skip_checksum_verification)
+        summary = run_g1_audit(args.output_root, replace=args.replace)
     except AuditError as error:
         report = args.output_root / "reports/data_audit.json"
         summary = {"audit_status": "failed", "error": str(error), "report": str(report)}
