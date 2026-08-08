@@ -38,6 +38,11 @@ commit SHA below. The server must be clean and must checkout that exact SHA;
 it does not run an unreviewed branch tip. From
 `/home/ubuntu/Manh/repos/eegkv`, use this one audit command:
 
+Prerequisites are server-operator responsibilities: Python 3.11 or newer,
+project dependencies already installed, and successful imports of `pyedflib`
+and `wfdb`. The audit script does not install packages or modify the server
+environment.
+
 ```bash
 git fetch origin
 git status --short

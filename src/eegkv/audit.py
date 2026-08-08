@@ -70,6 +70,17 @@ def _require_root(root: Path) -> None:
         raise AuditError("Incomplete CHB-MIT snapshot; missing " + ", ".join(missing))
 
 
+def _safe_output_root(raw_root: Path, output_root: Path) -> Path:
+    """Resolve paths before any output is created and keep raw data read-only."""
+    resolved_raw = raw_root.resolve(strict=True)
+    resolved_output = output_root.resolve(strict=False)
+    try:
+        resolved_output.relative_to(resolved_raw)
+    except ValueError:
+        return resolved_output
+    raise AuditError("G1 output_root must not equal or reside inside CHBMIT_RAW_DIR")
+
+
 def _lines(path: Path) -> list[str]:
     return [line.strip() for line in path.read_text(encoding="utf-8", errors="strict").splitlines() if line.strip()]
 
@@ -342,12 +353,15 @@ def run_g1_preflight() -> dict[str, Any]:
     }
 
 
-def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: bool = True) -> dict[str, Any]:
+def run_g1_audit(output_root: Path, *, replace: bool = False) -> dict[str, Any]:
     raw_value = os.environ.get("CHBMIT_RAW_DIR")
     if not raw_value:
         raise AuditError("CHBMIT_RAW_DIR is required; no fallback dataset path is permitted")
     root = Path(raw_value); _require_root(root)
+    root = root.resolve(strict=True)
     repository = Path(__file__).resolve().parents[2]
+    repository_status_at_start = _git(repository, "status", "--porcelain")
+    output_root = _safe_output_root(root, output_root)
     config = json.loads((repository / "configs/chbmit_g1_audit_v1.json").read_text(encoding="utf-8"))
     paths = {
         "manifest_csv": output_root / "manifests/chbmit_recordings.csv",
@@ -375,11 +389,11 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
     entries = _checksum_entries(root / "SHA256SUMS.txt")
     anomalies["checksum_coverage"] = _checksum_coverage(root, entries, _relevant_checksum_paths(root, records, state["machine_paths"]))
     cache = _DigestCache()
-    checksum = _verify_checksums(root, entries, cache) if verify_checksums else {
-        "status": "skipped", "entry_count": len(entries), "failures": [],
-    }
+    checksum = _verify_checksums(root, entries, cache)
     snapshot_id = _snapshot_id(config)
     summaries = _all_summary_annotations(root)
+    anomalies["summary_records_outside_records"] = sorted(set(summaries) - set(records))
+    anomalies["records_missing_summary_records"] = sorted(set(records) - set(summaries))
     manifest: list[dict[str, Any]] = []
     digest_records: defaultdict[str, list[str]] = defaultdict(list)
     parsed_positive: set[str] = set()
@@ -482,6 +496,7 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
         "records_with_seizures_sha256": cache.sha256(root / "RECORDS-WITH-SEIZURES"),
         "sha256sums_sha256": cache.sha256(root / "SHA256SUMS.txt"),
         "checksum_verification": checksum, "checksum_coverage": anomalies["checksum_coverage"],
+        "repository_status_at_start": repository_status_at_start,
         "known_metadata_discrepancy": config["known_metadata_discrepancy"],
         "digest_cache_computed_file_count": cache.computed_count,
     }
@@ -491,6 +506,7 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
         "records_with_seizures_outside_records", "machine_annotations_outside_records_with_seizures",
         "records_with_seizures_missing_machine_annotations", "unreadable_edfs", "duplicate_recording_ids",
         "duplicate_file_sha256", "annotation_discrepancies", "invalid_intervals", "checksum_coverage",
+        "summary_records_outside_records", "records_missing_summary_records",
     )
     failed = checksum["status"] == "failed" or any(
         anomalies[key] if key != "checksum_coverage" else any(
@@ -510,7 +526,7 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
         "channel_pattern_count": len(patterns), "parquet_status": parquet_status,
         "known_metadata_discrepancy": config["known_metadata_discrepancy"], "anomalies": anomalies,
         "created_files": [str(path.relative_to(output_root)) for path in paths.values() if path.exists()],
-        "tracked_files_modified_before_run": _git(repository, "status", "--porcelain"),
+        "repository_status_at_start": repository_status_at_start,
     }
     _write_json(paths["audit"], report)
     if failed:

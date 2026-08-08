@@ -20,6 +20,14 @@ prepared arrays, caches, and checkpoints are server-only and are not copied or
 committed. G1A's shareable provenance deliberately omits absolute paths,
 hostnames, and usernames.
 
+## SERVER-02 prerequisites
+
+Before using the single audit command, the server operator verifies Python
+3.11 or newer, installs the declared project dependencies through the approved
+server environment, and confirms `pyedflib` and `wfdb` import successfully.
+Codex and the audit script do not install packages or otherwise modify the
+server environment.
+
 ## Safe handoff
 
 1. Codex pushes a feature branch and opens a PR into `main`.

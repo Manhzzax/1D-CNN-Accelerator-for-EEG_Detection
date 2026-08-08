@@ -13,7 +13,7 @@ from unittest.mock import patch
 from eegkv.audit import (
     AuditError, CASE_IDS, MANIFEST_SCHEMA_VERSION, _DigestCache, _channel_kind, _identity,
     _label_candidate, _parse_summary, _require_root, _same_intervals,
-    run_g1_audit, run_g1_preflight,
+    _safe_output_root, run_g1_audit, run_g1_preflight,
 )
 from eegkv.cli import main
 
@@ -169,6 +169,22 @@ class G1AuditTests(unittest.TestCase):
             self.assertIn("chb01/chb01_01.edf", result["anomalies"]["checksum_coverage"]["missing_checksum_entries"])
             self.assertIn("unexpected.txt", result["anomalies"]["checksum_coverage"]["checksum_entries_outside_g1a_scope"])
 
+    def test_audit_rejects_output_root_equal_to_or_below_raw_root_without_writing(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root); before = _tree_fingerprint(root)
+            for output_root in (root, root / "forbidden-output"):
+                with self.subTest(output_root=output_root), self.assertRaises(AuditError):
+                    run_g1_audit(output_root)
+            self.assertEqual(before, _tree_fingerprint(root))
+            self.assertFalse((root / "forbidden-output").exists())
+
+    def test_audit_rejects_symlink_resolved_output_inside_raw_root(self):
+        raw_root = Path("raw-root")
+        symlink_output = Path("outside-link/forbidden-output")
+        with patch.object(Path, "resolve", side_effect=[Path("/resolved/raw"), Path("/resolved/raw/forbidden-output")]):
+            with self.assertRaises(AuditError):
+                _safe_output_root(raw_root, symlink_output)
+
     def test_audit_compares_summary_machine_intervals_and_writes_portable_provenance(self):
         header = {
             "sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0,
@@ -187,6 +203,8 @@ class G1AuditTests(unittest.TestCase):
             self.assertNotIn(temporary, provenance)
             self.assertEqual(json.loads(provenance)["digest_cache_computed_file_count"], 32)
             self.assertTrue(all(not Path(created).is_absolute() for created in result["created_files"]))
+            self.assertEqual(result["repository_status_at_start"], json.loads(provenance)["repository_status_at_start"])
+            self.assertNotIn("tracked_files_modified_before_run", result)
 
     def test_audit_fails_when_summary_and_machine_intervals_disagree(self):
         header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
@@ -195,6 +213,31 @@ class G1AuditTests(unittest.TestCase):
             with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.0, 0.5]]):
                 with self.assertRaises(AuditError):
                     run_g1_audit(Path(output))
+
+    def test_audit_fails_for_summary_record_outside_records(self):
+        header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root)
+            summary = root / "chb01/chb01-summary.txt"
+            summary.write_text(summary.read_text(encoding="utf-8") + "File Name: chb01_extra.edf\nNumber of Seizures in File: 0\n", encoding="utf-8")
+            _write_checksum_manifest(root)
+            with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.25, 0.75]]):
+                with self.assertRaises(AuditError):
+                    run_g1_audit(Path(output))
+            report = json.loads((Path(output) / "reports/data_audit.json").read_text(encoding="utf-8"))
+            self.assertIn("chb01/chb01_extra.edf", report["anomalies"]["summary_records_outside_records"])
+
+    def test_audit_fails_when_records_entry_has_no_summary_record(self):
+        header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root)
+            (root / "chb01/chb01-summary.txt").write_text("", encoding="utf-8")
+            _write_checksum_manifest(root)
+            with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.25, 0.75]]):
+                with self.assertRaises(AuditError):
+                    run_g1_audit(Path(output))
+            report = json.loads((Path(output) / "reports/data_audit.json").read_text(encoding="utf-8"))
+            self.assertIn("chb01/chb01_01.edf", report["anomalies"]["records_missing_summary_records"])
 
     def test_audit_fails_for_checksum_mismatch(self):
         header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
@@ -209,6 +252,10 @@ class G1AuditTests(unittest.TestCase):
             self.assertEqual(report["audit_status"], "failed")
             self.assertEqual(provenance["checksum_verification"]["status"], "failed")
             self.assertEqual(report["anomalies"]["checksum_coverage"]["missing_checksum_entries"], [])
+
+    def test_public_cli_rejects_checksum_skip_flag(self):
+        with self.assertRaises(SystemExit):
+            main(["audit-g1", "--skip-checksum-verification"])
 
     def test_audit_does_not_modify_the_synthetic_dataset_root(self):
         header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
