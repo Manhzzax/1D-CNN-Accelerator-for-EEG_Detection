@@ -260,7 +260,9 @@ def _checksum_entries(path: Path) -> dict[str, str]:
 
 
 def _relevant_checksum_paths(root: Path, records: list[str], machine_paths: dict[str, tuple[Path, str]]) -> set[str]:
-    root_files = {"RECORDS", "RECORDS-WITH-SEIZURES", "SUBJECT-INFO", "ANNOTATORS"}
+    # Root-level source documents (for example the official PDF) are part of
+    # the snapshot too. SHA256SUMS.txt cannot safely checksum itself.
+    root_files = {path.name for path in root.iterdir() if path.is_file() and path.name != "SHA256SUMS.txt"}
     summaries = {f"{case}/{case}-summary.txt" for case in CASE_IDS}
     machine = {path.relative_to(root).as_posix() for path, _ in machine_paths.values()}
     return root_files | set(records) | summaries | machine
@@ -270,7 +272,7 @@ def _checksum_coverage(root: Path, entries: dict[str, str], required: set[str]) 
     # SHA256SUMS.txt cannot safely checksum itself; all other G1A-relevant files must be covered.
     return {
         "missing_checksum_entries": sorted(required - set(entries)),
-        "unexpected_checksum_entries": sorted(set(entries) - required),
+        "checksum_entries_outside_g1a_scope": sorted(set(entries) - required),
         "missing_files_referenced_by_checksum": sorted(relative for relative in entries if not (root / relative).is_file()),
     }
 
@@ -286,12 +288,11 @@ def _verify_checksums(root: Path, entries: dict[str, str], cache: _DigestCache) 
     return {"status": "passed" if not failures else "failed", "entry_count": len(entries), "failures": failures}
 
 
-def _snapshot_id(cache: _DigestCache, root: Path) -> str:
-    binding = {
-        name: cache.sha256(root / name)
-        for name in ("RECORDS", "RECORDS-WITH-SEIZURES", "SHA256SUMS.txt")
-    }
-    return "chbmit-1.0.0-" + hashlib.sha256(json.dumps(binding, sort_keys=True).encode()).hexdigest()[:16]
+def _snapshot_id(config: dict[str, Any]) -> str:
+    value = config.get("dataset_snapshot_id")
+    if not isinstance(value, str) or not re.fullmatch(r"[a-z0-9][a-z0-9.-]+", value):
+        raise AuditError("Config requires a portable dataset_snapshot_id")
+    return value
 
 
 def _inventory_state(root: Path, records: list[str], seizure_records: list[str]) -> dict[str, Any]:
@@ -325,7 +326,9 @@ def run_g1_preflight() -> dict[str, Any]:
     entries = _checksum_entries(root / "SHA256SUMS.txt")
     coverage = _checksum_coverage(root, entries, _relevant_checksum_paths(root, records, state["machine_paths"]))
     anomalies = {**state["anomalies"], "checksum_coverage": coverage}
-    failed = any(value for key, value in anomalies.items() if key != "checksum_coverage") or any(coverage.values())
+    failed = any(value for key, value in anomalies.items() if key != "checksum_coverage") or any(
+        coverage[key] for key in ("missing_checksum_entries", "missing_files_referenced_by_checksum")
+    )
     return {
         "preflight_schema_version": "g1a-server-preflight/v1",
         "preflight_status": "failed" if failed else "passed",
@@ -375,7 +378,7 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
     checksum = _verify_checksums(root, entries, cache) if verify_checksums else {
         "status": "skipped", "entry_count": len(entries), "failures": [],
     }
-    snapshot_id = _snapshot_id(cache, root)
+    snapshot_id = _snapshot_id(config)
     summaries = _all_summary_annotations(root)
     manifest: list[dict[str, Any]] = []
     digest_records: defaultdict[str, list[str]] = defaultdict(list)
@@ -490,7 +493,10 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
         "duplicate_file_sha256", "annotation_discrepancies", "invalid_intervals", "checksum_coverage",
     )
     failed = checksum["status"] == "failed" or any(
-        anomalies[key] if key != "checksum_coverage" else any(anomalies[key].values())
+        anomalies[key] if key != "checksum_coverage" else any(
+            anomalies[key][coverage_key]
+            for coverage_key in ("missing_checksum_entries", "missing_files_referenced_by_checksum")
+        )
         for key in hard_keys
     )
     report = {
@@ -503,7 +509,7 @@ def run_g1_audit(output_root: Path, *, replace: bool = False, verify_checksums: 
         "sample_rate_summary_hz": dict(Counter(str(row["sampling_rate_hz"]) for row in manifest)),
         "channel_pattern_count": len(patterns), "parquet_status": parquet_status,
         "known_metadata_discrepancy": config["known_metadata_discrepancy"], "anomalies": anomalies,
-        "created_files": [str(path) for path in paths.values() if path.exists()],
+        "created_files": [str(path.relative_to(output_root)) for path in paths.values() if path.exists()],
         "tracked_files_modified_before_run": _git(repository, "status", "--porcelain"),
     }
     _write_json(paths["audit"], report)

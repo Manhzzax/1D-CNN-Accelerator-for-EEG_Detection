@@ -35,18 +35,20 @@ PYTHONPATH=src python -m unittest discover -s tests -v
 
 After the G1A pull request is approved and merged, substitute the approved
 commit SHA below. The server must be clean and must checkout that exact SHA;
-it does not run an unreviewed branch tip.
+it does not run an unreviewed branch tip. From
+`/home/ubuntu/Manh/repos/eegkv`, use this one audit command:
 
 ```bash
 git fetch origin
 git status --short
 git checkout --detach <APPROVED_COMMIT_SHA>
-export CHBMIT_RAW_DIR=/path/to/CHB-MIT/1.0.0
-PYTHONPATH=src python -m eegkv preflight-g1
-PYTHONPATH=src python -m eegkv audit-g1 --output-root artifacts/g1
+CHBMIT_RAW_DIR=/home/ubuntu/Manh/datasets/CHB-MIT/1.0.0 \
+  bash scripts/run_g1_audit.sh
 ```
 
-`preflight-g1` is read-only and emits one JSON object without writing
-artifacts. `audit-g1` never downloads, copies, resamples, or loads EEG
-waveforms. Small audit artifacts under `artifacts/g1/` are reviewable Git
-artifacts; raw EEG, prepared arrays, checkpoints, and caches remain ignored.
+The script first runs G1 synthetic tests, then the read-only JSON preflight,
+then the full checksum audit. It never uses checksum-skip mode or overwrites an
+existing artifact. `audit-g1` never downloads, copies, resamples, or loads EEG
+waveforms. Only manifests, hashes, census, reports, and shareable provenance
+may be committed; raw EDF, cache, windows, checkpoints, and private server logs
+remain ignored.

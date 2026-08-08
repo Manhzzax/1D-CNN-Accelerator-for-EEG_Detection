@@ -5,9 +5,11 @@
 The current official snapshot manifests contain **686 `RECORDS`** and
 **141 `RECORDS-WITH-SEIZURES`** entries. Earlier descriptive CHB-MIT prose and
 publications may instead report 664 recordings and 129 seizure-containing
-recordings. G1A derives its observed counts and `dataset_snapshot_id` from the
-pinned local `RECORDS`, `RECORDS-WITH-SEIZURES`, and `SHA256SUMS.txt` files;
-the prose figures are not executable constraints.
+recordings. G1A derives its observed counts from the pinned local `RECORDS`
+and `RECORDS-WITH-SEIZURES` files and verifies their binding through
+`SHA256SUMS.txt`; the prose figures are not executable constraints. The
+portable snapshot identifier is fixed as
+`chbmit-1.0.0-physionet-wget-20260728` for the declared wget snapshot.
 
 ## Stage separation
 

@@ -2,7 +2,8 @@
   "protocol_id": "chbmit_g1_audit_v1",
   "dataset": "chbmit",
   "dataset_version": "1.0.0",
+  "dataset_snapshot_id": "chbmit-1.0.0-physionet-wget-20260728",
   "annotation_tolerance_seconds": 0.001,
   "documented_duplicate_sha256_exceptions": [],
-  "known_metadata_discrepancy": "Current official snapshot manifests contain 686 RECORDS and 141 RECORDS-WITH-SEIZURES. Older descriptive CHB-MIT text/publications may state 664 and 129. G1A derives counts and dataset_snapshot_id from the pinned local manifests and SHA256SUMS.txt; it never enforces descriptive prose counts."
+  "known_metadata_discrepancy": "Online official manifests were observed with 686 RECORDS and 141 RECORDS-WITH-SEIZURES. The SERVER-02 snapshot manifests and SHA256SUMS.txt are the final evidence. G1A derives observed counts from those pinned local files and never enforces online or prose counts as a pass condition."
 }

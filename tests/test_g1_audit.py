@@ -11,7 +11,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from eegkv.audit import (
-    AuditError, CASE_IDS, MANIFEST_SCHEMA_VERSION, _channel_kind, _identity,
+    AuditError, CASE_IDS, MANIFEST_SCHEMA_VERSION, _DigestCache, _channel_kind, _identity,
     _label_candidate, _parse_summary, _require_root, _same_intervals,
     run_g1_audit, run_g1_preflight,
 )
@@ -43,7 +43,7 @@ def _sha256(path: Path) -> str:
 
 def _write_checksum_manifest(root: Path, *, omit: set[str] | None = None, extra: bool = False) -> None:
     omit = omit or set()
-    relevant = {"RECORDS", "RECORDS-WITH-SEIZURES", "SUBJECT-INFO", "ANNOTATORS"}
+    relevant = {path.name for path in root.iterdir() if path.is_file() and path.name != "SHA256SUMS.txt"}
     relevant |= {f"{case}/{case}-summary.txt" for case in CASE_IDS}
     relevant |= {"chb01/chb01_01.edf", "chb01/chb01_01.edf.seizures"}
     lines = []
@@ -57,6 +57,7 @@ def _write_checksum_manifest(root: Path, *, omit: set[str] | None = None, extra:
 def _synthetic_snapshot(root: Path) -> None:
     for name in ("SUBJECT-INFO", "ANNOTATORS"):
         (root / name).write_text("synthetic\n", encoding="utf-8")
+    (root / "chbmit-2010.pdf").write_bytes(b"synthetic source document")
     for case in CASE_IDS:
         directory = root / case
         directory.mkdir()
@@ -72,6 +73,10 @@ def _synthetic_snapshot(root: Path) -> None:
     _write_synthetic_edf(root / "chb01/chb01_01.edf")
     (root / "chb01/chb01_01.edf.seizures").write_text("synthetic annotation\n", encoding="utf-8")
     _write_checksum_manifest(root)
+
+
+def _tree_fingerprint(root: Path) -> dict[str, str]:
+    return {path.relative_to(root).as_posix(): _sha256(path) for path in root.rglob("*") if path.is_file()}
 
 
 class G1AuditTests(unittest.TestCase):
@@ -136,6 +141,15 @@ class G1AuditTests(unittest.TestCase):
             self.assertIn("chb01/chb01_01.edf", result["anomalies"]["duplicate_seizure_manifest_entries"])
             self.assertEqual(result["preflight_status"], "failed")
 
+    def test_preflight_detects_duplicate_records_entry(self):
+        with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root)
+            (root / "RECORDS").write_text("chb01/chb01_01.edf\nchb01/chb01_01.edf\n", encoding="utf-8")
+            _write_checksum_manifest(root)
+            result = run_g1_preflight()
+            self.assertIn("chb01/chb01_01.edf", result["anomalies"]["duplicate_records_entries"])
+            self.assertEqual(result["preflight_status"], "failed")
+
     def test_preflight_detects_inventory_and_machine_annotation_mismatches(self):
         with tempfile.TemporaryDirectory() as temporary, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
             root = Path(temporary); _synthetic_snapshot(root)
@@ -153,7 +167,7 @@ class G1AuditTests(unittest.TestCase):
             result = run_g1_preflight()
             self.assertIn("chb01/chb01_01.edf", result["anomalies"]["records_with_seizures_missing_machine_annotations"])
             self.assertIn("chb01/chb01_01.edf", result["anomalies"]["checksum_coverage"]["missing_checksum_entries"])
-            self.assertIn("unexpected.txt", result["anomalies"]["checksum_coverage"]["unexpected_checksum_entries"])
+            self.assertIn("unexpected.txt", result["anomalies"]["checksum_coverage"]["checksum_entries_outside_g1a_scope"])
 
     def test_audit_compares_summary_machine_intervals_and_writes_portable_provenance(self):
         header = {
@@ -168,9 +182,11 @@ class G1AuditTests(unittest.TestCase):
             self.assertEqual(result["audit_status"], "passed")
             row = json.loads((Path(output) / "manifests/chbmit_recordings.jsonl").read_text(encoding="utf-8"))
             self.assertEqual(row["manifest_schema_version"], MANIFEST_SCHEMA_VERSION)
+            self.assertEqual(row["dataset_snapshot_id"], "chbmit-1.0.0-physionet-wget-20260728")
             provenance = (Path(output) / "reports/provenance_shareable.json").read_text(encoding="utf-8")
             self.assertNotIn(temporary, provenance)
-            self.assertEqual(json.loads(provenance)["digest_cache_computed_file_count"], 31)
+            self.assertEqual(json.loads(provenance)["digest_cache_computed_file_count"], 32)
+            self.assertTrue(all(not Path(created).is_absolute() for created in result["created_files"]))
 
     def test_audit_fails_when_summary_and_machine_intervals_disagree(self):
         header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
@@ -179,3 +195,32 @@ class G1AuditTests(unittest.TestCase):
             with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.0, 0.5]]):
                 with self.assertRaises(AuditError):
                     run_g1_audit(Path(output))
+
+    def test_audit_fails_for_checksum_mismatch(self):
+        header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root)
+            (root / "SUBJECT-INFO").write_text("modified after checksum\n", encoding="utf-8")
+            with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.25, 0.75]]):
+                with self.assertRaises(AuditError):
+                    run_g1_audit(Path(output))
+            report = json.loads((Path(output) / "reports/data_audit.json").read_text(encoding="utf-8"))
+            provenance = json.loads((Path(output) / "reports/provenance_shareable.json").read_text(encoding="utf-8"))
+            self.assertEqual(report["audit_status"], "failed")
+            self.assertEqual(provenance["checksum_verification"]["status"], "failed")
+            self.assertEqual(report["anomalies"]["checksum_coverage"]["missing_checksum_entries"], [])
+
+    def test_audit_does_not_modify_the_synthetic_dataset_root(self):
+        header = {"sampling_rate_hz": 4.0, "sampling_rates_hz": [4.0], "duration_s": 1.0, "num_samples": 4, "num_samples_by_channel": [4], "original_channel_count": 1, "original_channel_labels": ["EEG Fp1-REF"], "physical_dimensions": ["uV"]}
+        with tempfile.TemporaryDirectory() as temporary, tempfile.TemporaryDirectory() as output, patch.dict(os.environ, {"CHBMIT_RAW_DIR": temporary}):
+            root = Path(temporary); _synthetic_snapshot(root); before = _tree_fingerprint(root)
+            with patch("eegkv.audit._edf_header", return_value=header), patch("eegkv.audit._machine_intervals", return_value=[[0.25, 0.75]]):
+                run_g1_audit(Path(output))
+            self.assertEqual(before, _tree_fingerprint(root))
+
+    def test_digest_cache_computes_a_file_digest_once(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "fixture.edf"; path.write_bytes(b"synthetic")
+            cache = _DigestCache()
+            self.assertEqual(cache.sha256(path), cache.sha256(path))
+            self.assertEqual(cache.computed_count, 1)

@@ -5,8 +5,9 @@
 - **Codex/local** develops source code and runs synthetic tests only. It has
   no access to SERVER-02 or the CHB-MIT raw snapshot and must not report a real
   audit, checksum verification, or dataset conformance result.
-- **GitHub** is the control plane. Review happens through a feature-branch pull
-  request; only an approved commit SHA is eligible for server execution.
+- **GitHub `main`** is the public source of truth and control plane. Review
+  happens through a feature-branch pull request; only an approved commit SHA is
+  eligible for server execution.
 - **SERVER-02** is the data plane. Its operator checks out the exact approved
   SHA in detached HEAD state, sets `CHBMIT_RAW_DIR`, and runs the read-only
   preflight and then the audit.
@@ -21,13 +22,15 @@ hostnames, and usernames.
 
 ## Safe handoff
 
-1. Codex pushes `feature/g1a-offline-contract` and opens a PR into `main`.
+1. Codex pushes a feature branch and opens a PR into `main`.
 2. Reviewers approve and merge it. Record the resulting approved commit SHA.
 3. The SERVER-02 operator confirms a clean worktree, fetches GitHub, and
    checks out that SHA exactly — never an arbitrary branch state.
-4. The operator runs `eegkv preflight-g1`; it prints JSON and creates no
-   files. A failure is returned for investigation, not repaired automatically.
-5. Only if preflight passes may the operator run `eegkv audit-g1`. Generated
-   small artifacts can be reviewed and committed separately after inspection.
+4. The operator runs the single documented `scripts/run_g1_audit.sh` command.
+   It runs synthetic G1 tests, then `eegkv preflight-g1` (JSON, no files), then
+   the full checksum audit. A failure is returned for investigation, not
+   repaired automatically.
+5. Generated small artifacts can be reviewed and committed separately after
+   inspection.
 
 G1A does not authorize G1B, training, quantization, HLS, or hardware work.
