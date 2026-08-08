@@ -1,6 +1,7 @@
 import unittest
 
 from eegkv.events import Event, false_positives_per_day, score_events
+from eegkv.preprocess import label_window
 
 
 class EventTests(unittest.TestCase):
@@ -16,3 +17,8 @@ class EventTests(unittest.TestCase):
         self.assertEqual(result["true_positive_events"], 3)
         self.assertAlmostEqual(false_positives_per_day(2, 43200), 4.0)
 
+    def test_window_labels_exclude_guard_band(self):
+        intervals = [[100.0, 140.0]]
+        self.assertEqual(label_window(110, 114, intervals), 1)
+        self.assertEqual(label_window(10, 14, intervals), 0)
+        self.assertIsNone(label_window(75, 79, intervals))

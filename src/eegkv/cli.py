@@ -8,6 +8,7 @@ from pathlib import Path
 
 from .events import Event, false_positives_per_day, score_events
 from .manifest import build_manifest, read_jsonl, validate_manifest, write_jsonl
+from .preprocess import infer_continuous, prepare_fold
 from .results import aggregate_subject_results
 from .splits import make_loso_folds, write_folds
 from .training import train_fp32
@@ -32,6 +33,16 @@ def main(argv: list[str] | None = None) -> None:
     train.add_argument("--validation-npz", type=Path, required=True)
     train.add_argument("--output", type=Path, required=True)
     train.add_argument("--seed", type=int, required=True)
+    prepare = commands.add_parser("prepare-fold")
+    prepare.add_argument("--manifest", type=Path, required=True)
+    prepare.add_argument("--fold", type=Path, required=True)
+    prepare.add_argument("--output", type=Path, required=True)
+    infer = commands.add_parser("infer-continuous")
+    infer.add_argument("--manifest", type=Path, required=True)
+    infer.add_argument("--fold", type=Path, required=True)
+    infer.add_argument("--normalization", type=Path, required=True)
+    infer.add_argument("--checkpoint", type=Path, required=True)
+    infer.add_argument("--output", type=Path, required=True)
     score = commands.add_parser("score-events")
     score.add_argument("--reference", required=True)
     score.add_argument("--predicted", required=True)
@@ -49,6 +60,10 @@ def main(argv: list[str] | None = None) -> None:
         output = make_loso_folds(read_jsonl(args.manifest), seed=args.seed); write_folds(output, args.output); print(json.dumps({"folds": len(output)}))
     elif args.command == "train-fp32":
         print(json.dumps(train_fp32(args.train_npz, args.validation_npz, args.output, args.seed), sort_keys=True))
+    elif args.command == "prepare-fold":
+        print(json.dumps(prepare_fold(read_jsonl(args.manifest), json.loads(args.fold.read_text(encoding="utf-8")), args.output), sort_keys=True))
+    elif args.command == "infer-continuous":
+        print(json.dumps(infer_continuous(read_jsonl(args.manifest), json.loads(args.fold.read_text(encoding="utf-8")), args.normalization, args.checkpoint, args.output), sort_keys=True))
     elif args.command == "score-events":
         result = score_events(_events(args.reference), _events(args.predicted)); result.update({"subject_id": args.subject_id, "replay_seconds": args.replay_seconds, "false_positives_per_day": false_positives_per_day(result["false_positive_events"], args.replay_seconds)})
         args.output.parent.mkdir(parents=True, exist_ok=True); args.output.write_text(json.dumps(result, indent=2, sort_keys=True) + "\n", encoding="utf-8")
