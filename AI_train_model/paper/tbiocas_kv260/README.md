@@ -36,6 +36,17 @@ is `pdflatex`, `bibtex`, `pdflatex`, `pdflatex`.
 - Replace all author, affiliation, funding, ethics, and data-availability
   placeholders before submission.
 
+## Current Writing Control
+
+The manuscript skeleton is intentionally ahead of the final results. The
+paper's live claim-control matrix and section-by-section writing order are in
+[`WRITING_PLAN.md`](WRITING_PLAN.md). The professor-mandated Track-B accuracy
+gate is a validation-loss-selected seed-42 result of at least 95.0%, followed
+by a three-seed mean of at least 95.0%; five frozen seeds are required before a
+final reproducibility result. Until then, the R2 five-second model is a
+development candidate only, while the two-second fixed-point reference remains
+the engineering baseline.
+
 ## Layout
 
 ```text

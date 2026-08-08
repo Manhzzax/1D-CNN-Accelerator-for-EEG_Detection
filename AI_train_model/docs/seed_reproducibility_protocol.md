@@ -15,6 +15,14 @@ and all available PyTorch CUDA generators. The prepared NPZ files, locked
 recording split, preprocessing configuration, validation set, architecture, and
 hyperparameters remain constant across the seed trials.
 
+The numerical value has **no scientific meaning**. `42`, `7`, and `123` are
+not years, patient identifiers, fold identifiers, model versions, or ranks;
+they merely select different deterministic pseudo-random number sequences. A
+valid protocol chooses values before experiments begin and never replaces a
+weak seed with a better-looking one. The planned five-seed set for the frozen
+accuracy winner is `[7, 42, 123, 202, 1001]`; its values are intentionally
+arbitrary, distinct, and fixed in advance.
+
 Thus, `seed=42`, `seed=7`, and `seed=123` are **three independent training
 replicates**, not three cross-validation folds and not three different patient
 cohorts. A seed controls much of the training randomness but does not by itself
@@ -44,6 +52,31 @@ record a first variability estimate. They are not a magic scientific threshold,
 nor are they sufficient to establish a precise confidence interval or a strong
 null-hypothesis claim. Final paper evidence should expand the frozen winner and
 the frozen baseline to five independent seeds when compute permits.
+
+There is no universal paper or journal rule that makes exactly three or five
+seeds mandatory. The methodological basis is to perform multiple independent
+runs and report their distribution rather than a selected maximum. Five is a
+pragmatic cost-versus-evidence choice here: it improves the estimate of training
+stochasticity over three runs while retaining a feasible RTX 8000 budget.
+
+## Seeds Are Not Cross-Validation Folds
+
+Prior CHB-MIT studies commonly obtain variation from a different source:
+
+- Chung et al. use patient-specific k-fold cross-validation, where `k` is tied
+  to the number of seizure-containing EDF files in each case. Their mean +/- SD
+  represents performance across patient/fold evaluations, not a published list
+  of neural-network random seeds.
+- Ali et al. use subject-wise 5-fold and leave-one-out protocols to evaluate
+  cross-subject continuous event detection. Those protocols change the unseen
+  patient cohort; they address generalisation, not weight-initialisation noise.
+- Modern patient-exclusive/nested-CV CHB-MIT studies likewise vary held-out
+  patients or splits. This is stronger evidence for generalisation but does not
+  reveal whether one fixed training split is sensitive to stochastic training.
+
+Our final evidence must contain both layers: repeated seeds for a frozen
+development configuration, then a frozen patient-group-held-out evaluation.
+Neither layer replaces the other.
 
 ## Current worked example: R2 Lite, 2 s versus 5 s
 
@@ -107,4 +140,6 @@ window-level confidence interval.
 - [JMLR reproducibility best practice: perform multiple runs with different seeds](https://www.jmlr.org/papers/volume21/20-056/20-056.pdf)
 - [AAAI reproducibility checklist: describe seed handling and number of runs](https://aaai.org/conference/aaai/aaai-23/reproducibility-checklist/)
 - [Pineau et al., 2021, Improving Reproducibility in Machine Learning Research](https://www.jmlr.org/papers/v22/20-303.html)
+- [Chung et al., 2024: patient-specific k-fold and event-level CHB-MIT evaluation](https://doi.org/10.3389/fneur.2024.1389731)
+- [Ali et al., 2024: subject-wise continuous cross-subject CHB-MIT evaluation](https://doi.org/10.1098/rsos.230601)
 - [TRIPOD+AI reporting guidance for machine-learning clinical prediction models](https://www.bmj.com/content/385/bmj-2023-078378)
