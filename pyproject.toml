@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eegkv"
+version = "0.1.0"
+description = "Patient-independent continuous EEG seizure detection for KV260 co-design"
+requires-python = ">=3.11"
+dependencies = [
+  "numpy>=1.26",
+  "scipy>=1.11",
+  "torch>=2.3",
+  "pyedflib>=0.1.36",
+]
+
+[project.scripts]
+eegkv = "eegkv.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+

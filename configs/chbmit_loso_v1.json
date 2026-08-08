@@ -1,0 +1,16 @@
+{
+  "protocol_id": "chbmit_loso_continuous_v1",
+  "sample_rate_hz": 256,
+  "window_seconds": 4,
+  "stride_seconds": 1,
+  "validation_group_count": 4,
+  "fold_seed": 20260808,
+  "training_seeds": [1701, 2911, 4241],
+  "bandpass_hz": [0.5, 45.0],
+  "notch_hz": 60.0,
+  "interictal_guard_seconds": 30,
+  "event_tolerance_before_seconds": 30,
+  "event_tolerance_after_seconds": 60,
+  "event_merge_gap_seconds": 90,
+  "event_split_seconds": 300
+}
