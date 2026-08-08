@@ -14,3 +14,14 @@ class G1ContractTests(unittest.TestCase):
         self.assertNotIn("copyfile(", source)
         self.assertNotIn("copy2(", source)
         self.assertNotIn("np.save", source)
+
+    def test_execution_model_requires_an_approved_sha_and_server_only_data_access(self):
+        model = Path("docs/EXECUTION_MODEL.md").read_text(encoding="utf-8")
+        self.assertIn("approved commit SHA", model)
+        self.assertIn("SERVER-02", model)
+        self.assertIn("no access to SERVER-02", model)
+
+    def test_errata_keeps_montage_as_a_pending_g1b_decision(self):
+        errata = Path("docs/spec/ERRATA.md").read_text(encoding="utf-8")
+        self.assertIn("141 `RECORDS-WITH-SEIZURES`", errata)
+        self.assertIn("pending proposal", errata)

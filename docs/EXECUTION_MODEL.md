@@ -1,0 +1,33 @@
+# G1A execution model
+
+## Trust boundary
+
+- **Codex/local** develops source code and runs synthetic tests only. It has
+  no access to SERVER-02 or the CHB-MIT raw snapshot and must not report a real
+  audit, checksum verification, or dataset conformance result.
+- **GitHub** is the control plane. Review happens through a feature-branch pull
+  request; only an approved commit SHA is eligible for server execution.
+- **SERVER-02** is the data plane. Its operator checks out the exact approved
+  SHA in detached HEAD state, sets `CHBMIT_RAW_DIR`, and runs the read-only
+  preflight and then the audit.
+
+## Data handling
+
+`CHBMIT_RAW_DIR` is required at runtime and has no fallback. The raw snapshot
+is read-only. EDF signal samples are never loaded by G1A. Raw EDF files,
+prepared arrays, caches, and checkpoints are server-only and are not copied or
+committed. G1A's shareable provenance deliberately omits absolute paths,
+hostnames, and usernames.
+
+## Safe handoff
+
+1. Codex pushes `feature/g1a-offline-contract` and opens a PR into `main`.
+2. Reviewers approve and merge it. Record the resulting approved commit SHA.
+3. The SERVER-02 operator confirms a clean worktree, fetches GitHub, and
+   checks out that SHA exactly — never an arbitrary branch state.
+4. The operator runs `eegkv preflight-g1`; it prints JSON and creates no
+   files. A failure is returned for investigation, not repaired automatically.
+5. Only if preflight passes may the operator run `eegkv audit-g1`. Generated
+   small artifacts can be reviewed and committed separately after inspection.
+
+G1A does not authorize G1B, training, quantization, HLS, or hardware work.

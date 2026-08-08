@@ -4,5 +4,5 @@
   "dataset_version": "1.0.0",
   "annotation_tolerance_seconds": 0.001,
   "documented_duplicate_sha256_exceptions": [],
-  "known_metadata_discrepancy": "Current PhysioNet file manifests observed on 2026-08-08 contain 686 RECORDS and 142 RECORDS-WITH-SEIZURES, while older descriptive CHB-MIT text/publications may state 664 and 129. This audit derives all counts from verified snapshot manifests and never enforces prose counts."
+  "known_metadata_discrepancy": "Current official snapshot manifests contain 686 RECORDS and 141 RECORDS-WITH-SEIZURES. Older descriptive CHB-MIT text/publications may state 664 and 129. G1A derives counts and dataset_snapshot_id from the pinned local manifests and SHA256SUMS.txt; it never enforces descriptive prose counts."
 }
